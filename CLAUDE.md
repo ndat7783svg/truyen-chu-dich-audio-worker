@@ -35,8 +35,17 @@ tra 1 file) Claude tự làm luôn — xem ngoại lệ trong chính skill đó.
 - **Hoãn lại, bàn sau:** mục trả phí mua chương; audio trong trang đọc.
 
 ## Trạng thái hiện tại
-Đang trong giai đoạn brainstorming/thiết kế (chưa có code). Xem `NEXT_SESSION.md` để biết bước
-tiếp theo cụ thể.
+Đang thực thi implementation plan v1 (`docs/superpowers/plans/2026-09-08-website-truyen-v1.md`).
+Đã xong + kiểm chứng thật (test/browser): Task 1-8 (scaffold, DB schema, sinh slug, parse chương,
+script `sync-truyen.mjs`, trang chủ, trang truyện, trang đọc chương + lưu tiến độ đọc). Task 9
+(đăng ký/đăng nhập) đã viết code, đang chờ user tự test thủ công. Còn lại: Task 10 (dark mode),
+Task 11 (deploy). Xem `NEXT_SESSION.md` để biết bước tiếp theo cụ thể.
+
+## Quy tắc an toàn khi test
+Claude KHÔNG tự bấm submit form đăng ký/đăng nhập thật trên Supabase Auth của user (dù chỉ để
+test) — hành động này là "tạo tài khoản", thuộc nhóm bị cấm tuyệt đối theo quy tắc an toàn chung.
+Luồng đăng ký/đăng nhập/đăng xuất phải để user tự làm thủ công qua trình duyệt, Claude chỉ hướng
+dẫn các bước. Chi tiết xem `docs/handoff/an-toan-thao-tac.md`.
 
 ## Các file trong bộ quản lý ngữ cảnh — đọc file nào khi nào
 | File | Khi nào mở |
