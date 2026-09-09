@@ -1,6 +1,15 @@
-import Link from 'next/link';
 import { taoSupabaseServerClient } from '@/lib/supabase/server';
 import SearchBox from '@/components/SearchBox';
+import TheTruyen, { type TruyenThe } from '@/components/TheTruyen';
+
+type HangTruyen = {
+  ten: string;
+  slug: string;
+  anh_bia: string | null;
+  trang_thai: string;
+  tac_gia: string | null;
+  truyen_the_loai: { the_loai: { ten: string; slug: string } }[];
+};
 
 export default async function TrangChu({
   searchParams,
@@ -12,30 +21,33 @@ export default async function TrangChu({
 
   let query = supabase
     .from('truyen')
-    .select('id, ten, slug, anh_bia, trang_thai')
+    .select('ten, slug, anh_bia, trang_thai, tac_gia, truyen_the_loai(the_loai(ten, slug))')
     .order('created_at', { ascending: false });
   if (q) {
     query = query.ilike('ten', `%${q}%`);
   }
-  const { data: dsTruyen } = await query;
+  const { data } = await query;
+  const dsTruyen = (data ?? []) as HangTruyen[];
+
+  const dsThe: TruyenThe[] = dsTruyen.map((t) => ({
+    slug: t.slug,
+    ten: t.ten,
+    tacGia: t.tac_gia,
+    anhBia: t.anh_bia,
+    trangThai: t.trang_thai,
+    theLoai: t.truyen_the_loai.map((n) => n.the_loai),
+  }));
 
   return (
-    <main className="max-w-3xl mx-auto p-4">
+    <main className="w-full max-w-5xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Truyện dịch AI</h1>
       <SearchBox defaultValue={q ?? ''} />
-      <ul className="mt-4 space-y-2">
-        {(dsTruyen ?? []).map((truyen) => (
-          <li key={truyen.id}>
-            <Link href={`/truyen/${truyen.slug}`} className="text-lg hover:underline">
-              {truyen.ten}
-            </Link>
-            <span className="ml-2 text-sm text-gray-500">
-              {truyen.trang_thai === 'hoan-thanh' ? 'Hoàn thành' : 'Đang ra'}
-            </span>
-          </li>
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {dsThe.map((truyen) => (
+          <TheTruyen key={truyen.slug} truyen={truyen} />
         ))}
-        {dsTruyen?.length === 0 && <li className="text-gray-500">Không tìm thấy truyện nào.</li>}
-      </ul>
+      </div>
+      {dsThe.length === 0 && <p className="mt-4 text-gray-500">Không tìm thấy truyện nào.</p>}
     </main>
   );
 }
