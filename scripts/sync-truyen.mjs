@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import { taoSlug } from './slug.js';
 import { parseChuong } from './parse-chuong.js';
+import { parseThongTin } from './parse-thong-tin.js';
 
 const THU_MUC_GOC =
   process.env.TRANSLATE_TRUYEN_DIR || 'D:\\translate truyen\\danh-sach-truyen';
@@ -54,6 +55,75 @@ function timThuMucTruyen(tenTruyenGoc) {
   return khop[0];
 }
 
+function docThongTin(tenThuMuc) {
+  const thuMucThongTin = join(THU_MUC_GOC, tenThuMuc, 'thong-tin');
+  const fileThongTin = join(thuMucThongTin, 'thong-tin.md');
+  const fileAnhBia = join(thuMucThongTin, 'anh-bia.jpg');
+
+  const parsed = existsSync(fileThongTin)
+    ? parseThongTin(readFileSync(fileThongTin, 'utf-8'))
+    : null;
+  const duongDanAnhBia = existsSync(fileAnhBia) ? fileAnhBia : null;
+
+  return { parsed, duongDanAnhBia };
+}
+
+async function uploadAnhBia(supabase, slug, duongDanFileAnh) {
+  const bytes = readFileSync(duongDanFileAnh);
+  const { error } = await supabase.storage
+    .from('anh-bia')
+    .upload(`${slug}.jpg`, bytes, { contentType: 'image/jpeg', upsert: true });
+  if (error) {
+    console.error('Loi upload anh bia:', error.message);
+    process.exit(1);
+  }
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from('anh-bia').getPublicUrl(`${slug}.jpg`);
+  return publicUrl;
+}
+
+async function upsertTheLoai(supabase, tenTheLoai) {
+  const slugTheLoai = taoSlug(tenTheLoai);
+  const { data: hienCo, error: loiTim } = await supabase
+    .from('the_loai')
+    .select('id')
+    .eq('slug', slugTheLoai)
+    .maybeSingle();
+  if (loiTim) {
+    console.error(`Loi truy van the loai "${tenTheLoai}":`, loiTim.message);
+    process.exit(1);
+  }
+  if (hienCo) return hienCo.id;
+
+  const { data: moi, error: loiTao } = await supabase
+    .from('the_loai')
+    .insert({ ten: tenTheLoai, slug: slugTheLoai })
+    .select('id')
+    .single();
+  if (loiTao) {
+    console.error(`Loi tao the loai "${tenTheLoai}":`, loiTao.message);
+    process.exit(1);
+  }
+  return moi.id;
+}
+
+async function ganTheLoai(supabase, truyenId, dsTenTheLoai) {
+  for (const ten of dsTenTheLoai) {
+    const theLoaiId = await upsertTheLoai(supabase, ten);
+    const { error } = await supabase
+      .from('truyen_the_loai')
+      .upsert(
+        { truyen_id: truyenId, the_loai_id: theLoaiId },
+        { onConflict: 'truyen_id,the_loai_id', ignoreDuplicates: true }
+      );
+    if (error) {
+      console.error(`Loi gan the loai "${ten}":`, error.message);
+      process.exit(1);
+    }
+  }
+}
+
 async function main() {
   const { tenTruyenGoc, moTa, anhBia } = docThamSo(process.argv.slice(2));
   const tenThuMuc = timThuMucTruyen(tenTruyenGoc);
@@ -66,6 +136,16 @@ async function main() {
     process.exit(1);
   }
   const supabase = createClient(supabaseUrl, serviceKey);
+
+  const { parsed: thongTin, duongDanAnhBia } = docThongTin(tenThuMuc);
+
+  let anhBiaMoi = null;
+  if (duongDanAnhBia) {
+    anhBiaMoi = await uploadAnhBia(supabase, slug, duongDanAnhBia);
+    console.log(`Da upload anh bia cho "${tenThuMuc}".`);
+  } else if (thongTin) {
+    console.log(`Canh bao: co thong-tin.md nhung thieu anh-bia.jpg cho "${tenThuMuc}".`);
+  }
 
   const { data: truyenRow, error: loiTimTruyen } = await supabase
     .from('truyen')
@@ -81,15 +161,22 @@ async function main() {
   let truyenId = truyenRow?.id;
 
   if (!truyenId) {
-    if (!moTa) {
+    const moTaCuoiCung = thongTin?.moTa ?? moTa;
+    if (!moTaCuoiCung) {
       console.error(
-        `Truyen "${tenThuMuc}" chua co tren web. Chay lai kem --mo-ta "..." (va --anh-bia "URL" neu co) de tao moi.`
+        `Truyen "${tenThuMuc}" chua co tren web va khong tim thay thong-tin/thong-tin.md. Chay lai kem --mo-ta "..." de tao moi.`
       );
       process.exit(1);
     }
     const { data: truyenMoi, error: loiTao } = await supabase
       .from('truyen')
-      .insert({ ten: tenThuMuc, slug, mo_ta: moTa, anh_bia: anhBia })
+      .insert({
+        ten: tenThuMuc,
+        slug,
+        mo_ta: moTaCuoiCung,
+        anh_bia: anhBiaMoi ?? anhBia,
+        tac_gia: thongTin?.tacGia ?? null,
+      })
       .select('id')
       .single();
     if (loiTao) {
@@ -98,6 +185,28 @@ async function main() {
     }
     truyenId = truyenMoi.id;
     console.log(`Da tao truyen moi "${tenThuMuc}" (slug: ${slug}).`);
+  } else if (thongTin) {
+    const capNhat = {};
+    if (thongTin.moTa) capNhat.mo_ta = thongTin.moTa;
+    if (thongTin.tacGia) capNhat.tac_gia = thongTin.tacGia;
+    if (anhBiaMoi) capNhat.anh_bia = anhBiaMoi;
+
+    if (Object.keys(capNhat).length > 0) {
+      const { error: loiCapNhat } = await supabase
+        .from('truyen')
+        .update(capNhat)
+        .eq('id', truyenId);
+      if (loiCapNhat) {
+        console.error('Loi cap nhat metadata truyen:', loiCapNhat.message);
+        process.exit(1);
+      }
+      console.log(`Da cap nhat metadata (${Object.keys(capNhat).join(', ')}) cho "${tenThuMuc}".`);
+    }
+  }
+
+  if (thongTin?.theLoai?.length) {
+    await ganTheLoai(supabase, truyenId, thongTin.theLoai);
+    console.log(`Da gan the loai: ${thongTin.theLoai.join(', ')}.`);
   }
 
   const { data: chuongDaCo, error: loiDsChuong } = await supabase
@@ -121,29 +230,29 @@ async function main() {
   const daDang = [];
   const boQua = [];
   for (const tenFile of fileChuong) {
-    let thongTin;
+    let thongTinChuong;
     try {
       const noiDungFile = readFileSync(join(thuMucChuong, tenFile), 'utf-8');
-      thongTin = parseChuong(tenFile, noiDungFile);
+      thongTinChuong = parseChuong(tenFile, noiDungFile);
     } catch (err) {
       console.error(`Bo qua file loi dinh dang "${tenFile}": ${err.message}`);
       boQua.push(tenFile);
       continue;
     }
-    if (soDaCo.has(thongTin.soChuong)) continue;
+    if (soDaCo.has(thongTinChuong.soChuong)) continue;
 
     const { error: loiDang } = await supabase.from('chuong').insert({
       truyen_id: truyenId,
-      so_chuong: thongTin.soChuong,
-      tieu_de: thongTin.tieuDe,
-      noi_dung: thongTin.noiDung,
+      so_chuong: thongTinChuong.soChuong,
+      tieu_de: thongTinChuong.tieuDe,
+      noi_dung: thongTinChuong.noiDung,
     });
     if (loiDang) {
-      console.error(`Loi dang chuong ${thongTin.soChuong}:`, loiDang.message);
+      console.error(`Loi dang chuong ${thongTinChuong.soChuong}:`, loiDang.message);
       boQua.push(tenFile);
       continue;
     }
-    daDang.push(thongTin.soChuong);
+    daDang.push(thongTinChuong.soChuong);
   }
 
   daDang.sort((a, b) => a - b);
