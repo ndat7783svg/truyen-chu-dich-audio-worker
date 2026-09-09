@@ -47,7 +47,7 @@ export default async function TrangDocChuong({
   ]);
 
   return (
-    <main className="max-w-2xl mx-auto p-4">
+    <main className="w-full max-w-2xl mx-auto p-4">
       <LuuTienDo truyenId={truyen.id} chuongId={chuong.id} />
       <p className="text-sm text-gray-500">
         <Link href={`/truyen/${slug}`} className="hover:underline">
