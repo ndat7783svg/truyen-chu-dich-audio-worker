@@ -41,3 +41,28 @@ create policy "user tao tien do cua minh" on tien_do_doc
   for insert with check (auth.uid() = user_id);
 create policy "user sua tien do cua minh" on tien_do_doc
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Đợt A (2026-09-09): ảnh bìa, tác giả, thể loại
+alter table truyen add column tac_gia text;
+
+create table the_loai (
+  id uuid primary key default gen_random_uuid(),
+  ten text not null,
+  slug text not null unique
+);
+
+create table truyen_the_loai (
+  truyen_id uuid not null references truyen(id) on delete cascade,
+  the_loai_id uuid not null references the_loai(id) on delete cascade,
+  primary key (truyen_id, the_loai_id)
+);
+
+alter table the_loai enable row level security;
+alter table truyen_the_loai enable row level security;
+
+create policy "the_loai doc cong khai" on the_loai for select using (true);
+create policy "truyen_the_loai doc cong khai" on truyen_the_loai for select using (true);
+
+insert into storage.buckets (id, name, public)
+values ('anh-bia', 'anh-bia', true)
+on conflict (id) do nothing;
