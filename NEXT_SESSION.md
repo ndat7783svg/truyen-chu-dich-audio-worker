@@ -16,12 +16,13 @@
 - [x] Task 6: Trang truyện nâng cấp (ảnh bìa lớn, tác giả, badge thể loại, mô tả đầy đủ).
 - [x] Task 7: Kiểm tra end-to-end qua browser + cập nhật tài liệu trạng thái (file này).
 
-**Lỗi phát sinh ngoài kế hoạch đã sửa luôn trong Task 4**: `header`/`main` không giãn hết
-`max-w-*` như dự kiến (do tương tác `mx-auto` + `body` có `flex flex-col` khiến các thẻ này co lại
-theo nội dung thay vì full width) — sửa bằng cách thêm class `w-full` trước `max-w-*`. Xem chi tiết
-kỹ thuật nên ghi vào `docs/handoff/` nếu gặp lại ở trang khác chưa sửa (vd `app/dang-ky`,
-`app/dang-nhap`, `app/truyen/[slug]/chuong/[so]` — các trang này KHÔNG nằm trong Đợt A nên chưa sửa,
-vẫn có khả năng bị hiện tượng co hẹp tương tự nếu nội dung thưa).
+**Lỗi phát sinh ngoài kế hoạch đã sửa xong (Task 4 + fix bổ sung sau đó)**: `header`/`main` không
+giãn hết `max-w-*` như dự kiến (do tương tác `mx-auto` + `body` có `flex flex-col` khiến các thẻ
+này co lại theo nội dung thay vì full width) — sửa bằng cách thêm class `w-full` trước `max-w-*`.
+Đã áp dụng cho TẤT CẢ trang: `components/Header.tsx`, `app/page.tsx`, `app/the-loai/[slug]/page.tsx`,
+`app/truyen/[slug]/page.tsx`, `app/dang-ky/page.tsx`, `app/dang-nhap/page.tsx`,
+`app/truyen/[slug]/chuong/[so]/page.tsx` — không còn trang nào sót. Chi tiết kỹ thuật xem
+`docs/handoff/layout-flex-w-full.md`.
 
 ## Bước tiếp theo — chọn 1 trong các hướng sau, hỏi user trước khi làm
 
@@ -30,8 +31,6 @@ vẫn có khả năng bị hiện tượng co hẹp tương tự nếu nội dun
 2. **Bàn thiết kế Đợt B** (lượt xem, đánh giá sao, "Top thịnh hành", sidebar "Đọc tiếp") nếu user
    muốn tiếp tục nâng cấp tính năng ngay — dùng skill `brainstorming` trước khi code, giống quy
    trình đã làm với Đợt A.
-3. **Sửa nốt hiện tượng `w-full` co hẹp** ở các trang chưa đụng tới trong Đợt A (thấp ưu tiên, chỉ
-   là cosmetic, chưa gây lỗi chức năng).
 
 ## Lưu ý quan trọng
 - `.env.local` đã điền đủ 4 biến (kể cả `SUPABASE_SERVICE_ROLE_KEY`) — không hỏi lại, không in

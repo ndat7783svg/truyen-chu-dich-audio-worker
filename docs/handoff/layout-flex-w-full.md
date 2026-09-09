@@ -15,10 +15,8 @@
   cho MỌI phần tử là con trực tiếp của `body` dùng pattern `max-w-* mx-auto` này. `w-full` ép
   `width: 100%` trước, sau đó `max-w-*` mới cắt trần đúng như ý, `mx-auto` canh giữa khối đã đủ
   rộng.
-- **Đã sửa** (Đợt A, Task 4): `components/Header.tsx`, `app/page.tsx`.
-- **Chưa sửa** (ngoài phạm vi Đợt A, để ý nếu đụng vào sau): `app/dang-ky/page.tsx`,
-  `app/dang-nhap/page.tsx`, `app/truyen/[slug]/chuong/[so]/page.tsx` — các trang này chưa được kiểm
-  tra lại, có khả năng gặp hiện tượng tương tự nếu nội dung bên trong không đủ rộng để tự chạm trần
-  `max-width`.
-- Các trang mới viết trong Đợt A (`app/the-loai/[slug]/page.tsx`, `app/truyen/[slug]/page.tsx` bản
-  nâng cấp) đã áp dụng `w-full` ngay từ đầu, không bị lỗi này.
+- **Đã sửa cho tất cả trang** (Đợt A, Task 4 + fix bổ sung ngay sau đó cùng ngày): `components/Header.tsx`,
+  `app/page.tsx`, `app/the-loai/[slug]/page.tsx`, `app/truyen/[slug]/page.tsx`, `app/dang-ky/page.tsx`,
+  `app/dang-nhap/page.tsx`, `app/truyen/[slug]/chuong/[so]/page.tsx` — không còn trang nào sót.
+- **Lưu ý cho trang mới sau này**: bất kỳ `<main>`/`<header>` mới nào là con trực tiếp của `body`
+  và dùng pattern `max-w-* mx-auto` đều phải thêm `w-full` ngay từ đầu, tránh lặp lại lỗi này.
