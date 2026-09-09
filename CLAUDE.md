@@ -35,11 +35,20 @@ tra 1 file) Claude tự làm luôn — xem ngoại lệ trong chính skill đó.
 - **Hoãn lại, bàn sau:** mục trả phí mua chương; audio trong trang đọc.
 
 ## Trạng thái hiện tại
-Đang thực thi implementation plan v1 (`docs/superpowers/plans/2026-09-08-website-truyen-v1.md`).
-Đã xong + kiểm chứng thật (test/browser): Task 1-8 (scaffold, DB schema, sinh slug, parse chương,
-script `sync-truyen.mjs`, trang chủ, trang truyện, trang đọc chương + lưu tiến độ đọc). Task 9
-(đăng ký/đăng nhập) đã viết code, đang chờ user tự test thủ công. Còn lại: Task 10 (dark mode),
-Task 11 (deploy). Xem `NEXT_SESSION.md` để biết bước tiếp theo cụ thể.
+**v1**: Task 1-8 xong + kiểm chứng thật. Task 9 (đăng ký/đăng nhập) đã viết code, đang chờ user tự
+test thủ công. Task 10 (dark mode), Task 11 (deploy) chưa làm — xem
+`docs/superpowers/plans/2026-09-08-website-truyen-v1.md`.
+
+**Đợt A** (ảnh bìa, tác giả, thể loại, trang chủ/trang truyện nâng cấp — xem spec
+`docs/superpowers/specs/2026-09-09-dot-a-metadata-truyen-design.md`, plan
+`docs/superpowers/plans/2026-09-09-dot-a-metadata-truyen.md`): **đã xong cả 7 Task + kiểm chứng
+thật qua browser + dữ liệu Supabase thật.** `sync-truyen.mjs` giờ tự đọc `thong-tin/thong-tin.md` +
+`anh-bia.jpg` bên `D:\translate truyen` mỗi lần "check", không cần nhập tay mô tả nữa.
+
+**Đợt B** (lượt xem, đánh giá sao, "Top thịnh hành", sidebar "Đọc tiếp") — chưa bàn thiết kế, xem
+mục "Ngoài phạm vi" trong spec Đợt A.
+
+Xem `NEXT_SESSION.md` để biết bước tiếp theo cụ thể.
 
 ## Quy tắc an toàn khi test
 Claude KHÔNG tự bấm submit form đăng ký/đăng nhập thật trên Supabase Auth của user (dù chỉ để
