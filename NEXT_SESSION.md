@@ -1,5 +1,22 @@
 # NEXT_SESSION.md
 
+## Đợt B (Phần 1 — Lượt xem): xong Task 1-6 + kiểm chứng thật 4/5 kịch bản
+
+Spec `docs/superpowers/specs/2026-09-10-dot-b-luot-xem-design.md` + plan
+`docs/superpowers/plans/2026-09-10-dot-b-luot-xem.md` (7 task) đã hoàn thành qua brainstorming →
+writing-plans → giao Antigravity thực thi (Claude duyệt, bắt lỗi lệch spec 1 lần — Antigravity ban
+đầu làm sai cơ chế dedup thành "30 phút" thay vì "1 lần mãi mãi", đã yêu cầu sửa lại đúng).
+
+- [x] Task 1-6: DB schema (`truyen.luot_xem`, `chuong.luot_xem`, bảng `luot_xem_da_doc`, RPC
+      `ghi_luot_xem`), middleware cookie `khach_id`, ghi RPC ở trang đọc chương, hiển thị UI thẻ
+      truyện + trang truyện. User đã tự chạy SQL migration qua Supabase Dashboard.
+- [x] Task 7 — 4/5 kịch bản đã verify thật qua browser + Supabase (truyện "Tà Tu Hảo A..."): khách
+      đọc chương lần đầu tăng đúng 1 (cả cấp chương lẫn truyện), refresh không tăng, đọc chương
+      khác tăng tiếp, UI hiển thị đúng số.
+- [ ] Kịch bản 4 (visitor_key = `nguoidung:<user_id>` khi đăng nhập) — **cần bạn tự làm**: đăng nhập
+      thật rồi đọc 1 chương mới, kiểm tra bảng `luot_xem_da_doc` trên Supabase Dashboard có dòng
+      `visitor_key` bắt đầu bằng `nguoidung:` không (Claude không tự đăng nhập tài khoản thật).
+
 ## Đợt A: xong hoàn toàn
 
 Đã hoàn thành + kiểm chứng thật (test/browser + dữ liệu Supabase thật) toàn bộ 7 Task của
