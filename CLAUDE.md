@@ -35,8 +35,8 @@ tra 1 file) Claude tự làm luôn — xem ngoại lệ trong chính skill đó.
 - **Hoãn lại, bàn sau:** mục trả phí mua chương; audio trong trang đọc.
 
 ## Trạng thái hiện tại
-**v1**: Task 1-8 xong + kiểm chứng thật. Task 9 (đăng ký/đăng nhập) đã viết code, đang chờ user tự
-test thủ công. Task 10 (dark mode), Task 11 (deploy) chưa làm — xem
+**v1**: Task 1-9 xong + kiểm chứng thật (Task 9 đăng ký/đăng nhập đã nâng cấp vượt phạm vi gốc, xem
+mục riêng bên dưới). Task 10 (dark mode), Task 11 (deploy) chưa làm — xem
 `docs/superpowers/plans/2026-09-08-website-truyen-v1.md`.
 
 **Đợt A** (ảnh bìa, tác giả, thể loại, trang chủ/trang truyện nâng cấp — xem spec
@@ -45,8 +45,15 @@ test thủ công. Task 10 (dark mode), Task 11 (deploy) chưa làm — xem
 thật qua browser + dữ liệu Supabase thật.** `sync-truyen.mjs` giờ tự đọc `thong-tin/thong-tin.md` +
 `anh-bia.jpg` bên `D:\translate truyen` mỗi lần "check", không cần nhập tay mô tả nữa.
 
-**Đợt B** (lượt xem, đánh giá sao, "Top thịnh hành", sidebar "Đọc tiếp") — chưa bàn thiết kế, xem
-mục "Ngoài phạm vi" trong spec Đợt A.
+**Đợt B — Phần 1 (lượt xem)**: đã xong Task 1-6 + kiểm chứng thật 4/5 kịch bản — xem spec
+`docs/superpowers/specs/2026-09-10-dot-b-luot-xem-design.md`. Phần còn lại (đánh giá sao, "Top
+thịnh hành", sidebar "Đọc tiếp") chưa bàn thiết kế.
+
+**Đăng ký/đăng nhập nâng cấp** (Task 9 v1, mở rộng vượt phạm vi gốc — xem spec
+`docs/superpowers/specs/2026-09-10-dang-nhap-dang-ky-google-design.md`): **đã xong hoàn toàn**, user
+đã tự test đủ 7 kịch bản qua browser thật. Thêm xác nhận email thật, đăng nhập Google OAuth, bảng hồ
+sơ `public.nguoi_dung` riêng (không dùng `user_metadata`) làm nền tảng cho tính năng nạp tiền sau
+này.
 
 Xem `NEXT_SESSION.md` để biết bước tiếp theo cụ thể.
 

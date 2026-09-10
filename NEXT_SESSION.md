@@ -1,5 +1,27 @@
 # NEXT_SESSION.md
 
+## Task 9 v1 (đăng ký/đăng nhập): xong hoàn toàn, nâng cấp vượt phạm vi v1 gốc
+
+Không chỉ hoàn thành Task 9 v1 cũ (email/mật khẩu đơn giản) mà đã nâng cấp hẳn qua brainstorming →
+spec `docs/superpowers/specs/2026-09-10-dang-nhap-dang-ky-google-design.md` → plan
+`docs/superpowers/plans/2026-09-10-dang-nhap-dang-ky-google.md` (7 task): thêm xác nhận email thật
+(Supabase Auth "Confirm email"), đăng nhập Google OAuth, bảng hồ sơ riêng `public.nguoi_dung` (theo
+Profile Pattern chuẩn của Supabase, KHÔNG dùng `user_metadata` — quyết định có chủ đích để làm nền
+tảng chắc chắn cho tính năng nạp tiền/mua chương sau này).
+
+- [x] Task 1-6 code xong, build sạch (`npm run build`), test 25/25 pass.
+- [x] Task 7 — user đã tự test đủ 7 kịch bản qua browser thật, xác nhận "hoạt động ổn" (đăng ký,
+      chặn đăng nhập khi chưa xác nhận email, bấm link xác nhận, đăng nhập lại, Google OAuth, báo
+      lỗi sai mật khẩu, báo lỗi trùng email).
+- [x] Dọn git hygiene: phát hiện `app/layout.tsx` (gắn `<Header/>`) và `components/NutDangXuat.tsx`
+      là phần việc cũ của Task 9 đã code/test xong từ trước nhưng CHƯA TỪNG được commit (dù
+      `Header.tsx` đã commit từ lâu import `NutDangXuat` — repo trước đó sẽ lỗi build nếu clone
+      mới). Đã commit bổ sung.
+- Lỗi phát sinh khi test (không phải lỗi code): Hydration Mismatch ở `app/layout.tsx` do cache
+  Turbopack cũ trong lúc dev server chạy lâu — fix bằng xoá thư mục `.next` + restart dev server
+  sạch. Nếu gặp lại hiện tượng tương tự (giao diện lỗi lạ không rõ nguyên nhân sau khi sửa nhiều
+  file liên tiếp), thử cách này trước khi nghi ngờ code.
+
 ## Đợt B (Phần 1 — Lượt xem): xong Task 1-6 + kiểm chứng thật 4/5 kịch bản
 
 Spec `docs/superpowers/specs/2026-09-10-dot-b-luot-xem-design.md` + plan
@@ -43,11 +65,12 @@ này co lại theo nội dung thay vì full width) — sửa bằng cách thêm 
 
 ## Bước tiếp theo — chọn 1 trong các hướng sau, hỏi user trước khi làm
 
-1. **Quay lại v1 còn dở**: Task 9 (chờ user tự test đăng ký/đăng nhập/đăng xuất — xem 5 bước đã đưa
-   trước đây), Task 10 (dark mode), Task 11 (deploy Vercel).
-2. **Bàn thiết kế Đợt B** (lượt xem, đánh giá sao, "Top thịnh hành", sidebar "Đọc tiếp") nếu user
-   muốn tiếp tục nâng cấp tính năng ngay — dùng skill `brainstorming` trước khi code, giống quy
-   trình đã làm với Đợt A.
+1. **Quay lại v1 còn dở**: Task 10 (dark mode), Task 11 (deploy Vercel). Task 9 đã xong hoàn toàn.
+2. **Việc nhỏ còn sót của Đợt B lượt xem**: kịch bản 4 (verify `visitor_key = nguoidung:<user_id>`
+   khi đăng nhập đọc chương) — giờ đã có tài khoản thật đăng nhập được (nhờ Task 9 vừa xong), có thể
+   nhờ user tiện thể đọc 1 chương lúc đang đăng nhập rồi kiểm tra bảng `luot_xem_da_doc`.
+3. **Bàn thiết kế Đợt B phần còn lại** (đánh giá sao, "Top thịnh hành", sidebar "Đọc tiếp") — dùng
+   skill `brainstorming` trước khi code, giống quy trình đã làm với Đợt A/lượt xem/đăng nhập.
 
 ## Lưu ý quan trọng
 - `.env.local` đã điền đủ 4 biến (kể cả `SUPABASE_SERVICE_ROLE_KEY`) — không hỏi lại, không in
