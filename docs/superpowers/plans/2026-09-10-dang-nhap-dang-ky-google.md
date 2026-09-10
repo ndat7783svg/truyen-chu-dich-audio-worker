@@ -706,7 +706,9 @@ export default async function Header() {
 - Consumes: Bộ mã nguồn và test suite
 - Produces: Xác nhận build/test xanh và kết quả kiểm thử thực tế từ người dùng
 
-- [ ] **Bước 1: Chạy toàn bộ test tự động và kiểm tra build Next.js**
+- [x] **Bước 1: Chạy toàn bộ test tự động và kiểm tra build Next.js** — đã chạy thật: 25/25 test
+      pass, `npm run build` pass (sau khi fix thêm 4 lỗi TS2352 tồn đọng từ Đợt B trước đó, không
+      thuộc phạm vi task này nhưng chặn build nên đã sửa luôn).
 
 Chạy lệnh kiểm thử tự động:
 ```bash
@@ -720,7 +722,10 @@ npm run build
 ```
 Đảm bảo bản build Next.js thành công không có lỗi type hoặc Suspense boundary.
 
-- [ ] **Bước 2: Hướng dẫn người dùng tự thực hiện 7 kịch bản kiểm thử thủ công**
+- [x] **Bước 2: Hướng dẫn người dùng tự thực hiện 7 kịch bản kiểm thử thủ công** — user đã tự test
+      cả 7 kịch bản, xác nhận "hoạt động ổn" (bao gồm cả nhánh Google OAuth). Có gặp 1 lỗi Hydration
+      Mismatch ở `app/layout.tsx` trong lúc test do cache Turbopack cũ — đã sửa bằng cách xoá `.next`
+      và restart dev server sạch, không phải lỗi code.
 
 > **Lưu ý quan trọng:** Theo quy tắc an toàn của dự án, Claude/Antigravity **KHÔNG** tự động submit form đăng ký/đăng nhập thật trên trình duyệt. Người dùng tự mở trình duyệt và thực hiện theo 7 kịch bản sau:
 
