@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { taoSupabaseServerClient } from '@/lib/supabase/server';
+import { dinhDangSoRutGon } from '@/lib/utils/format';
 
 type HangTruyen = {
   id: string;
@@ -10,6 +11,7 @@ type HangTruyen = {
   anh_bia: string | null;
   trang_thai: string;
   tac_gia: string | null;
+  luot_xem: number;
   truyen_the_loai: { the_loai: { ten: string; slug: string } }[];
 };
 
@@ -24,7 +26,7 @@ export default async function TrangTruyen({
   const { data } = await supabase
     .from('truyen')
     .select(
-      'id, ten, mo_ta, anh_bia, trang_thai, tac_gia, truyen_the_loai(the_loai(ten, slug))'
+      'id, ten, mo_ta, anh_bia, trang_thai, tac_gia, luot_xem, truyen_the_loai(the_loai(ten, slug))'
     )
     .eq('slug', slug)
     .maybeSingle();
@@ -74,9 +76,32 @@ export default async function TrangTruyen({
         <div>
           <h1 className="text-2xl font-bold">{truyen.ten}</h1>
           {truyen.tac_gia && <p className="text-gray-600">Tác giả: {truyen.tac_gia}</p>}
-          <p className="text-sm text-gray-500">
-            {truyen.trang_thai === 'hoan-thanh' ? 'Hoàn thành' : 'Đang ra'}
-          </p>
+          <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
+            <span>{truyen.trang_thai === 'hoan-thanh' ? 'Hoàn thành' : 'Đang ra'}</span>
+            <span>•</span>
+            <span className="flex items-center gap-1">
+              <svg
+                className="w-4 h-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+              {dinhDangSoRutGon(truyen.luot_xem ?? 0)} lượt xem
+            </span>
+          </div>
           {truyen.truyen_the_loai.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
               {truyen.truyen_the_loai.map((n) => (

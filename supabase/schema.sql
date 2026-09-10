@@ -66,3 +66,45 @@ create policy "truyen_the_loai doc cong khai" on truyen_the_loai for select usin
 insert into storage.buckets (id, name, public)
 values ('anh-bia', 'anh-bia', true)
 on conflict (id) do nothing;
+
+-- Đợt B (2026-09-10): Lượt xem truyện & chương
+alter table truyen add column if not exists luot_xem integer not null default 0;
+alter table chuong add column if not exists luot_xem integer not null default 0;
+
+create table if not exists luot_xem_da_doc (
+  visitor_key text not null,
+  chuong_id uuid not null references chuong(id) on delete cascade,
+  tao_luc timestamptz not null default now(),
+  primary key (visitor_key, chuong_id)
+);
+
+alter table luot_xem_da_doc enable row level security;
+
+-- Hàm RPC ghi nhận lượt xem nguyên tử, chống trùng vĩnh viễn theo visitor_key + chuong_id
+create or replace function ghi_luot_xem(
+  p_visitor_key text,
+  p_chuong_id uuid,
+  p_truyen_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into luot_xem_da_doc (visitor_key, chuong_id)
+  values (p_visitor_key, p_chuong_id)
+  on conflict (visitor_key, chuong_id) do nothing;
+
+  -- Chỉ tăng số đếm nếu insert ở trên thực sự tạo ra dòng mới (chưa từng đọc chương này)
+  if found then
+    update chuong
+    set luot_xem = luot_xem + 1
+    where id = p_chuong_id;
+
+    update truyen
+    set luot_xem = luot_xem + 1
+    where id = p_truyen_id;
+  end if;
+end;
+$$;
