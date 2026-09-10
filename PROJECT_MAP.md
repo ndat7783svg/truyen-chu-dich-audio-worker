@@ -24,7 +24,9 @@ website truyện chữ AI/
 │   ├── truyen/[slug]/
 │   │   ├── page.tsx                 (trang truyện - ảnh bìa, tác giả, thể loại, mô tả, lượt xem, ds chương)
 │   │   └── chuong/[so]/
-│   │       ├── page.tsx             (trang đọc chương - ghi RPC ghi_luot_xem)
+│   │       ├── page.tsx             (trang đọc chương - fetch dữ liệu + ghi RPC ghi_luot_xem, render KhungDocChuong)
+│   │       ├── KhungDocChuong.tsx   (client - khung đọc, quản lý state cài đặt đọc + áp dụng màu nền/cỡ chữ/phông/giãn dòng)
+│   │       ├── PanelCaiDatDoc.tsx   (client - nút "Aa" + dropdown 4 mục cài đặt đọc)
 │   │       └── LuuTienDo.tsx        (client component ghi tien_do_doc khi mở trang)
 │   ├── the-loai/[slug]/page.tsx     (trang lọc truyện theo 1 thể loại)
 │   ├── dang-ky/page.tsx             (đăng ký: tên/email/mật khẩu/xác nhận + nút Google)
@@ -41,7 +43,8 @@ website truyện chữ AI/
 │   │   └── server.ts                (taoSupabaseServerClient - Server Component/Action)
 │   └── utils/
 │       ├── format.ts                (dinhDangSoRutGon - rút gọn số kiểu 12.5K/3.4M)
-│       └── dich-loi-supabase.ts     (dichLoiSupabase - dịch lỗi Supabase Auth sang tiếng Việt)
+│       ├── dich-loi-supabase.ts     (dichLoiSupabase - dịch lỗi Supabase Auth sang tiếng Việt)
+│       └── cai-dat-doc.ts           (đọc/ghi cài đặt đọc chương qua localStorage, chuẩn hóa dữ liệu, màu theo theme)
 ├── scripts/                         (chạy độc lập bằng node --env-file=.env.local)
 │   ├── slug.js                      (taoSlug - sinh slug từ tên có dấu)
 │   ├── parse-chuong.js              (parseChuong - đọc 1 file chuong-XXX.md)
@@ -75,6 +78,13 @@ website truyện chữ AI/
   redirect `/` (thành công) hoặc `/dang-nhap?loi=xac-nhan-that-bai` (thất bại).
 - Google OAuth Client ID/Secret đã cấu hình trên Google Cloud Console + Supabase Dashboard →
   Authentication → Providers → Google.
+
+## Cài đặt đọc (chỉ trong trang đọc chương)
+- Lưu ở `localStorage` key `caiDatDocTruyen` (không lưu theo tài khoản) — xem
+  `lib/utils/cai-dat-doc.ts`.
+- 4 mục: màu nền (Sáng/Vàng/Tối), cỡ chữ (16-32px), phông chữ (Hiện đại = mặc định site / Cổ điển
+  = Noto Serif), giãn dòng (1.5-2.5). Chi tiết xem
+  `docs/superpowers/specs/2026-09-10-cai-dat-doc-chuong-design.md`.
 
 ## Nguồn dữ liệu ngoài (`D:\translate truyen` — dự án này CHỈ ĐỌC, không sửa)
 - `danh-sach-truyen/[Tên truyện]/chuong/chuong-XXX.md` — chương đã dịch, dòng đầu

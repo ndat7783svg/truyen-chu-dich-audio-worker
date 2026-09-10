@@ -1,5 +1,25 @@
 # NEXT_SESSION.md
 
+## Cài đặt đọc trong trang chương: xong hoàn toàn + kiểm chứng thật
+
+Brainstorm → spec `docs/superpowers/specs/2026-09-10-cai-dat-doc-chuong-design.md` → plan
+`docs/superpowers/plans/2026-09-10-cai-dat-doc-chuong.md` (3 task) → giao Antigravity thực thi →
+Claude tự kiểm chứng qua browser thật + đọc lại code.
+
+- [x] Task 1: module thuần `lib/utils/cai-dat-doc.ts` (TDD, 8/8 test pass) — đọc/ghi
+      `localStorage` key `caiDatDocTruyen`, chuẩn hóa dữ liệu hỏng về mặc định.
+- [x] Task 2: `PanelCaiDatDoc.tsx` (nút "Aa" + dropdown 4 mục) + `KhungDocChuong.tsx` (quản lý
+      state + áp dụng style).
+- [x] Task 3: gán vào `page.tsx`, build sạch, `npx vitest run` 33/33 pass.
+- [x] Kiểm chứng thật qua browser (Claude tự làm): mở panel, đổi từng mục (màu nền Tối/Vàng, cỡ
+      chữ A+, phông Cổ điển) áp dụng đúng ngay; reload trang giữ nguyên cài đặt (đọc lại từ
+      `localStorage`); Header không bị ảnh hưởng; console không có lỗi JS.
+- Lưu ý phát sinh khi giao Antigravity: gọi `use_antigravity` với `mode: "plan"` (chỉ đọc) nhưng
+  agy vẫn tự thực thi thật luôn (tạo file, sửa `page.tsx`, chạy build/test) — không phải lỗi, chỉ
+  là hành vi thực tế của agy khác mô tả "read-only" của mode này. Không có commit git nào bị agy tự
+  tạo. Lần sau cứ coi như `mode: "plan"` cũng có thể ghi file thật, kiểm tra `git status` ngay sau
+  khi gọi để biết chắc.
+
 ## Task 9 v1 (đăng ký/đăng nhập): xong hoàn toàn, nâng cấp vượt phạm vi v1 gốc
 
 Không chỉ hoàn thành Task 9 v1 cũ (email/mật khẩu đơn giản) mà đã nâng cấp hẳn qua brainstorming →
