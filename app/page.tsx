@@ -28,7 +28,7 @@ export default async function TrangChu({
     query = query.ilike('ten', `%${q}%`);
   }
   const { data } = await query;
-  const dsTruyen = (data ?? []) as HangTruyen[];
+  const dsTruyen = (data ?? []) as unknown as HangTruyen[];
 
   const dsThe: TruyenThe[] = dsTruyen.map((t) => ({
     slug: t.slug,

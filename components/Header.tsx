@@ -8,6 +8,18 @@ export default async function Header() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  let tenNguoiDung: string | null = null;
+  if (user) {
+    const { data: hoSo } = await supabase
+      .from('nguoi_dung')
+      .select('ten_nguoi_dung')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    tenNguoiDung = hoSo?.ten_nguoi_dung ?? null;
+  }
+
   const { data: dsTheLoai } = await supabase
     .from('the_loai')
     .select('ten, slug')
@@ -22,7 +34,12 @@ export default async function Header() {
         <DropdownTheLoai dsTheLoai={dsTheLoai ?? []} />
         <div className="flex items-center gap-3">
           {user ? (
-            <NutDangXuat />
+            <>
+              <span className="text-sm text-gray-700">
+                Xin chào{tenNguoiDung ? `, ${tenNguoiDung}` : ''}
+              </span>
+              <NutDangXuat />
+            </>
           ) : (
             <>
               <Link href="/dang-nhap" className="hover:underline">

@@ -30,7 +30,7 @@ export default async function TrangTruyen({
     )
     .eq('slug', slug)
     .maybeSingle();
-  const truyen = data as HangTruyen | null;
+  const truyen = data as unknown as HangTruyen | null;
 
   if (!truyen) notFound();
 
@@ -52,7 +52,7 @@ export default async function TrangTruyen({
       .eq('user_id', user.id)
       .eq('truyen_id', truyen.id)
       .maybeSingle();
-    chuongDangDoc = (tienDo?.chuong as { so_chuong: number } | null) ?? null;
+    chuongDangDoc = (tienDo?.chuong as unknown as { so_chuong: number } | null) ?? null;
   }
 
   return (

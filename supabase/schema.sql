@@ -108,3 +108,46 @@ begin
   end if;
 end;
 $$;
+
+-- Đợt C (2026-09-10): Hồ sơ người dùng & trigger tự động tạo hồ sơ
+create table if not exists public.nguoi_dung (
+  id uuid primary key references auth.users(id) on delete cascade,
+  ten_nguoi_dung text,
+  tao_luc timestamptz not null default now()
+);
+
+alter table public.nguoi_dung enable row level security;
+
+drop policy if exists "nguoi dung xem ho so cua chinh minh" on public.nguoi_dung;
+create policy "nguoi dung xem ho so cua chinh minh"
+  on public.nguoi_dung for select using (auth.uid() = id);
+
+drop policy if exists "nguoi dung sua ho so cua chinh minh" on public.nguoi_dung;
+create policy "nguoi dung sua ho so cua chinh minh"
+  on public.nguoi_dung for update using (auth.uid() = id);
+
+create or replace function public.tao_ho_so_nguoi_dung()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.nguoi_dung (id, ten_nguoi_dung)
+  values (
+    new.id,
+    coalesce(
+      new.raw_user_meta_data->>'ten_nguoi_dung',
+      new.raw_user_meta_data->>'full_name',
+      new.raw_user_meta_data->>'name'
+    )
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists khi_co_tai_khoan_moi on auth.users;
+create trigger khi_co_tai_khoan_moi
+  after insert on auth.users
+  for each row execute function public.tao_ho_so_nguoi_dung();
+

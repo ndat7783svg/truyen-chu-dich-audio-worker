@@ -34,7 +34,7 @@ export default async function TrangTheLoai({
     .select('truyen(slug, ten, anh_bia, trang_thai, tac_gia, luot_xem)')
     .eq('the_loai_id', theLoai.id);
 
-  const dsLienKet = (data ?? []) as HangLienKet[];
+  const dsLienKet = (data ?? []) as unknown as HangLienKet[];
   const dsThe: TruyenThe[] = dsLienKet.map((lk) => ({
     slug: lk.truyen.slug,
     ten: lk.truyen.ten,
