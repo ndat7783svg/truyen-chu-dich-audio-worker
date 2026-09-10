@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { taoSupabaseServerClient } from '@/lib/supabase/server';
 import LuuTienDo from './LuuTienDo';
+import KhungDocChuong from './KhungDocChuong';
 
 export default async function TrangDocChuong({
   params,
@@ -73,33 +73,17 @@ export default async function TrangDocChuong({
   ]);
 
   return (
-    <main className="w-full max-w-2xl mx-auto p-4">
+    <>
       <LuuTienDo truyenId={truyen.id} chuongId={chuong.id} />
-      <p className="text-sm text-gray-500">
-        <Link href={`/truyen/${slug}`} className="hover:underline">
-          {truyen.ten}
-        </Link>
-      </p>
-      <h1 className="text-xl font-bold mt-1">
-        Chương {chuong.so_chuong}: {chuong.tieu_de}
-      </h1>
-      <article className="mt-4 whitespace-pre-line leading-relaxed">{chuong.noi_dung}</article>
-      <nav className="mt-6 flex justify-between">
-        {chuongTruoc ? (
-          <Link href={`/truyen/${slug}/chuong/${chuongTruoc.so_chuong}`} className="hover:underline">
-            ← Chương trước
-          </Link>
-        ) : (
-          <span />
-        )}
-        {chuongSau ? (
-          <Link href={`/truyen/${slug}/chuong/${chuongSau.so_chuong}`} className="hover:underline">
-            Chương sau →
-          </Link>
-        ) : (
-          <span />
-        )}
-      </nav>
-    </main>
+      <KhungDocChuong
+        tenTruyen={truyen.ten}
+        slugTruyen={slug}
+        soChuong={chuong.so_chuong}
+        tieuDe={chuong.tieu_de}
+        noiDung={chuong.noi_dung}
+        soChuongTruoc={chuongTruoc?.so_chuong}
+        soChuongSau={chuongSau?.so_chuong}
+      />
+    </>
   );
 }
