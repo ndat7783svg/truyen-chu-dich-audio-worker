@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   GIOI_HAN_CO_CHU,
   GIOI_HAN_GIAI_DONG,
@@ -17,6 +17,22 @@ export default function PanelCaiDatDoc({
   onDoiCaiDat: (caiDatMoi: CaiDatDoc) => void;
 }) {
   const [moPanel, setMoPanel] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!moPanel) return;
+
+    function xuLyClickNgoai(suKien: MouseEvent) {
+      if (panelRef.current && !panelRef.current.contains(suKien.target as Node)) {
+        setMoPanel(false);
+      }
+    }
+
+    document.addEventListener('mousedown', xuLyClickNgoai);
+    return () => {
+      document.removeEventListener('mousedown', xuLyClickNgoai);
+    };
+  }, [moPanel]);
 
   function doiMauNen(mauNen: MauNen) {
     onDoiCaiDat({ ...caiDat, mauNen });
@@ -36,7 +52,7 @@ export default function PanelCaiDatDoc({
   }
 
   return (
-    <div className="absolute top-4 right-4">
+    <div ref={panelRef} className="absolute top-4 right-4 z-20">
       <button
         type="button"
         onClick={() => setMoPanel((truoc) => !truoc)}
@@ -46,7 +62,7 @@ export default function PanelCaiDatDoc({
         Aa
       </button>
       {moPanel && (
-        <div className="absolute right-0 mt-2 w-64 rounded-lg border bg-white text-gray-900 p-4 shadow-lg space-y-4 z-10">
+        <div className="absolute right-0 mt-2 w-64 rounded-lg border bg-white text-gray-900 p-4 shadow-lg space-y-4 z-20">
           <div>
             <p className="text-xs font-semibold uppercase mb-2">Màu nền</p>
             <div className="flex gap-2">

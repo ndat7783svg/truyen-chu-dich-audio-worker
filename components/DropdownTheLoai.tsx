@@ -13,17 +13,21 @@ export default function DropdownTheLoai({
   if (dsTheLoai.length === 0) return null;
 
   return (
-    <div className="relative">
-      <button type="button" onClick={() => setMoRong((v) => !v)} className="hover:underline">
+    <div
+      className="relative"
+      onMouseEnter={() => setMoRong(true)}
+      onMouseLeave={() => setMoRong(false)}
+    >
+      <button type="button" className="hover:underline">
         Thể loại
       </button>
       {moRong && (
-        <ul className="absolute left-0 mt-1 w-48 rounded border bg-white shadow-md z-10 max-h-64 overflow-y-auto">
+        <ul className="absolute left-0 top-full w-48 rounded border border-border bg-surface shadow-md z-10 max-h-64 overflow-y-auto">
           {dsTheLoai.map((tl) => (
             <li key={tl.slug}>
               <Link
                 href={`/the-loai/${tl.slug}`}
-                className="block px-3 py-2 hover:bg-gray-100"
+                className="block px-3 py-2 hover:bg-background"
                 onClick={() => setMoRong(false)}
               >
                 {tl.ten}

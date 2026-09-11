@@ -394,6 +394,7 @@ git commit -m "feat: thanh dieu huong icon noi (Trang chu/Tai khoan/Tu truyen)"
 ```tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import Header from "@/components/Header";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
@@ -430,7 +431,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: SCRIPT_CHONG_FOUC }} />
+        <Script
+          id="chong-fouc-theme"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: SCRIPT_CHONG_FOUC }}
+        />
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <ThanhDieuHuong />

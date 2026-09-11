@@ -49,7 +49,7 @@ export default async function TrangChu({
           <TheTruyen key={truyen.slug} truyen={truyen} />
         ))}
       </div>
-      {dsThe.length === 0 && <p className="mt-4 text-gray-500">Không tìm thấy truyện nào.</p>}
+      {dsThe.length === 0 && <p className="mt-4 text-muted-foreground">Không tìm thấy truyện nào.</p>}
     </main>
   );
 }

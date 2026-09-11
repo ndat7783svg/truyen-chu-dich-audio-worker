@@ -17,10 +17,12 @@ website truyện chữ AI/
 ├── middleware.ts                    (refresh session Supabase Auth + cấp cookie khach_id mỗi request)
 ├── next.config.ts                   (cho phép next/image tải ảnh bìa từ Supabase Storage)
 ├── app/                             (Next.js App Router)
-│   ├── layout.tsx                   (root layout, gắn <Header/>)
+│   ├── layout.tsx                   (root layout, gắn <ThanhDieuHuong/>, <Header/>, script chống FOUC)
 │   ├── page.tsx                     (trang chủ - lưới thẻ truyện + tìm kiếm)
-│   ├── globals.css
+│   ├── globals.css                  (3 theme CSS Sáng/Giấy/Tối + mapping Tailwind v4 @theme inline)
 │   ├── auth/callback/route.ts       (route PKCE dùng chung cho Google OAuth + link xác nhận email)
+│   ├── tai-khoan/page.tsx           (trang tài khoản - hồ sơ, cấp độ, đổi theme, đăng xuất)
+│   ├── tu-truyen/page.tsx           (trang tủ truyện tạm - placeholder sắp ra mắt)
 │   ├── truyen/[slug]/
 │   │   ├── page.tsx                 (trang truyện - ảnh bìa, tác giả, thể loại, mô tả, lượt xem, ds chương)
 │   │   └── chuong/[so]/
@@ -32,9 +34,11 @@ website truyện chữ AI/
 │   ├── dang-ky/page.tsx             (đăng ký: tên/email/mật khẩu/xác nhận + nút Google)
 │   └── dang-nhap/page.tsx           (đăng nhập: email/mật khẩu + nút Google)
 ├── components/
-│   ├── Header.tsx                   (logo + dropdown Thể loại + "Xin chào, {tên}"/đăng xuất hoặc đăng nhập/đăng ký)
+│   ├── ThanhDieuHuong.tsx           (client component - thanh icon nổi bên trái: Trang chủ/Tài khoản/Tủ truyện)
+│   ├── ChonTheme.tsx                (client component - nút chuyển đổi 3 theme Sáng/Giấy/Tối)
+│   ├── Header.tsx                   (logo + dropdown Thể loại)
 │   ├── DropdownTheLoai.tsx          (client component - menu thể loại trong Header)
-│   ├── NutDangXuat.tsx              (client component - nút đăng xuất)
+│   ├── NutDangXuat.tsx              (client component - nút đăng xuất, dùng trong trang Tài khoản)
 │   ├── SearchBox.tsx                (ô tìm kiếm trang chủ)
 │   └── TheTruyen.tsx                (thẻ truyện dùng chung - trang chủ + trang thể loại, hiện lượt xem)
 ├── lib/
@@ -42,6 +46,7 @@ website truyện chữ AI/
 │   │   ├── client.ts                (taoSupabaseClient - Client Component)
 │   │   └── server.ts                (taoSupabaseServerClient - Server Component/Action)
 │   └── utils/
+│       ├── theme.ts                 (ThemeToanSite - đọc/ghi theme toàn site qua localStorage)
 │       ├── format.ts                (dinhDangSoRutGon - rút gọn số kiểu 12.5K/3.4M)
 │       ├── dich-loi-supabase.ts     (dichLoiSupabase - dịch lỗi Supabase Auth sang tiếng Việt)
 │       └── cai-dat-doc.ts           (đọc/ghi cài đặt đọc chương qua localStorage, chuẩn hóa dữ liệu, màu theo theme)

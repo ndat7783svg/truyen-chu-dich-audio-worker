@@ -58,7 +58,7 @@ export default async function TrangTruyen({
   return (
     <main className="w-full max-w-3xl mx-auto p-4">
       <div className="flex gap-4">
-        <div className="relative w-32 aspect-[2/3] shrink-0 bg-gray-200 rounded overflow-hidden">
+        <div className="relative w-32 aspect-[2/3] shrink-0 bg-surface rounded overflow-hidden">
           {truyen.anh_bia ? (
             <Image
               src={truyen.anh_bia}
@@ -68,20 +68,20 @@ export default async function TrangTruyen({
               className="object-cover"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-gray-400 text-xs text-center px-1">
+            <div className="flex h-full items-center justify-center text-muted-foreground text-xs text-center px-1">
               Chưa có ảnh bìa
             </div>
           )}
         </div>
         <div>
           <h1 className="text-2xl font-bold">{truyen.ten}</h1>
-          {truyen.tac_gia && <p className="text-gray-600">Tác giả: {truyen.tac_gia}</p>}
-          <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
+          {truyen.tac_gia && <p className="text-muted-foreground">Tác giả: {truyen.tac_gia}</p>}
+          <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
             <span>{truyen.trang_thai === 'hoan-thanh' ? 'Hoàn thành' : 'Đang ra'}</span>
             <span>•</span>
             <span className="flex items-center gap-1">
               <svg
-                className="w-4 h-4 text-gray-400"
+                className="w-4 h-4 text-muted-foreground"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -117,7 +117,7 @@ export default async function TrangTruyen({
           )}
         </div>
       </div>
-      {truyen.mo_ta && <p className="mt-4 text-gray-600 whitespace-pre-line">{truyen.mo_ta}</p>}
+      {truyen.mo_ta && <p className="mt-4 text-muted-foreground whitespace-pre-line">{truyen.mo_ta}</p>}
       {chuongDangDoc && (
         <Link
           href={`/truyen/${slug}/chuong/${chuongDangDoc.so_chuong}`}

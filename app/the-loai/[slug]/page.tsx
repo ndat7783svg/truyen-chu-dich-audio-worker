@@ -54,7 +54,7 @@ export default async function TrangTheLoai({
         ))}
       </div>
       {dsThe.length === 0 && (
-        <p className="text-gray-500">Chưa có truyện nào thuộc thể loại này.</p>
+        <p className="text-muted-foreground">Chưa có truyện nào thuộc thể loại này.</p>
       )}
     </main>
   );

@@ -19,9 +19,9 @@ export default function TheTruyen({ truyen }: { truyen: TruyenThe }) {
   return (
     <Link
       href={`/truyen/${truyen.slug}`}
-      className="block rounded-lg border overflow-hidden hover:shadow-md transition-shadow"
+      className="block rounded-lg border border-border overflow-hidden hover:shadow-md transition-shadow"
     >
-      <div className="relative aspect-[2/3] bg-gray-200">
+      <div className="relative aspect-[2/3] bg-surface">
         {truyen.anhBia ? (
           <Image
             src={truyen.anhBia}
@@ -31,7 +31,7 @@ export default function TheTruyen({ truyen }: { truyen: TruyenThe }) {
             className="object-cover"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-gray-400 text-sm px-2 text-center">
+          <div className="flex h-full items-center justify-center text-muted-foreground text-sm px-2 text-center">
             Chưa có ảnh bìa
           </div>
         )}
@@ -41,13 +41,13 @@ export default function TheTruyen({ truyen }: { truyen: TruyenThe }) {
       </div>
       <div className="p-2">
         <h3 className="font-medium line-clamp-2">{truyen.ten}</h3>
-        <div className="flex items-center justify-between text-sm text-gray-500 mt-1">
+        <div className="flex items-center justify-between text-sm text-muted-foreground mt-1">
           {truyen.tacGia ? (
             <p className="truncate flex-1 pr-1">{truyen.tacGia}</p>
           ) : (
             <span />
           )}
-          <span className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
+          <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
             <svg
               className="w-3.5 h-3.5"
               fill="none"
@@ -80,7 +80,7 @@ export default function TheTruyen({ truyen }: { truyen: TruyenThe }) {
                 {tl.ten}
               </span>
             ))}
-            {soDu > 0 && <span className="text-xs px-1.5 py-0.5 text-gray-500">+{soDu}</span>}
+            {soDu > 0 && <span className="text-xs px-1.5 py-0.5 text-muted-foreground">+{soDu}</span>}
           </div>
         )}
       </div>
