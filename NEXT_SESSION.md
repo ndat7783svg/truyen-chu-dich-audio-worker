@@ -1,5 +1,39 @@
 # NEXT_SESSION.md
 
+## Đợt C — Thanh điều hướng + Trang Tài khoản + Theme toàn site: xong hoàn toàn + kiểm chứng thật
+
+Brainstorm → spec `docs/superpowers/specs/2026-09-11-thanh-dieu-huong-tai-khoan-design.md` → plan
+`docs/superpowers/plans/2026-09-11-thanh-dieu-huong-tai-khoan.md` (11 Task) → giao Antigravity thực
+thi 10 Task đầu trong 1 lượt → Claude tự kiểm chứng qua browser thật + đọc lại code.
+
+- [x] Thanh điều hướng icon nổi bên trái (`components/ThanhDieuHuong.tsx`): 3 icon Trang
+      chủ/Tài khoản/Tủ truyện, tooltip khi hover, tô đậm đúng trang đang mở.
+- [x] Trang `/tai-khoan`: hồ sơ (tên/email/"Cấp độ: Thành viên" tĩnh) khi đã đăng nhập, nút Đăng
+      nhập/Đăng ký khi chưa đăng nhập, mục Giao diện (`ChonTheme.tsx`), mục Cài đặt placeholder
+      "Sắp ra mắt".
+- [x] Trang `/tu-truyen`: tạm thời chỉ có "Sắp ra mắt, đang phát triển" — nội dung thật (3 tab Đã
+      đọc/Đã lưu/Đã thêm) để bàn thiết kế riêng đợt sau.
+- [x] Theme toàn site 3 chế độ Sáng/Giấy/Tối (`lib/utils/theme.ts`, biến CSS trong
+      `app/globals.css`), lưu `localStorage`, áp dụng ngay không cần reload, chống FOUC bằng
+      `next/script` `strategy="beforeInteractive"` — **hoàn tất dứt điểm Task 10 dark mode** còn
+      treo từ v1. Độc lập hoàn toàn với cài đặt đọc riêng của trang chương (không đụng
+      `cai-dat-doc.ts`/`KhungDocChuong.tsx`/`PanelCaiDatDoc.tsx`).
+- [x] `Header.tsx` bỏ hẳn đăng nhập/đăng ký/"Xin chào {tên}"/đăng xuất — chuyển hết vai trò này
+      sang trang Tài khoản.
+- [x] Kiểm chứng thật qua browser: đổi theme Sáng→Tối áp dụng ngay toàn site (trang chủ, trang
+      truyện, trang thể loại, thanh điều hướng); reload giữ nguyên theme không nhấp nháy; trang đọc
+      chương vẫn giữ nền riêng không bị theme toàn site chi phối; Header không còn đăng nhập/đăng
+      xuất; console sạch lỗi (tab mới hoàn toàn, không tính nhiễu HMR lúc đang sửa code). Build +
+      38/38 test đều pass.
+- Lỗi phát sinh đã tự sửa: `<script dangerouslySetInnerHTML>` thô trong `<head>` bị React log lỗi
+  "Encountered a script tag..." — đổi sang `next/script` (`strategy="beforeInteractive"`, built-in
+  Next.js, không phải dependency mới) là hết. Ban đầu tưởng lỗi vẫn còn khi test lại trên tab cũ,
+  hoá ra chỉ là nhiễu do HMR lúc đang sửa file — mở tab trình duyệt mới hoàn toàn mới xác nhận được
+  sạch thật.
+- Đã gộp commit luôn 2 fix nhỏ còn treo từ trước (chưa commit): nút "Aa" trang đọc chương (bug nửa
+  trên không bấm được do `<p opacity-70>` tạo stacking context đè lên — fix bằng `z-20` + thêm
+  click-outside-to-close) và dropdown "Thể loại" đổi từ click sang hover.
+
 ## Cài đặt đọc trong trang chương: xong hoàn toàn + kiểm chứng thật
 
 Brainstorm → spec `docs/superpowers/specs/2026-09-10-cai-dat-doc-chuong-design.md` → plan
@@ -85,11 +119,14 @@ này co lại theo nội dung thay vì full width) — sửa bằng cách thêm 
 
 ## Bước tiếp theo — chọn 1 trong các hướng sau, hỏi user trước khi làm
 
-1. **Quay lại v1 còn dở**: Task 10 (dark mode), Task 11 (deploy Vercel). Task 9 đã xong hoàn toàn.
-2. **Việc nhỏ còn sót của Đợt B lượt xem**: kịch bản 4 (verify `visitor_key = nguoidung:<user_id>`
-   khi đăng nhập đọc chương) — giờ đã có tài khoản thật đăng nhập được (nhờ Task 9 vừa xong), có thể
-   nhờ user tiện thể đọc 1 chương lúc đang đăng nhập rồi kiểm tra bảng `luot_xem_da_doc`.
-3. **Bàn thiết kế Đợt B phần còn lại** (đánh giá sao, "Top thịnh hành", sidebar "Đọc tiếp") — dùng
+1. **Quay lại v1 còn dở**: Task 11 (deploy Vercel) — Task 10 dark mode đã xong (gộp vào Đợt C).
+2. **Nội dung thật của trang Tủ truyện** (3 tab Đã đọc/Đã lưu/Đã thêm) — cần bàn thiết kế riêng vì
+   "Đã lưu" cần thêm tính năng lưu truyện (bookmark) chưa có; "Đã đọc" có thể tận dụng
+   `tien_do_doc` sẵn có.
+3. **Việc nhỏ còn sót của Đợt B lượt xem**: kịch bản 4 (verify `visitor_key = nguoidung:<user_id>`
+   khi đăng nhập đọc chương) — giờ đã có tài khoản thật đăng nhập được, có thể nhờ user tiện thể đọc
+   1 chương lúc đang đăng nhập rồi kiểm tra bảng `luot_xem_da_doc`.
+4. **Bàn thiết kế Đợt B phần còn lại** (đánh giá sao, "Top thịnh hành", sidebar "Đọc tiếp") — dùng
    skill `brainstorming` trước khi code, giống quy trình đã làm với Đợt A/lượt xem/đăng nhập.
 
 ## Lưu ý quan trọng

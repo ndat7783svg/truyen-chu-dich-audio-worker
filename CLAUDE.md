@@ -35,9 +35,9 @@ tra 1 file) Claude tự làm luôn — xem ngoại lệ trong chính skill đó.
 - **Hoãn lại, bàn sau:** mục trả phí mua chương; audio trong trang đọc.
 
 ## Trạng thái hiện tại
-**v1**: Task 1-9 xong + kiểm chứng thật (Task 9 đăng ký/đăng nhập đã nâng cấp vượt phạm vi gốc, xem
-mục riêng bên dưới). Task 10 (dark mode), Task 11 (deploy) chưa làm — xem
-`docs/superpowers/plans/2026-09-08-website-truyen-v1.md`.
+**v1**: Task 1-10 xong + kiểm chứng thật (Task 9 đăng ký/đăng nhập đã nâng cấp vượt phạm vi gốc,
+Task 10 dark mode gộp vào Đợt C bên dưới — xem 2 mục riêng). Chỉ còn Task 11 (deploy Vercel) chưa
+làm — xem `docs/superpowers/plans/2026-09-08-website-truyen-v1.md`.
 
 **Đợt A** (ảnh bìa, tác giả, thể loại, trang chủ/trang truyện nâng cấp — xem spec
 `docs/superpowers/specs/2026-09-09-dot-a-metadata-truyen-design.md`, plan
@@ -54,6 +54,14 @@ thịnh hành", sidebar "Đọc tiếp") chưa bàn thiết kế.
 đã tự test đủ 7 kịch bản qua browser thật. Thêm xác nhận email thật, đăng nhập Google OAuth, bảng hồ
 sơ `public.nguoi_dung` riêng (không dùng `user_metadata`) làm nền tảng cho tính năng nạp tiền sau
 này.
+
+**Đợt C** (thanh điều hướng + trang Tài khoản + theme toàn site — xem spec
+`docs/superpowers/specs/2026-09-11-thanh-dieu-huong-tai-khoan-design.md`, plan
+`docs/superpowers/plans/2026-09-11-thanh-dieu-huong-tai-khoan.md`): **đã xong hoàn toàn + kiểm
+chứng thật qua browser.** Thanh điều hướng icon nổi (Trang chủ/Tài khoản/Tủ truyện), trang Tài
+khoản (hồ sơ + đổi theme + đăng xuất), trang Tủ truyện tạm "Sắp ra mắt", theme toàn site 3 chế độ
+Sáng/Giấy/Tối (hoàn tất dứt điểm Task 10 dark mode v1). Header bỏ đăng nhập/đăng xuất, chuyển hết
+sang trang Tài khoản.
 
 Xem `NEXT_SESSION.md` để biết bước tiếp theo cụ thể.
 
