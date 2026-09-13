@@ -104,23 +104,26 @@ export default function KhungDocChuong({
       >
         {noiDung}
       </article>
-      <nav className="mt-6 flex justify-between">
+      <nav className="mt-6 flex justify-between gap-3">
         {soChuongTruoc ? (
           <Link
             href={`/truyen/${slugTruyen}/chuong/${soChuongTruoc}`}
-            className="hover:underline"
+            className="flex-1 min-h-11 flex items-center justify-center rounded-lg border border-border font-medium hover:bg-black/5"
           >
             ← Chương trước
           </Link>
         ) : (
-          <span />
+          <span className="flex-1" />
         )}
         {soChuongSau ? (
-          <Link href={`/truyen/${slugTruyen}/chuong/${soChuongSau}`} className="hover:underline">
+          <Link
+            href={`/truyen/${slugTruyen}/chuong/${soChuongSau}`}
+            className="flex-1 min-h-11 flex items-center justify-center rounded-lg border border-border font-medium hover:bg-black/5"
+          >
             Chương sau →
           </Link>
         ) : (
-          <span />
+          <span className="flex-1" />
         )}
       </nav>
     </main>
