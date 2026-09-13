@@ -10,6 +10,7 @@ type HangLienKet = {
     trang_thai: string;
     tac_gia: string | null;
     luot_xem: number;
+    chuong: { count: number }[];
   };
 };
 
@@ -31,7 +32,7 @@ export default async function TrangTheLoai({
 
   const { data } = await supabase
     .from('truyen_the_loai')
-    .select('truyen(slug, ten, anh_bia, trang_thai, tac_gia, luot_xem)')
+    .select('truyen(slug, ten, anh_bia, trang_thai, tac_gia, luot_xem, chuong(count))')
     .eq('the_loai_id', theLoai.id);
 
   const dsLienKet = (data ?? []) as unknown as HangLienKet[];
@@ -43,6 +44,7 @@ export default async function TrangTheLoai({
     trangThai: lk.truyen.trang_thai,
     luotXem: lk.truyen.luot_xem ?? 0,
     theLoai: [],
+    soChuong: lk.truyen.chuong?.[0]?.count ?? 0,
   }));
 
   return (

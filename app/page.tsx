@@ -9,6 +9,7 @@ type HangTruyen = {
   tac_gia: string | null;
   luot_xem: number;
   truyen_the_loai: { the_loai: { ten: string; slug: string } }[];
+  chuong: { count: number }[];
 };
 
 export default async function TrangChu({
@@ -21,7 +22,9 @@ export default async function TrangChu({
 
   let query = supabase
     .from('truyen')
-    .select('ten, slug, anh_bia, trang_thai, tac_gia, luot_xem, truyen_the_loai(the_loai(ten, slug))')
+    .select(
+      'ten, slug, anh_bia, trang_thai, tac_gia, luot_xem, truyen_the_loai(the_loai(ten, slug)), chuong(count)'
+    )
     .order('created_at', { ascending: false });
   if (q) {
     query = query.ilike('ten', `%${q}%`);
@@ -37,6 +40,7 @@ export default async function TrangChu({
     trangThai: t.trang_thai,
     luotXem: t.luot_xem ?? 0,
     theLoai: t.truyen_the_loai.map((n) => n.the_loai),
+    soChuong: t.chuong?.[0]?.count ?? 0,
   }));
 
   return (

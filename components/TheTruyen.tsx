@@ -10,6 +10,7 @@ export type TruyenThe = {
   trangThai: string;
   theLoai: { ten: string; slug: string }[];
   luotXem?: number;
+  soChuong?: number;
 };
 
 export default function TheTruyen({ truyen }: { truyen: TruyenThe }) {
@@ -37,6 +38,9 @@ export default function TheTruyen({ truyen }: { truyen: TruyenThe }) {
         )}
         <span className="absolute top-1 left-1 px-2 py-0.5 rounded text-xs bg-black/60 text-white">
           {truyen.trangThai === 'hoan-thanh' ? 'Hoàn thành' : 'Đang ra'}
+        </span>
+        <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-purple-600 text-white">
+          AI
         </span>
       </div>
       <div className="p-2">
@@ -70,6 +74,9 @@ export default function TheTruyen({ truyen }: { truyen: TruyenThe }) {
             {dinhDangSoRutGon(truyen.luotXem ?? 0)}
           </span>
         </div>
+        {typeof truyen.soChuong === 'number' && (
+          <p className="text-xs text-muted-foreground mt-0.5">{truyen.soChuong} chương</p>
+        )}
         {theLoaiHienThi.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
             {theLoaiHienThi.map((tl) => (
