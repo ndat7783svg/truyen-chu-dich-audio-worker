@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { taoSupabaseServerClient } from '@/lib/supabase/server';
 import { dinhDangSoRutGon } from '@/lib/utils/format';
 import NutLuuTruyen from './NutLuuTruyen';
+import MoTaTruyen from './MoTaTruyen';
 
 type HangTruyen = {
   id: string;
@@ -136,7 +137,7 @@ export default async function TrangTruyen({
           />
         </div>
       </div>
-      {truyen.mo_ta && <p className="mt-4 text-muted-foreground whitespace-pre-line">{truyen.mo_ta}</p>}
+      {truyen.mo_ta && <MoTaTruyen moTa={truyen.mo_ta} />}
       <div className="mt-4 flex flex-wrap gap-3">
         {chuongDauTien && (
           <Link
