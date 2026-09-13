@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import Header from "@/components/Header";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import ChromeToanSite from "@/components/ChromeToanSite";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,9 +42,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Script id="chong-fouc-theme" strategy="beforeInteractive">
           {SCRIPT_CHONG_FOUC}
         </Script>
-        <ThanhDieuHuong />
-        <Header />
-        {children}
+        <ChromeToanSite header={<Header />} dieuHuong={<ThanhDieuHuong />}>
+          {children}
+        </ChromeToanSite>
         <Analytics />
       </body>
     </html>
