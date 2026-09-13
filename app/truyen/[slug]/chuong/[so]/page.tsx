@@ -1,8 +1,11 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { taoSupabaseServerClient } from '@/lib/supabase/server';
+import { SO_CHUONG_FREE } from '@/lib/config/goi-vip';
+import { conHieuLucGoi } from '@/lib/utils/gia-han-vip';
 import LuuTienDo from './LuuTienDo';
 import KhungDocChuong from './KhungDocChuong';
+import ChanChuongVip from './ChanChuongVip';
 
 export default async function TrangDocChuong({
   params,
@@ -28,13 +31,28 @@ export default async function TrangDocChuong({
     .maybeSingle();
   if (!chuong) notFound();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (chuong.so_chuong > SO_CHUONG_FREE) {
+    if (!user) redirect('/dang-nhap');
+
+    const { data: hoSo } = await supabase
+      .from('nguoi_dung')
+      .select('goi_het_han')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!conHieuLucGoi(hoSo?.goi_het_han ?? null)) {
+      return <ChanChuongVip tenTruyen={truyen.ten} slugTruyen={slug} soChuong={chuong.so_chuong} />;
+    }
+  }
+
   // Ghi nhận lượt xem (chống trùng vĩnh viễn, không chặn render nội dung)
   try {
     const cookieStore = await cookies();
     const khachId = cookieStore.get('khach_id')?.value;
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
     const visitorKey = user
       ? `nguoidung:${user.id}`
