@@ -52,7 +52,7 @@ export default function PanelCaiDatDoc({
   }
 
   return (
-    <div ref={panelRef} className="absolute top-4 right-4 z-20">
+    <div ref={panelRef} className="fixed top-3 right-3 z-40">
       <button
         type="button"
         onClick={() => setMoPanel((truoc) => !truoc)}
