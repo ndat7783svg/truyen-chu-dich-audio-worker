@@ -1,5 +1,59 @@
 # NEXT_SESSION.md
 
+## Chốt phiên 2026-09-13 (dài) — chuyển sang chat mới, đọc mục này trước tiên
+
+Phiên này làm liên tục nhiều việc, đã **deploy production 3 lần**, lần cuối cùng gồm đủ mọi thay
+đổi. Thứ tự thực tế đã làm (các mục chi tiết bên dưới, đọc theo thứ tự ngược từ đây xuống nếu cần
+tra lại kỹ):
+
+1. Bật Vercel Analytics (`@vercel/analytics`) — deploy lần 1.
+2. Phát hiện lượt xem tăng bất thường sau khi có domain thật → **không phải bug**, là bot
+   Googlebot/Bing crawl lần đầu (dedup theo `visitor_key` vẫn đúng, chỉ là bot không giữ cookie nên
+   mỗi lần bị tính "khách mới").
+3. User lo ngại bị "ăn cắp truyện" → đã tách thành 4 việc bảo mật độc lập, **mới làm xong việc 1**:
+   - [x] Chặn copy nội dung chương (mức cơ bản: bôi đen/chuột phải/copy-cut, chỉ trong khối nội
+         dung chương, không ảnh hưởng SEO).
+   - [ ] Chặn copy nâng cao (rate limit IP, CAPTCHA, obfuscate DOM chống scraper) — **user yêu cầu
+         để dành phiên sau**, chưa brainstorm.
+   - [ ] Chặn bot làm sai lệch lượt xem (lọc User-Agent trước khi gọi RPC `ghi_luot_xem`, KHÔNG
+         được chặn crawl của Googlebot/Bing vì cần cho SEO).
+   - [ ] Rà soát bảo mật tổng thể (auth, RLS Supabase, secrets, API) — việc lớn nhất, nên dùng
+         skill `security-review` hoặc brainstorm kỹ, chưa động vào.
+4. Redesign giao diện mobile-first (8 Task, xem mục riêng bên dưới) — deploy lần 2.
+5. User tự test trên điện thoại thật, báo thêm 3 vấn đề UX → đã sửa cả 3 (xem mục riêng bên dưới)
+   — deploy lần 3 (**mới nhất**, đã lên production, CHƯA có phản hồi test lại từ user**).
+
+**Việc cần làm ngay đầu phiên mới**: hỏi user đã test lại 3 fix UX mới nhất trên điện thoại thật
+chưa (đặc biệt thanh loading chạy ngang khi bấm thẻ truyện/tên chương) — nếu chưa ổn, xem
+`docs/handoff/thanh-loading-chuyen-trang.md` trước khi sửa tiếp (đã ghi rõ giới hạn đã biết: không
+bắt được điều hướng qua `router.push()` ở ô tìm kiếm/đăng nhập/đăng xuất).
+
+**Sau đó**: ưu tiên số 1 vẫn là hệ thống trả phí/VIP (xem `CLAUDE.md` mục "Kế hoạch tiếp theo") —
+bắt buộc `brainstorming` trước khi code.
+
+## 3 fix UX từ phản hồi test thật trên điện thoại (2026-09-13, sau redesign) — xong, đã deploy
+
+User dùng `ask-before-do` yêu cầu xác nhận hiểu đúng trước khi sửa (Claude đã hỏi lại + xác nhận
+từng điểm trước khi code, không tự đoán). Vì là sửa lỗi trên code đã duyệt (không phải tính năng
+mới), Claude tự code trực tiếp, không qua Antigravity.
+
+- [x] **Icon trang đọc chương che chữ khi cuộn**: 3 nút (nhà/Danh sách/Aa) trong
+      `KhungDocChuong.tsx` giờ bọc chung 1 khung `fixed` có `transition-transform`, tự trượt lên ẩn
+      khi cuộn xuống > 80px, trượt xuống hiện lại ngay khi cuộn lên (theo dõi hướng cuộn bằng
+      `scrollYTruocRef`). `DanhSachChuong.tsx`/`PanelCaiDatDoc.tsx` đổi từ `fixed` sang `absolute`
+      (nằm trong khung fixed cha thay vì tự fixed riêng).
+- [x] **Thanh điều hướng dưới đáy che nội dung cuối trang** (mobile): `ChromeToanSite.tsx` bọc
+      `children` (ở các trang không phải trang đọc chương) trong `<div className="pb-16 md:pb-0">`
+      để chừa chỗ cho thanh điều hướng cố định.
+- [x] **Không có thanh loading khi chuyển trang** (ban đầu Claude chẩn đoán sai là do prefetch quá
+      nhiều gây nghẽn — user sửa lại: vấn đề là thiếu phản hồi trực quan, không phải chậm). Đã thêm
+      `components/ThanhTienTrinh.tsx` (progress bar chạy ngang trên cùng, không dùng thư viện
+      ngoài) + `loading.tsx` cho 4 route động (`/`, `/truyen/[slug]`,
+      `/truyen/[slug]/chuong/[so]`, `/the-loai/[slug]`) — đúng theo tài liệu Next.js 16 chính thức
+      xác định "route động thiếu `loading.tsx`" là nguyên nhân chính xác của triệu chứng này. Chi
+      tiết đầy đủ + giới hạn đã biết xem `docs/handoff/thanh-loading-chuyen-trang.md`.
+- Build sạch, 52/52 test pass. Đã deploy production (lần 3, mới nhất).
+
 ## Redesign giao diện mobile-first (2026-09-13): xong hoàn toàn 8/8 Task + kiểm chứng thật
 
 User chủ yếu đọc trên điện thoại, phản hồi 6 vấn đề UX qua ảnh chụp thật (thanh điều hướng đè
@@ -33,8 +87,8 @@ phát hiện thêm nguyên nhân thật khiến chậm là **WARP bị tắt** (
 chạy build 1 lần ở cuối (Task 8) thay vì sau mỗi Task, hoặc dùng thư mục `.next` khác cho build tạm
 nếu cần kiểm tra type giữa chừng thường xuyên.
 
-**Chưa deploy lên production** — cần chạy `npx vercel --prod --yes` khi user sẵn sàng (đã hỏi xác
-nhận trước theo quy tắc an toàn).
+**Đã deploy lên production** ngay sau đó (cùng phiên, gộp chung với việc chặn copy chương ở mục
+dưới) — xem mục "Chốt phiên 2026-09-13" ở đầu file để biết thứ tự deploy đầy đủ.
 
 ## Bật Vercel Analytics + chặn copy nội dung chương (2026-09-13)
 

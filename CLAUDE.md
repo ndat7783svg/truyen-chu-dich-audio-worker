@@ -92,6 +92,18 @@ thêm số chương + nhãn "AI" vào thẻ truyện. Chi tiết xem `NEXT_SESSI
 null/rác), thêm truyện "Mở Đầu Giao Nộp Tu Tiên Giới..." (767 chương), thêm banner mời liên hệ
 fanpage Facebook ở đầu trang chủ/trang thể loại (`components/ThongBaoFanpage.tsx`).
 
+**Redesign giao diện mobile-first + chặn copy chương + Vercel Analytics** (2026-09-13): đã xong
+hoàn toàn + kiểm chứng thật + deploy production (3 lần deploy trong phiên). Bật Vercel Analytics;
+chặn copy nội dung chương mức cơ bản (bôi đen/chuột phải/copy-cut, chỉ trong khối nội dung chương);
+redesign 8 Task theo phản hồi thật của user trên điện thoại — thanh điều hướng chuyển xuống đáy
+nằm ngang trên mobile (giữ icon nổi dọc trên desktop), ẩn hẳn Header/thanh điều hướng ở trang đọc
+chương (thay bằng icon nhà + nút Danh sách chương + nút "Aa", tất cả tự ẩn khi cuộn xuống/hiện lại
+khi cuộn lên), nút Chương trước/sau nổi bật, nút "Bắt đầu đọc" + khối "Giới thiệu truyện" thu
+gọn/xem thêm ở trang truyện; và 3 fix UX phát sinh sau khi user tự test trên điện thoại thật (thanh
+điều hướng dưới đáy che nội dung cuối trang, thêm thanh loading chạy ngang trên cùng khi chuyển
+trang + `loading.tsx` cho các route động — xem `docs/handoff/thanh-loading-chuyen-trang.md`). Chi
+tiết đầy đủ xem `NEXT_SESSION.md`.
+
 ## Kế hoạch tiếp theo — Hệ thống trả phí / tài khoản VIP (đang bàn, CHƯA code)
 User đã đồng ý làm phần trả phí sau khi deploy (deploy xong rồi — xem trên). Ý tưởng ban đầu của
 user (**chưa chốt, cần brainstorm kỹ trước khi code** — đây là tính năng lớn, phải dùng skill
