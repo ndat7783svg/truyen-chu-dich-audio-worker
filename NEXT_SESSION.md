@@ -1,5 +1,35 @@
 # NEXT_SESSION.md
 
+## Cập nhật 3 bộ truyện + mở rộng `sync-truyen.mjs` kiểm tra tính liên tục số chương (2026-09-13)
+
+Lệnh "check [tên truyện]" chạy cho 3 bộ: Tà Tu Hảo A - Tà Tu Thăng Cấp Khoái, Phàm Trần Phi Tiên,
+Chôn Vùi Nhân Gian Trở Về - Ta Tạo Phản Ngươi Hoảng Cái Gì. Cả 3 đã đăng đủ chương, xác nhận thẳng
+qua Supabase (không chỉ tin log script) — không thiếu chương nào:
+- Tà Tu Hảo A, Tà Tu Thăng Cấp Khoái: 510/510 chương.
+- Phàm Trần Phi Tiên: 403/403 chương.
+- Chôn Vùi Nhân Gian Trở Về, Ta Tạo Phản Ngươi Hoảng Cái Gì: 266/266 chương (truyện mới).
+
+**Sự cố phát sinh & đã xử lý xong**:
+1. **WARP bị ngắt kết nối** giữa chừng → hàng loạt chương bị lỗi "fetch failed" khi đang đăng (ISP
+   chặn domain supabase.com khi không có WARP, đã ghi ở `moi-truong-va-cong-cu.md`). User tự bật lại
+   WARP, Claude chạy lại lệnh sync — script tự bỏ qua chương đã có, chỉ đăng nốt phần thiếu (idempo-
+   tent). Phát hiện thêm: 1 chương ("Phàm Trần Phi Tiên" chương 134) báo lỗi fetch nhưng thực ra đã
+   đăng thành công (request tới server OK, phản hồi bị rớt do mạng chập chờn) — lần chạy lại tự nhận
+   ra đã có nên bỏ qua, không đăng trùng. Bài học: log "loi fetch" khi đang cập nhật hàng loạt không
+   đồng nghĩa 100% chương đó thực sự thiếu trên DB — luôn xác nhận lại bằng truy vấn DB thật (service
+   role key) sau khi nghi ngờ, đừng chỉ dựa vào danh sách "bỏ qua" của lần chạy có lỗi mạng.
+2. **"Chôn Vùi Nhân Gian..." toàn bộ 266 file không parse được** — nguồn dịch xuất chương thiếu dấu
+   `#` ở đầu dòng tiêu đề (khác 2 bộ kia). User quyết định: nới luật parse chấp nhận cả 2 định dạng
+   thay vì sửa lại nguồn dịch. Đã sửa `scripts/parse-chuong.js` (TDD, test mới cho định dạng không có
+   `#`) — không đổi hành vi cũ cho file có `#`, chỉ thêm nhánh chấp nhận dòng `Chương N: ...` trần.
+
+**Tính năng mới thêm vào `sync-truyen.mjs`** (theo yêu cầu user, áp dụng từ nay mỗi lần "check"):
+sau khi đăng chương xong, script tự in báo cáo kiểm tra tính liên tục số chương nguồn (module mới
+`scripts/kiem-tra-chuong.js`, TDD 6/6 test): liệt kê số chương bị thiếu trong khoảng
+[min-max] của các file cục bộ, và cảnh báo nếu số chương ghi trong tiêu đề nội dung khác với số
+trong tên file (nghi trùng/nhầm số). Lưu ý: báo cáo này kiểm tra **nguồn file cục bộ**, không phải
+tình trạng đã đăng lên DB — 2 việc khác nhau, xem mục sự cố (1) ở trên.
+
 ## Tính năng "Đã lưu" (bookmark truyện) + Header full-width: xong hoàn toàn + kiểm chứng thật
 
 Brainstorm → spec `docs/superpowers/specs/2026-09-13-da-luu-truyen-design.md` → plan

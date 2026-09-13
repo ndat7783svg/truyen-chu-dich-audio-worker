@@ -56,9 +56,10 @@ website truyện chữ AI/
 │       └── cai-dat-doc.ts           (đọc/ghi cài đặt đọc chương qua localStorage, chuẩn hóa dữ liệu, màu theo theme)
 ├── scripts/                         (chạy độc lập bằng node --env-file=.env.local)
 │   ├── slug.js                      (taoSlug - sinh slug từ tên có dấu)
-│   ├── parse-chuong.js              (parseChuong - đọc 1 file chuong-XXX.md)
+│   ├── parse-chuong.js              (parseChuong - đọc 1 file chuong-XXX.md, chấp nhận tiêu đề có/không có "#")
 │   ├── parse-thong-tin.js           (parseThongTin - đọc file thong-tin.md: tác giả/thể loại/mô tả)
-│   └── sync-truyen.mjs              (CLI "check [tên truyện]" - đồng bộ chương + metadata lên Supabase)
+│   ├── kiem-tra-chuong.js           (kiemTraTinhLienTuc/laySoChuongTuTieuDe - kiểm tra thiếu chương/lệch số trong nguồn cục bộ)
+│   └── sync-truyen.mjs              (CLI "check [tên truyện]" - đồng bộ chương + metadata lên Supabase, in báo cáo tính liên tục sau khi đăng)
 ├── supabase/schema.sql              (schema tích luỹ - áp dụng thủ công qua SQL Editor)
 ├── __smoke__/smoke.test.ts
 ├── .env.local.example / .env.local  (biến môi trường; .env.local gitignore)
