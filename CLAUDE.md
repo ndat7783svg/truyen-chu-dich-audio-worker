@@ -35,9 +35,15 @@ tra 1 file) Claude tự làm luôn — xem ngoại lệ trong chính skill đó.
 - **Hoãn lại, bàn sau:** mục trả phí mua chương; audio trong trang đọc.
 
 ## Trạng thái hiện tại
-**v1**: Task 1-10 xong + kiểm chứng thật (Task 9 đăng ký/đăng nhập đã nâng cấp vượt phạm vi gốc,
-Task 10 dark mode gộp vào Đợt C bên dưới — xem 2 mục riêng). Chỉ còn Task 11 (deploy Vercel) chưa
-làm — xem `docs/superpowers/plans/2026-09-08-website-truyen-v1.md`.
+**v1**: **xong hoàn toàn cả 11 Task**, kể cả Task 11 (deploy Vercel) — xem
+`docs/superpowers/plans/2026-09-08-website-truyen-v1.md`. (Task 9 đăng ký/đăng nhập đã nâng cấp vượt
+phạm vi gốc, Task 10 dark mode gộp vào Đợt C bên dưới — xem 2 mục riêng).
+
+**Đã lên production thật** (2026-09-13): deploy qua Vercel CLI (project `asuo-team/truyen-chu-dich`),
+domain riêng **`truyenchudich.site`** (mua trên Namecheap, DNS trỏ A record `76.76.21.21` + CNAME
+`www`) đã hoạt động — xác nhận qua browser thật. URL fallback mặc định:
+`truyen-chu-dich.vercel.app`. Chi tiết quy trình deploy + domain + các lỗi gặp phải xem
+`docs/handoff/deploy-vercel-va-domain.md`.
 
 **Đợt A** (ảnh bìa, tác giả, thể loại, trang chủ/trang truyện nâng cấp — xem spec
 `docs/superpowers/specs/2026-09-09-dot-a-metadata-truyen-design.md`, plan
@@ -79,6 +85,26 @@ truyện mới), xác nhận thẳng qua Supabase không thiếu chương nào. 
 khác dấu phân cách nguồn dịch (`/` vs `,`), mở rộng parser chấp nhận tiêu đề chương không có `#`,
 thêm số chương + nhãn "AI" vào thẻ truyện. Chi tiết xem `NEXT_SESSION.md` và
 `docs/handoff/cap-nhat-truyen-loi-mang-va-dinh-dang.md`.
+
+**Sửa bug cache ảnh bìa + bug tác giả toàn bộ truyện + thêm bộ truyện thứ 5 + banner fanpage**
+(2026-09-13): xem chi tiết ở `NEXT_SESSION.md`. Tóm tắt: `uploadAnhBia` thêm cache-busting `?v=`,
+`parseThongTin` sửa đúng nhãn `**Tác giả:**` (trước đó tìm sai nên tác_gia toàn bộ truyện luôn
+null/rác), thêm truyện "Mở Đầu Giao Nộp Tu Tiên Giới..." (767 chương), thêm banner mời liên hệ
+fanpage Facebook ở đầu trang chủ/trang thể loại (`components/ThongBaoFanpage.tsx`).
+
+## Kế hoạch tiếp theo — Hệ thống trả phí / tài khoản VIP (đang bàn, CHƯA code)
+User đã đồng ý làm phần trả phí sau khi deploy (deploy xong rồi — xem trên). Ý tưởng ban đầu của
+user (**chưa chốt, cần brainstorm kỹ trước khi code** — đây là tính năng lớn, phải dùng skill
+`brainstorming` + `writing-plans` trước, KHÔNG code thẳng):
+- Mỗi bộ truyện: 50 chương đầu đọc free, chương sau phải mua gói mới mở khoá.
+- Gói theo thời gian (không phải theo từng chương) — user lấy cảm hứng từ "gói 4G" nhà mạng: gói
+  ngày (~6k/ngày), gói tuần (~39k/7 ngày, giảm ~7%), gói tháng (~162k/30 ngày, giảm ~10%). Kích hoạt
+  gói nào thì mở toàn bộ mọi truyện không giới hạn chương trong thời gian đó (không phải mở riêng
+  từng bộ) — đơn giản hơn quản lý theo từng truyện.
+- User muốn thanh toán tự động nâng cấp tài khoản ngay sau khi trả tiền (ưu tiên chi phí gần 0đ) —
+  cần cổng thanh toán VN có webhook (VNPay/Momo/PayOS...), chưa chọn cổng nào.
+- Lý do quyết định làm free-trial 50 chương thay vì trả tiền từng chương như đa số trang dịch AI
+  khác (ví dụ truyendich.ai) — user tự tin chất lượng dịch hơn nhờ duyệt lại 2 lần.
 
 Xem `NEXT_SESSION.md` để biết bước tiếp theo cụ thể.
 

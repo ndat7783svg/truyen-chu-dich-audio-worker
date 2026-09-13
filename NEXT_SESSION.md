@@ -1,5 +1,29 @@
 # NEXT_SESSION.md
 
+## Deploy production + mua domain + thêm truyện mới + banner fanpage (2026-09-13)
+
+- **Thêm bộ truyện thứ 5** "Mở Đầu Giao Nộp Tu Tiên Giới, Quốc Gia Cho Ta Thành Tiên Trước" — 767/767
+  chương, không thiếu chương nào, tác giả "Củ Hành Xinh Đẹp" (parse đúng nhờ đã sửa bug tác giả).
+- **Thêm trạng thái "Hoàn thành"** cho "Chôn Vùi Nhân Gian Trở Về..." — đọc từ field `**Trạng
+  thái:**` mới thêm vào `thong-tin.md`, `parse-thong-tin.js`/`sync-truyen.mjs` đã hỗ trợ sẵn (tự
+  thêm hàm `timTrangThai`, xem code hiện tại — phần này được thêm ngoài phiên chat, không phải
+  Claude tự viết trong lượt hội thoại, chỉ chạy sync để áp dụng).
+- **Thêm banner mời liên hệ fanpage Facebook** ở đầu trang chủ + trang thể loại
+  (`components/ThongBaoFanpage.tsx`) — icon Facebook + link tới fanpage, mời độc giả liên hệ khi
+  muốn dịch truyện mới hoặc gặp sự cố. Build + 49/49 test pass lúc đó.
+- **Kiểm tra tổng thể website trước deploy**: build sạch, 52/52 test pass, duyệt qua browser thật
+  tất cả luồng chính (trang chủ, trang truyện, đọc chương, tìm kiếm, tài khoản, tủ truyện, 404) —
+  không lỗi console (lỗi HMR/parse hiện trong tab cũ chỉ là artifact, tab mới sạch hoàn toàn).
+- **Deploy Vercel + mua domain Namecheap: XONG, đã lên production thật** — quy trình đầy đủ + các
+  bug gặp phải (stdin bị lệch khi set env vars, WARP chặn IP Vercel, lỗi UI Namecheap khi xoá DNS
+  record) xem chi tiết `docs/handoff/deploy-vercel-va-domain.md`. Tóm tắt kết quả:
+  - Project Vercel: `asuo-team/truyen-chu-dich`.
+  - Domain chính thức: **truyenchudich.site** (mua $0.98/năm, đã tắt auto-renew theo yêu cầu user).
+  - Domain đã trỏ đúng, xác nhận chạy tốt qua browser thật của user.
+- User xác nhận: sau session này muốn brainstorm + code hệ thống **trả phí / tài khoản VIP** — xem
+  mục kế hoạch trong `CLAUDE.md` (đã ghi ý tưởng ban đầu của user, CHƯA chốt thiết kế, phải
+  brainstorm kỹ trước).
+
 ## Sửa ảnh bìa không cập nhật (cache) + bug tác giả bị null/rác toàn bộ truyện (2026-09-13)
 
 - **Đổi ảnh bìa "Tà Tu Hảo A..."** theo ảnh mới user cung cấp (dán trực tiếp trong chat, không có
@@ -231,17 +255,25 @@ này co lại theo nội dung thay vì full width) — sửa bằng cách thêm 
 `app/truyen/[slug]/chuong/[so]/page.tsx` — không còn trang nào sót. Chi tiết kỹ thuật xem
 `docs/handoff/layout-flex-w-full.md`.
 
-## Bước tiếp theo — chọn 1 trong các hướng sau, hỏi user trước khi làm
+## Bước tiếp theo — ưu tiên số 1: hệ thống trả phí / tài khoản VIP
 
-1. **Quay lại v1 còn dở**: Task 11 (deploy Vercel) — user dự định tự làm sau đó mua domain
-   Namecheap. Task 10 dark mode đã xong (gộp vào Đợt C).
-2. **Nội dung thật còn lại của trang Tủ truyện** (2 tab Đã đọc/Đã thêm — "Đã lưu" đã xong hoàn toàn
+User đã xác nhận muốn làm ngay phiên tới (deploy xong rồi, xem mục đầu file + `CLAUDE.md`). **Bắt
+buộc dùng skill `brainstorming` trước** (đây là tính năng lớn, ảnh hưởng doanh thu, chưa chốt thiết
+kế) rồi mới `writing-plans` → giao Antigravity code theo quy trình chuẩn của dự án. Đọc kỹ ý tưởng
+ban đầu của user trong `CLAUDE.md` mục "Kế hoạch tiếp theo" trước khi bắt đầu brainstorm — còn nhiều
+điểm chưa rõ cần hỏi lại: chọn cổng thanh toán nào (VNPay/Momo/PayOS...), cơ chế webhook nâng cấp
+tài khoản, ngưỡng 50 chương free áp dụng thế nào với truyện mới ít hơn 50 chương, thời điểm hết hạn
+gói tính theo giờ hay theo ngày lịch, có cho mua nhiều gói cộng dồn không...
+
+## Việc nhỏ còn tồn đọng (làm sau, không gấp)
+
+1. **Nội dung thật còn lại của trang Tủ truyện** (2 tab Đã đọc/Đã thêm — "Đã lưu" đã xong hoàn toàn
    2026-09-13) — "Đã đọc" có thể tận dụng `tien_do_doc` sẵn có, "Đã thêm" chưa rõ ý nghĩa, cần hỏi
    lại user.
-3. **Việc nhỏ còn sót của Đợt B lượt xem**: kịch bản 4 (verify `visitor_key = nguoidung:<user_id>`
+2. **Việc nhỏ còn sót của Đợt B lượt xem**: kịch bản 4 (verify `visitor_key = nguoidung:<user_id>`
    khi đăng nhập đọc chương) — giờ đã có tài khoản thật đăng nhập được, có thể nhờ user tiện thể đọc
    1 chương lúc đang đăng nhập rồi kiểm tra bảng `luot_xem_da_doc`.
-4. **Bàn thiết kế Đợt B phần còn lại** (đánh giá sao, "Top thịnh hành", sidebar "Đọc tiếp") — dùng
+3. **Bàn thiết kế Đợt B phần còn lại** (đánh giá sao, "Top thịnh hành", sidebar "Đọc tiếp") — dùng
    skill `brainstorming` trước khi code, giống quy trình đã làm với Đợt A/lượt xem/đăng nhập.
 
 ## Lưu ý quan trọng
@@ -259,4 +291,4 @@ này co lại theo nội dung thay vì full width) — sửa bằng cách thêm 
   phải lỗi code hay lỗi mạng.
 
 ## Quyết định đang chờ user
-- Chọn hướng làm tiếp theo ở mục "Bước tiếp theo" phía trên.
+- Các câu hỏi mở cần chốt trước khi code hệ thống trả phí — xem mục "Bước tiếp theo" phía trên.
