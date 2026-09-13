@@ -18,3 +18,9 @@ export const DANH_SACH_GOI: ThongTinGoi[] = [
 export function layThongTinGoi(ma: string): ThongTinGoi | null {
   return DANH_SACH_GOI.find((g) => g.ma === ma) ?? null;
 }
+
+export const THONG_TIN_NHAN_TIEN = {
+  tenNguoiNhan: 'NGUYEN TIEN DAT',
+  nganHang: 'MoMo',
+  soTaiKhoan: 'PSP2624219600000051',
+};

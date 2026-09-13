@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { DANH_SACH_GOI, type MaGoi } from '@/lib/config/goi-vip';
+import { DANH_SACH_GOI, THONG_TIN_NHAN_TIEN, type MaGoi } from '@/lib/config/goi-vip';
 import { taoGiaoDich } from '@/app/tai-khoan/actions-goi-vip';
 
 type TrangThaiModal =
@@ -14,6 +14,17 @@ export default function ChonGoiVip() {
   const [moModal, setMoModal] = useState(false);
   const [trangThai, setTrangThai] = useState<TrangThaiModal>({ buoc: 'chon-goi' });
   const [dangXuLy, setDangXuLy] = useState(false);
+  const [truongDaCopy, setTruongDaCopy] = useState<string | null>(null);
+
+  async function copyVaoClipboard(truong: string, giaTri: string) {
+    try {
+      await navigator.clipboard.writeText(giaTri);
+      setTruongDaCopy(truong);
+      setTimeout(() => setTruongDaCopy((hienTai) => (hienTai === truong ? null : hienTai)), 1500);
+    } catch {
+      // Clipboard không khả dụng (trình duyệt cũ/không phải HTTPS) - user tự bôi đen copy tay.
+    }
+  }
 
   function moLai() {
     setTrangThai({ buoc: 'chon-goi' });
@@ -89,9 +100,36 @@ export default function ChonGoiVip() {
                     className="object-contain"
                   />
                 </div>
+                <div className="text-sm border border-border rounded p-3 space-y-2">
+                  <DongThongTinCopy
+                    nhan="Tên người nhận"
+                    giaTri={THONG_TIN_NHAN_TIEN.tenNguoiNhan}
+                    daCopy={truongDaCopy === 'ten'}
+                    onCopy={() => copyVaoClipboard('ten', THONG_TIN_NHAN_TIEN.tenNguoiNhan)}
+                  />
+                  <DongThongTinCopy
+                    nhan="Ngân hàng"
+                    giaTri={THONG_TIN_NHAN_TIEN.nganHang}
+                    daCopy={truongDaCopy === 'nganHang'}
+                    onCopy={() => copyVaoClipboard('nganHang', THONG_TIN_NHAN_TIEN.nganHang)}
+                  />
+                  <DongThongTinCopy
+                    nhan="Số tài khoản"
+                    giaTri={THONG_TIN_NHAN_TIEN.soTaiKhoan}
+                    daCopy={truongDaCopy === 'stk'}
+                    onCopy={() => copyVaoClipboard('stk', THONG_TIN_NHAN_TIEN.soTaiKhoan)}
+                  />
+                </div>
                 <p className="text-sm">
                   Chuyển khoản đúng số tiền, nội dung ghi chính xác:{' '}
-                  <strong className="text-blue-600">{trangThai.maGiaoDich}</strong>
+                  <strong className="text-blue-600">{trangThai.maGiaoDich}</strong>{' '}
+                  <button
+                    type="button"
+                    onClick={() => copyVaoClipboard('maGiaoDich', trangThai.maGiaoDich)}
+                    className="text-xs underline text-blue-600"
+                  >
+                    {truongDaCopy === 'maGiaoDich' ? 'Đã copy' : 'Copy'}
+                  </button>
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Sau khi chuyển khoản, gói sẽ được kích hoạt trong ít phút. Bạn có thể đóng cửa sổ
@@ -111,5 +149,33 @@ export default function ChonGoiVip() {
         </div>
       )}
     </>
+  );
+}
+
+function DongThongTinCopy({
+  nhan,
+  giaTri,
+  daCopy,
+  onCopy,
+}: {
+  nhan: string;
+  giaTri: string;
+  daCopy: boolean;
+  onCopy: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <div>
+        <p className="text-xs text-muted-foreground">{nhan}</p>
+        <p className="font-medium">{giaTri}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onCopy}
+        className="shrink-0 text-xs px-2 py-1 rounded border border-border hover:bg-black/5"
+      >
+        {daCopy ? 'Đã copy' : 'Copy'}
+      </button>
+    </div>
   );
 }
