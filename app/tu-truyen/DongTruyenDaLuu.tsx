@@ -17,11 +17,15 @@ export default function DongTruyenDaLuu({
   anhBia: string | null;
 }) {
   const [daXoa, setDaXoa] = useState(false);
+  const [dangXuLy, setDangXuLy] = useState(false);
 
   async function boLuu() {
+    if (dangXuLy) return;
+    setDangXuLy(true);
     setDaXoa(true);
     const ketQua = await boLuuTruyen(truyenId);
     if (!ketQua.thanhCong) setDaXoa(false);
+    setDangXuLy(false);
   }
 
   if (daXoa) return null;

@@ -14,6 +14,7 @@ export default function NutLuuTruyen({
   daDangNhap: boolean;
 }) {
   const [daLuu, setDaLuu] = useState(daLuuBanDau);
+  const [dangXuLy, setDangXuLy] = useState(false);
   const [hienThongBaoDangNhap, setHienThongBaoDangNhap] = useState(false);
 
   async function bamNut() {
@@ -21,6 +22,9 @@ export default function NutLuuTruyen({
       setHienThongBaoDangNhap(true);
       return;
     }
+    if (dangXuLy) return;
+
+    setDangXuLy(true);
     const trangThaiMoi = !daLuu;
     setDaLuu(trangThaiMoi);
     const ketQua = trangThaiMoi ? await luuTruyen(truyenId) : await boLuuTruyen(truyenId);
@@ -28,19 +32,35 @@ export default function NutLuuTruyen({
       setDaLuu(!trangThaiMoi);
       if (ketQua.canDangNhap) setHienThongBaoDangNhap(true);
     }
+    setDangXuLy(false);
   }
 
   return (
     <div className="mt-3">
       <button
         onClick={bamNut}
+        disabled={dangXuLy}
+        aria-pressed={daLuu}
+        title={daLuu ? 'Bỏ lưu truyện' : 'Lưu truyện'}
         className={
           daLuu
-            ? 'px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium'
-            : 'px-4 py-2 rounded border border-border text-sm font-medium'
+            ? 'p-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-60'
+            : 'p-2 rounded-full border border-border hover:bg-surface disabled:opacity-60'
         }
       >
-        {daLuu ? 'Đã lưu' : '+ Lưu truyện'}
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill={daLuu ? 'currentColor' : 'none'}
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 3a1 1 0 00-1 1v16l7-4 7 4V4a1 1 0 00-1-1H6z"
+          />
+        </svg>
       </button>
       {hienThongBaoDangNhap && (
         <p className="mt-1 text-sm text-muted-foreground">
