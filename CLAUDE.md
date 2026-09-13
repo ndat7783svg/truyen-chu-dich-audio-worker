@@ -63,6 +63,12 @@ khoản (hồ sơ + đổi theme + đăng xuất), trang Tủ truyện tạm "S�
 Sáng/Giấy/Tối (hoàn tất dứt điểm Task 10 dark mode v1). Header bỏ đăng nhập/đăng xuất, chuyển hết
 sang trang Tài khoản.
 
+**Tính năng "Đã lưu" (bookmark) + Header full-width** (2026-09-13, xem spec/plan tương ứng trong
+`docs/superpowers/specs/` và `docs/superpowers/plans/`): **đã xong hoàn toàn + kiểm chứng thật.**
+Nút lưu truyện (icon) trên trang truyện, tab "Đã lưu" thật trong Tủ truyện. Header đổi sang
+full-width theo mẫu truyendich.ai (logo + Thể loại + tìm kiếm gộp 1 thanh, dùng chung mọi trang).
+Tên hiển thị site đổi thành "Truyện chữ dịch".
+
 Xem `NEXT_SESSION.md` để biết bước tiếp theo cụ thể.
 
 ## Quy tắc an toàn khi test

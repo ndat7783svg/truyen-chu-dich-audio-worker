@@ -1,5 +1,48 @@
 # NEXT_SESSION.md
 
+## Tính năng "Đã lưu" (bookmark truyện) + Header full-width: xong hoàn toàn + kiểm chứng thật
+
+Brainstorm → spec `docs/superpowers/specs/2026-09-13-da-luu-truyen-design.md` → plan
+`docs/superpowers/plans/2026-09-13-da-luu-truyen.md` → giao Antigravity thực thi Task 1-4 → Claude
+tự kiểm chứng qua browser thật + đọc lại code + tự sửa bug phát sinh.
+
+- [x] Bảng `truyen_da_luu` (nguoi_dung_id, truyen_id, luu_luc), RLS theo user — user đã tự chạy SQL
+      qua Supabase Dashboard.
+- [x] Server actions `luuTruyen`/`boLuuTruyen` (`app/truyen/[slug]/actions-luu.ts`).
+- [x] Nút Lưu trên trang truyện (`NutLuuTruyen.tsx`) — icon bookmark (không phải chữ, theo yêu cầu
+      user), khoá nút trong lúc chờ xử lý (chống bấm đúp gây race condition).
+- [x] Tab "Đã lưu" thật trong `/tu-truyen` (`DongTruyenDaLuu.tsx`) — danh sách hàng ngang, mới lưu
+      lên đầu, có nút Bỏ lưu trực tiếp.
+- [x] Kiểm chứng thật: lưu/bỏ lưu cập nhật UI ngay, đồng bộ đúng giữa trang truyện và Tủ truyện,
+      thứ tự đúng, console sạch lỗi.
+- **Bug phát sinh đã tự sửa (systematic-debugging)**: sau khi Antigravity code xong, nút Lưu luôn
+  fail âm thầm (`thanhCong: false`) dù server action không throw exception — tra bằng service role
+  key phát hiện nguyên nhân thật: **user quên chưa chạy SQL migration** nên bảng `truyen_da_luu`
+  chưa tồn tại (Supabase trả lỗi "table not found", bị code nuốt thành `false`). Không phải lỗi
+  code. Bài học: khi nút bấm "chạy nhưng không có tác dụng" mà server không log exception, nghi
+  ngay bảng/cột chưa tồn tại — dùng `SUPABASE_SERVICE_ROLE_KEY` (có sẵn `.env.local`) để tra thẳng
+  qua script Node, nhanh hơn nhiều so với đoán qua RLS/logic.
+- Phát hiện thêm (chưa gây bug lần này nhưng đã fix phòng ngừa): nút Lưu/Bỏ lưu không khoá trong
+  lúc đang xử lý — bấm nhanh 2 lần liên tiếp có thể tạo request chồng nhau, request sau bị lỗi
+  duplicate-key/xoá-0-dòng làm lệch trạng thái hiển thị so với DB thật. Đã thêm `dangXuLy` state
+  chặn bấm lặp ở cả `NutLuuTruyen.tsx` và `DongTruyenDaLuu.tsx`.
+
+Sẵn tiện làm luôn (user yêu cầu giữa buổi, đã brainstorm riêng): spec
+`docs/superpowers/specs/2026-09-13-header-full-width-design.md` → plan
+`docs/superpowers/plans/2026-09-13-header-full-width.md` (việc nhỏ, Claude tự làm không qua
+Antigravity):
+- [x] `Header.tsx` full-width theo mẫu truyendich.ai — logo (icon sách + "Truyện chữ dịch") + dropdown
+      Thể loại bên trái, ô tìm kiếm (`SearchBox.tsx`, chuyển từ trang chủ lên Header, dùng được mọi
+      trang) bên phải. Responsive: xuống hàng ở khổ mobile, không vỡ layout.
+- [x] Đổi tên hiển thị site "Truyện dịch AI" → "**Truyện chữ dịch**" (Header + `metadata.title`,
+      trước đó vẫn là "Create Next App" mặc định, chưa từng sửa).
+- [x] Bỏ tiêu đề `<h1>` lặp lại trên trang chủ (Header đã đảm nhiệm).
+- [x] Kiểm chứng thật qua browser: Header đúng trên mọi trang, tìm kiếm từ trang khác trang chủ vẫn
+      điều hướng + lọc đúng, dropdown Thể loại vẫn hoạt động ở cả desktop/mobile, tiêu đề tab đúng,
+      console sạch lỗi. Build + 38/38 test pass.
+- User dự định tự deploy Vercel + mua domain Namecheap sau — chưa làm trong phiên này, xem mục
+  "Bước tiếp theo" cũ (Task 11) ở dưới.
+
 ## Đợt C — Thanh điều hướng + Trang Tài khoản + Theme toàn site: xong hoàn toàn + kiểm chứng thật
 
 Brainstorm → spec `docs/superpowers/specs/2026-09-11-thanh-dieu-huong-tai-khoan-design.md` → plan

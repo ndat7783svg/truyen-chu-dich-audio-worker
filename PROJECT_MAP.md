@@ -17,14 +17,18 @@ website truyện chữ AI/
 ├── middleware.ts                    (refresh session Supabase Auth + cấp cookie khach_id mỗi request)
 ├── next.config.ts                   (cho phép next/image tải ảnh bìa từ Supabase Storage)
 ├── app/                             (Next.js App Router)
-│   ├── layout.tsx                   (root layout, gắn <ThanhDieuHuong/>, <Header/>, script chống FOUC)
-│   ├── page.tsx                     (trang chủ - lưới thẻ truyện + tìm kiếm)
+│   ├── layout.tsx                   (root layout, gắn <ThanhDieuHuong/>, <Header/>, script chống FOUC, metadata.title "Truyện chữ dịch")
+│   ├── page.tsx                     (trang chủ - lưới thẻ truyện, đọc query `q` từ URL để lọc theo tìm kiếm)
 │   ├── globals.css                  (3 theme CSS Sáng/Giấy/Tối + mapping Tailwind v4 @theme inline)
 │   ├── auth/callback/route.ts       (route PKCE dùng chung cho Google OAuth + link xác nhận email)
 │   ├── tai-khoan/page.tsx           (trang tài khoản - hồ sơ, cấp độ, đổi theme, đăng xuất)
-│   ├── tu-truyen/page.tsx           (trang tủ truyện tạm - placeholder sắp ra mắt)
+│   ├── tu-truyen/
+│   │   ├── page.tsx                 (trang tủ truyện - tab "Đã lưu" thật, query truyen_da_luu join truyen)
+│   │   └── DongTruyenDaLuu.tsx      (client - 1 hàng trong danh sách Đã lưu, có nút Bỏ lưu)
 │   ├── truyen/[slug]/
-│   │   ├── page.tsx                 (trang truyện - ảnh bìa, tác giả, thể loại, mô tả, lượt xem, ds chương)
+│   │   ├── page.tsx                 (trang truyện - ảnh bìa, tác giả, thể loại, mô tả, lượt xem, nút Lưu, ds chương)
+│   │   ├── actions-luu.ts           (server actions luuTruyen/boLuuTruyen cho tính năng Đã lưu)
+│   │   ├── NutLuuTruyen.tsx         (client - nút icon bookmark lưu/bỏ lưu, khoá nút lúc đang xử lý)
 │   │   └── chuong/[so]/
 │   │       ├── page.tsx             (trang đọc chương - fetch dữ liệu + ghi RPC ghi_luot_xem, render KhungDocChuong)
 │   │       ├── KhungDocChuong.tsx   (client - khung đọc, quản lý state cài đặt đọc + áp dụng màu nền/cỡ chữ/phông/giãn dòng)
@@ -36,10 +40,10 @@ website truyện chữ AI/
 ├── components/
 │   ├── ThanhDieuHuong.tsx           (client component - thanh icon nổi bên trái: Trang chủ/Tài khoản/Tủ truyện)
 │   ├── ChonTheme.tsx                (client component - nút chuyển đổi 3 theme Sáng/Giấy/Tối)
-│   ├── Header.tsx                   (logo + dropdown Thể loại)
+│   ├── Header.tsx                   (thanh header full-width: logo "Truyện chữ dịch" + dropdown Thể loại bên trái, SearchBox bên phải — dùng chung mọi trang)
 │   ├── DropdownTheLoai.tsx          (client component - menu thể loại trong Header)
 │   ├── NutDangXuat.tsx              (client component - nút đăng xuất, dùng trong trang Tài khoản)
-│   ├── SearchBox.tsx                (ô tìm kiếm trang chủ)
+│   ├── SearchBox.tsx                (ô tìm kiếm, nằm trong Header, submit điều hướng về `/?q=...`)
 │   └── TheTruyen.tsx                (thẻ truyện dùng chung - trang chủ + trang thể loại, hiện lượt xem)
 ├── lib/
 │   ├── supabase/
@@ -69,6 +73,8 @@ website truyện chữ AI/
 - `truyen_the_loai` — bảng nối nhiều-nhiều giữa `truyen` và `the_loai`.
 - `luot_xem_da_doc` — visitor_key (`nguoidung:<uuid>` hoặc `khach:<uuid cookie>`), chuong_id, PK kép
   — bảng dedup, không cho client đọc/ghi trực tiếp, chỉ qua RPC `ghi_luot_xem`.
+- `truyen_da_luu` — nguoi_dung_id, truyen_id, luu_luc, PK kép — bookmark truyện, RLS theo user, ghi
+  qua server actions `luuTruyen`/`boLuuTruyen` (`app/truyen/[slug]/actions-luu.ts`).
 - `nguoi_dung` — id (= `auth.users.id`), ten_nguoi_dung, tao_luc. Hồ sơ người dùng riêng biệt với
   `auth.users` (Profile Pattern chuẩn của Supabase), tự tạo qua trigger `khi_co_tai_khoan_moi` mỗi
   khi có tài khoản mới (email/mật khẩu lẫn Google). Nền tảng cho tính năng nạp tiền/mua chương sau
