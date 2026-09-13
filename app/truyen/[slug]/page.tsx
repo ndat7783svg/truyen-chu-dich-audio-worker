@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { taoSupabaseServerClient } from '@/lib/supabase/server';
 import { dinhDangSoRutGon } from '@/lib/utils/format';
+import NutLuuTruyen from './NutLuuTruyen';
 
 type HangTruyen = {
   id: string;
@@ -53,6 +54,17 @@ export default async function TrangTruyen({
       .eq('truyen_id', truyen.id)
       .maybeSingle();
     chuongDangDoc = (tienDo?.chuong as unknown as { so_chuong: number } | null) ?? null;
+  }
+
+  let daLuuBanDau = false;
+  if (user) {
+    const { data: daLuu } = await supabase
+      .from('truyen_da_luu')
+      .select('truyen_id')
+      .eq('nguoi_dung_id', user.id)
+      .eq('truyen_id', truyen.id)
+      .maybeSingle();
+    daLuuBanDau = !!daLuu;
   }
 
   return (
@@ -115,6 +127,11 @@ export default async function TrangTruyen({
               ))}
             </div>
           )}
+          <NutLuuTruyen
+            truyenId={truyen.id}
+            daLuuBanDau={daLuuBanDau}
+            daDangNhap={!!user}
+          />
         </div>
       </div>
       {truyen.mo_ta && <p className="mt-4 text-muted-foreground whitespace-pre-line">{truyen.mo_ta}</p>}
