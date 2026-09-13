@@ -81,7 +81,9 @@ async function uploadAnhBia(supabase, slug, duongDanFileAnh) {
   const {
     data: { publicUrl },
   } = supabase.storage.from('anh-bia').getPublicUrl(`${slug}.jpg`);
-  return publicUrl;
+  // Them hau to phien ban de bat trinh duyet/Next.js Image cache coi la anh moi
+  // moi khi anh bia duoc thay the (URL goc giu nguyen ten file do dung upsert).
+  return `${publicUrl}?v=${Date.now()}`;
 }
 
 async function upsertTheLoai(supabase, tenTheLoai) {
@@ -177,6 +179,7 @@ async function main() {
         mo_ta: moTaCuoiCung,
         anh_bia: anhBiaMoi ?? anhBia,
         tac_gia: thongTin?.tacGia ?? null,
+        ...(thongTin?.trangThai ? { trang_thai: thongTin.trangThai } : {}),
       })
       .select('id')
       .single();
@@ -190,6 +193,7 @@ async function main() {
     const capNhat = {};
     if (thongTin.moTa) capNhat.mo_ta = thongTin.moTa;
     if (thongTin.tacGia) capNhat.tac_gia = thongTin.tacGia;
+    if (thongTin.trangThai) capNhat.trang_thai = thongTin.trangThai;
     if (anhBiaMoi) capNhat.anh_bia = anhBiaMoi;
 
     if (Object.keys(capNhat).length > 0) {

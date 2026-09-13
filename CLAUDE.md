@@ -45,6 +45,11 @@ làm — xem `docs/superpowers/plans/2026-09-08-website-truyen-v1.md`.
 thật qua browser + dữ liệu Supabase thật.** `sync-truyen.mjs` giờ tự đọc `thong-tin/thong-tin.md` +
 `anh-bia.jpg` bên `D:\translate truyen` mỗi lần "check", không cần nhập tay mô tả nữa.
 
+**Cập nhật 2026-09-13**: `parse-thong-tin.js` giờ đọc thêm field `**Trạng thái:**` ("Hoàn thành"/"Đang
+ra") từ `thong-tin.md`, `sync-truyen.mjs` tự ghi vào cột `trang_thai` (Supabase) khi tạo mới lẫn cập
+nhật — không còn phải set tay `trang_thai` trong Supabase nữa. Thiếu field này thì giữ nguyên default
+DB (`'dang-ra'`) hoặc giá trị hiện có, không ghi đè.
+
 **Đợt B — Phần 1 (lượt xem)**: đã xong Task 1-6 + kiểm chứng thật 4/5 kịch bản — xem spec
 `docs/superpowers/specs/2026-09-10-dot-b-luot-xem-design.md`. Phần còn lại (đánh giá sao, "Top
 thịnh hành", sidebar "Đọc tiếp") chưa bàn thiết kế.
@@ -89,3 +94,13 @@ dẫn các bước. Chi tiết xem `docs/handoff/an-toan-thao-tac.md`.
 | `PROJECT_MAP.md` | Cần biết code/cấu trúc thư mục nằm ở đâu |
 | `HANDOFF.md` (mục lục) → `docs/handoff/*.md` | Cần tra lại 1 quyết định/lỗi/kinh nghiệm cụ thể đã gặp trước đây |
 | `NEXT_SESSION.md` | Đầu mỗi phiên mới — biết phiên trước đang làm dở gì, cần đọc **trước** khi hỏi lại user |
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

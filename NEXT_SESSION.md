@@ -1,5 +1,31 @@
 # NEXT_SESSION.md
 
+## Sửa ảnh bìa không cập nhật (cache) + bug tác giả bị null/rác toàn bộ truyện (2026-09-13)
+
+- **Đổi ảnh bìa "Tà Tu Hảo A..."** theo ảnh mới user cung cấp (dán trực tiếp trong chat, không có
+  đường dẫn file — user phải lưu ra ổ đĩa rồi cho đường dẫn). Convert PNG → JPG thật bằng `ffmpeg`
+  (không chỉ đổi đuôi file) trước khi ghi đè `thong-tin/anh-bia.jpg`.
+- **Bug cache ảnh bìa không cập nhật (đã sửa)**: sau khi `sync-truyen.mjs` upload ảnh mới lên
+  Supabase Storage (upsert cùng tên file `<slug>.jpg`), ảnh mới **không hiện** trên web dù đã hard
+  reload / incognito / restart hẳn dev server — vì Next.js Image cache biến thể WebP/AVIF theo
+  đúng URL, mà URL ảnh bìa luôn giữ nguyên tên nên không có tín hiệu nào báo ảnh đã đổi. Xác nhận
+  qua nhiều lớp: curl thẳng vào Next.js image endpoint luôn đúng ảnh mới, nhưng `<img>` trên trang
+  (mọi trình duyệt, kể cả incognito) vẫn hiện ảnh cũ — chỉ hết khi đổi hẳn URL. **Đã sửa tận gốc**:
+  `uploadAnhBia` trong `scripts/sync-truyen.mjs` giờ tự thêm hậu tố `?v=<timestamp>` vào URL ảnh bìa
+  mỗi lần sync, buộc trình duyệt/Next.js luôn coi là ảnh mới hoàn toàn. Bài học: ảnh dùng tên file cố
+  định + `upsert: true` sẽ luôn dính lỗi cache kiểu này ở production thật (Vercel/CDN), không chỉ dev
+  — nên bắt buộc phải có cache-busting cho mọi URL ảnh có thể bị thay thế sau này (không riêng ảnh
+  bìa), tránh lặp lại phải debug nhiều lớp như lần này.
+- **Bug tác giả (`tac_gia`) luôn null hoặc rác — ảnh hưởng TẤT CẢ bộ truyện, không riêng 1 bộ**:
+  `parseThongTin` tìm nhãn `**Tác giả gốc:**` nhưng mọi file `thong-tin.md` thật đều dùng nhãn
+  `**Tác giả:**` (không có "gốc") — regex không bao giờ khớp, nên `tac_gia` luôn `null` và
+  `sync-truyen.mjs` (`if (thongTin.tacGia) capNhat.tac_gia = ...`) không bao giờ ghi đè giá trị cũ
+  trong DB dù chạy sync lại bao nhiêu lần. Bộ "Tà Tu Hảo A..." bị lộ ra vì DB đã lỡ có sẵn giá trị
+  rác `生態撕裂獸l-27型` từ trước (nguồn gốc không rõ, có thể nhập tay khi tạo truyện). Đã sửa
+  `scripts/parse-thong-tin.js` khớp đúng nhãn `**Tác giả:**` + tự bỏ phần tên Hán trong ngoặc (giống
+  cách xử lý thể loại) — TDD, cập nhật test cũ dùng nhãn sai + thêm 1 test mới cho việc bỏ ngoặc.
+  Chạy lại sync cho cả 4 bộ để điền đúng tác giả tiếng Việt. 49/49 test pass.
+
 ## Sửa bug thể loại bị gộp sai + thêm số chương/nhãn AI vào thẻ truyện (2026-09-13)
 
 - **Bug phát hiện**: `parseThongTin` chỉ tách thể loại theo dấu `/`, nhưng 3 bộ mới cập nhật dùng

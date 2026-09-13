@@ -1,5 +1,6 @@
 import { taoSupabaseServerClient } from '@/lib/supabase/server';
 import TheTruyen, { type TruyenThe } from '@/components/TheTruyen';
+import ThongBaoFanpage from '@/components/ThongBaoFanpage';
 
 type HangTruyen = {
   ten: string;
@@ -44,13 +45,18 @@ export default async function TrangChu({
   }));
 
   return (
-    <main className="w-full max-w-5xl mx-auto p-4">
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-        {dsThe.map((truyen) => (
-          <TheTruyen key={truyen.slug} truyen={truyen} />
-        ))}
-      </div>
-      {dsThe.length === 0 && <p className="mt-4 text-muted-foreground">Không tìm thấy truyện nào.</p>}
-    </main>
+    <>
+      <ThongBaoFanpage />
+      <main className="w-full max-w-5xl mx-auto p-4">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+          {dsThe.map((truyen) => (
+            <TheTruyen key={truyen.slug} truyen={truyen} />
+          ))}
+        </div>
+        {dsThe.length === 0 && (
+          <p className="mt-4 text-muted-foreground">Không tìm thấy truyện nào.</p>
+        )}
+      </main>
+    </>
   );
 }

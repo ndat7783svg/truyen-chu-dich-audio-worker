@@ -3,7 +3,7 @@ import { parseThongTin } from './parse-thong-tin.js';
 
 const MAU_DAY_DU = `# Tên Truyện Mẫu (示例名称)
 
-**Tác giả gốc:** Tác Giả Mẫu
+**Tác giả:** Tác Giả Mẫu
 **Thể loại:** Huyền Huyễn / Tiên Hiệp / Xuyên Không (Bối cảnh giả lập dùng để kiểm thử, không liên quan nội dung thật.)
 **Văn phong / xưng hô:**
 - Ngôi kể truyện: Ngôi thứ ba.
@@ -34,13 +34,13 @@ describe('parseThongTin', () => {
   });
 
   it('the_loai la mang rong neu thieu dong Thể loại', () => {
-    const noiDung = '**Tác giả gốc:** X\n\n## Giới thiệu\n\nMô tả.';
+    const noiDung = '**Tác giả:** X\n\n## Giới thiệu\n\nMô tả.';
     const kq = parseThongTin(noiDung);
     expect(kq.theLoai).toEqual([]);
   });
 
   it('mo_ta la null neu thieu muc Gioi thieu', () => {
-    const noiDung = '**Tác giả gốc:** X\n**Thể loại:** A / B';
+    const noiDung = '**Tác giả:** X\n**Thể loại:** A / B';
     const kq = parseThongTin(noiDung);
     expect(kq.moTa).toBeNull();
   });
@@ -72,9 +72,33 @@ describe('parseThongTin', () => {
     ]);
   });
 
-  it('tac_gia la null neu thieu dong Tac gia goc', () => {
+  it('tac_gia la null neu thieu dong Tac gia', () => {
     const noiDung = '**Thể loại:** A';
     const kq = parseThongTin(noiDung);
     expect(kq.tacGia).toBeNull();
+  });
+
+  it('tac_gia bo phan ten Han trong ngoac', () => {
+    const noiDung = '**Tác giả:** Sinh Thái Tê Liệt Thú L-27 (生態撕裂獸l-27型)';
+    const kq = parseThongTin(noiDung);
+    expect(kq.tacGia).toBe('Sinh Thái Tê Liệt Thú L-27');
+  });
+
+  it('trang_thai la hoan-thanh khi ghi Hoan thanh', () => {
+    const noiDung = '**Tác giả:** X\n**Trạng thái:** Hoàn thành';
+    const kq = parseThongTin(noiDung);
+    expect(kq.trangThai).toBe('hoan-thanh');
+  });
+
+  it('trang_thai la dang-ra khi ghi Dang ra', () => {
+    const noiDung = '**Tác giả:** X\n**Trạng thái:** Đang ra';
+    const kq = parseThongTin(noiDung);
+    expect(kq.trangThai).toBe('dang-ra');
+  });
+
+  it('trang_thai la null neu thieu dong Trang thai', () => {
+    const noiDung = '**Tác giả:** X';
+    const kq = parseThongTin(noiDung);
+    expect(kq.trangThai).toBeNull();
   });
 });

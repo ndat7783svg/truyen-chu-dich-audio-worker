@@ -3,12 +3,15 @@ export function parseThongTin(noiDung) {
     tacGia: timTacGia(noiDung),
     theLoai: timTheLoai(noiDung),
     moTa: timMoTa(noiDung),
+    trangThai: timTrangThai(noiDung),
   };
 }
 
 function timTacGia(noiDung) {
-  const khop = noiDung.match(/^\*\*Tác giả gốc:\*\*\s*(.+)$/m);
-  return khop ? khop[1].trim() : null;
+  const khop = noiDung.match(/^\*\*Tác giả:\*\*\s*(.+)$/m);
+  if (!khop) return null;
+  const ten = khop[1].split('(')[0].trim();
+  return ten || null;
 }
 
 function timTheLoai(noiDung) {
@@ -19,6 +22,13 @@ function timTheLoai(noiDung) {
     .split(/[/,]/)
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+function timTrangThai(noiDung) {
+  const khop = noiDung.match(/^\*\*Trạng thái:\*\*\s*(.+)$/m);
+  if (!khop) return null;
+  const gtri = khop[1].trim().toLowerCase();
+  return gtri === 'hoàn thành' ? 'hoan-thanh' : 'dang-ra';
 }
 
 function timMoTa(noiDung) {
