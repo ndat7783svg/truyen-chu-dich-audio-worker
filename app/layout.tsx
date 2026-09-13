@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import Header from "@/components/Header";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ThanhDieuHuong />
         <Header />
         {children}
+        <Analytics />
       </body>
     </html>
   );
