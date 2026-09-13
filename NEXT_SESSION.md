@@ -1,5 +1,56 @@
 # NEXT_SESSION.md
 
+## Hệ thống gói VIP (bản thủ công v1) — code xong, CHỜ USER TỰ TEST end-to-end (2026-09-13)
+
+Brainstorm → spec `docs/superpowers/specs/2026-09-13-goi-vip-tra-phi-design.md` → plan 9 Task
+`docs/superpowers/plans/2026-09-13-goi-vip-tra-phi.md` → giao Task 2-8 cho Antigravity qua MCP
+(Claude tự duyệt diff từng Task, đúng plan 100%), Task 1 (SQL) + phần chữ/nút copy thông tin chuyển
+khoản Claude tự làm (việc nhỏ). Build sạch, 62/62 test pass.
+
+**Quyết định quan trọng nhất**: PayOS/webhook tự động **hoãn sang phiên sau** — user chưa có tài
+khoản PayOS, số khách hiện tại còn ít nên chưa cần tự động hoá ngay. v1 làm thủ công: web tạo mã
+giao dịch `VIP-XXXXXX`, user chuyển khoản MoMo cá nhân của chủ site kèm mã đó trong nội dung, chủ
+site tự đối chiếu rồi chạy script CLI để nâng cấp tài khoản.
+
+- 3 gói: Sơ cấp 1 ngày 6.000đ, Trung cấp 7 ngày 39.000đ, Cao cấp 30 ngày 162.000đ — mua gói mới
+  **thay thế** hạn cũ (không cộng dồn), hết hạn tính theo giờ chính xác.
+- 50 chương đầu mỗi truyện free; truyện mới ít hơn 50 chương thì free toàn bộ.
+- Gate chương >50: chưa đăng nhập → redirect `/dang-nhap`; đã đăng nhập nhưng chưa có gói hiệu lực →
+  hiện `ChanChuongVip` (không lộ `noi_dung` trong HTML).
+- Trigger DB `chan_tu_sua_goi_vip` chặn user tự sửa `goi_loai`/`goi_het_han` qua tài khoản thường —
+  phát sinh ngoài spec gốc, cần thiết vì policy update hồ sơ sẵn có cho phép user tự sửa hồ sơ mình.
+- Script `scripts/xac-nhan-thanh-toan.mjs <MA_GIAO_DICH>` (dùng `SUPABASE_SERVICE_ROLE_KEY`) — idempotent,
+  chạy lại với mã đã xử lý sẽ báo "đã xử lý trước đó", không nâng hạn thêm lần nữa.
+- Đã cắt ảnh QR nhận tiền MoMo thật của user từ ảnh chụp màn hình (`ffmpeg`) lưu vào
+  `public/qr-nhan-tien-momo.png`, đồng thời thêm khối thông tin dạng chữ (tên người nhận/ngân
+  hàng/số tài khoản) kèm nút Copy trong modal `ChonGoiVip.tsx` — user yêu cầu giữa phiên, ngoài phạm
+  vi plan gốc (chỉ có ảnh QR), Claude tự làm trực tiếp (việc nhỏ).
+
+**Kiểm chứng đã làm được qua browser (Claude tự làm, không cần đăng nhập)**: icon khoá đúng ở chương
+>50 trong danh sách chương trang truyện; chương ≤50 đọc bình thường không bị chặn; vào thẳng URL
+chương >50 khi chưa đăng nhập → redirect đúng `/dang-nhap`; console sạch lỗi (tab trình duyệt mới
+hoàn toàn — 1 tab cũ trong phiên bị kẹt "Đang tải..." do dùng chung dev server với phiên chat khác,
+xác nhận qua `curl` thẳng vào server là false alarm, không phải bug thật).
+
+**Việc CHƯA kiểm chứng được (cần đăng nhập, Claude không tự đăng nhập tài khoản thật theo quy tắc an
+toàn `docs/handoff/an-toan-thao-tac.md`) — USER TỰ TEST bằng trình duyệt thật, đây là việc đầu tiên
+cần làm ở phiên sau nếu chưa test xong**:
+1. Đăng nhập → vào `/tai-khoan`, xác nhận mục "Gói VIP" hiện đúng "Chưa có gói VIP đang hiệu lực".
+2. Bấm "Mua gói VIP" → chọn 1 gói → xác nhận modal hiện đúng mã `VIP-XXXXXX`, số tiền, ảnh QR, và
+   khối thông tin chuyển khoản (tên/ngân hàng/STK) copy được.
+3. Tự chuyển khoản thật (hoặc bỏ qua bước chuyển tiền, chỉ cần có mã) rồi chạy:
+   `node --env-file=.env.local scripts/xac-nhan-thanh-toan.mjs <mã vừa tạo>` — xác nhận script in
+   đúng tên user, tên gói, hạn mới.
+4. F5 lại `/tai-khoan` và trang chương >50: xác nhận gói đã kích hoạt, đọc được chương >50, icon
+   khoá biến mất ở trang truyện.
+5. Chạy lại script với cùng mã lần 2: xác nhận báo "đã xử lý trước đó", không nâng hạn thêm.
+6. **Trước khi test thật**: nhớ chạy phần SQL mới cuối `supabase/schema.sql` qua Supabase Dashboard
+   nếu chưa chạy (cột `goi_loai`/`goi_het_han`, bảng `giao_dich`, trigger) — đã nhắc nhưng ghi lại
+   để chắc chắn.
+
+**Sau khi user xác nhận test xong (dù pass hay có bug)**, việc tiếp theo là PayOS/webhook tự động —
+xem `CLAUDE.md` mục "Kế hoạch tiếp theo".
+
 ## Chốt phiên 2026-09-13 (dài) — chuyển sang chat mới, đọc mục này trước tiên
 
 Phiên này làm liên tục nhiều việc, đã **deploy production 3 lần**, lần cuối cùng gồm đủ mọi thay

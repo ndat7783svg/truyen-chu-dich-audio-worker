@@ -22,7 +22,9 @@ website truyện chữ AI/
 │   ├── page.tsx                     (trang chủ - lưới thẻ truyện, đọc query `q` từ URL để lọc theo tìm kiếm)
 │   ├── globals.css                  (3 theme CSS Sáng/Giấy/Tối + mapping Tailwind v4 @theme inline + keyframe thanh-tien-trinh)
 │   ├── auth/callback/route.ts       (route PKCE dùng chung cho Google OAuth + link xác nhận email)
-│   ├── tai-khoan/page.tsx           (trang tài khoản - hồ sơ, cấp độ, đổi theme, đăng xuất)
+│   ├── tai-khoan/
+│   │   ├── page.tsx                 (trang tài khoản - hồ sơ, cấp độ, mục Gói VIP, đổi theme, đăng xuất)
+│   │   └── actions-goi-vip.ts       (server action taoGiaoDich - tạo giao dịch mua gói VIP)
 │   ├── tu-truyen/
 │   │   ├── page.tsx                 (trang tủ truyện - tab "Đã lưu" thật, query truyen_da_luu join truyen)
 │   │   └── DongTruyenDaLuu.tsx      (client - 1 hàng trong danh sách Đã lưu, có nút Bỏ lưu)
@@ -38,6 +40,7 @@ website truyện chữ AI/
 │   │       ├── KhungDocChuong.tsx   (client - khung đọc, chặn copy nội dung; icon nhà + Aa + Danh sách chương bọc trong 1 khung fixed tự ẩn khi cuộn xuống/hiện khi cuộn lên)
 │   │       ├── PanelCaiDatDoc.tsx   (client - nút "Aa" + dropdown 4 mục cài đặt đọc, `absolute` trong khung cha)
 │   │       ├── DanhSachChuong.tsx   (client - nút "Danh sách" + dropdown chuyển nhanh chương tại chỗ, `absolute` trong khung cha)
+│   │       ├── ChanChuongVip.tsx    (chặn chương >50 khi chưa có gói VIP hiệu lực, hiện <ChonGoiVip/>)
 │   │       └── LuuTienDo.tsx        (client component ghi tien_do_doc khi mở trang)
 │   ├── the-loai/[slug]/
 │   │   ├── page.tsx                 (trang lọc truyện theo 1 thể loại)
@@ -53,8 +56,11 @@ website truyện chữ AI/
 │   ├── DropdownTheLoai.tsx          (client component - menu thể loại trong Header)
 │   ├── NutDangXuat.tsx              (client component - nút đăng xuất, dùng trong trang Tài khoản)
 │   ├── SearchBox.tsx                (ô tìm kiếm, nằm trong Header, submit điều hướng về `/?q=...`)
-│   └── TheTruyen.tsx                (thẻ truyện dùng chung - trang chủ + trang thể loại, hiện lượt xem, số chương, nhãn "AI")
+│   ├── TheTruyen.tsx                (thẻ truyện dùng chung - trang chủ + trang thể loại, hiện lượt xem, số chương, nhãn "AI")
+│   └── ChonGoiVip.tsx               (client - modal chọn 1 trong 3 gói VIP + hướng dẫn chuyển khoản MoMo (QR + tên/ngân hàng/STK có nút copy), dùng chung ở trang Tài khoản và ChanChuongVip)
 ├── lib/
+│   ├── config/
+│   │   └── goi-vip.ts               (DANH_SACH_GOI 3 gói, SO_CHUONG_FREE=50, layThongTinGoi, THONG_TIN_NHAN_TIEN nhận tiền MoMo)
 │   ├── supabase/
 │   │   ├── client.ts                (taoSupabaseClient - Client Component)
 │   │   └── server.ts                (taoSupabaseServerClient - Server Component/Action)
@@ -62,13 +68,16 @@ website truyện chữ AI/
 │       ├── theme.ts                 (ThemeToanSite - đọc/ghi theme toàn site qua localStorage)
 │       ├── format.ts                (dinhDangSoRutGon - rút gọn số kiểu 12.5K/3.4M)
 │       ├── dich-loi-supabase.ts     (dichLoiSupabase - dịch lỗi Supabase Auth sang tiếng Việt)
-│       └── cai-dat-doc.ts           (đọc/ghi cài đặt đọc chương qua localStorage, chuẩn hóa dữ liệu, màu theo theme)
+│       ├── cai-dat-doc.ts           (đọc/ghi cài đặt đọc chương qua localStorage, chuẩn hóa dữ liệu, màu theo theme)
+│       └── gia-han-vip.ts           (tinhHanMoi, conHieuLucGoi, sinhMaGiaoDich - hàm thuần cho gói VIP)
 ├── scripts/                         (chạy độc lập bằng node --env-file=.env.local)
 │   ├── slug.js                      (taoSlug - sinh slug từ tên có dấu)
 │   ├── parse-chuong.js              (parseChuong - đọc 1 file chuong-XXX.md, chấp nhận tiêu đề có/không có "#")
 │   ├── parse-thong-tin.js           (parseThongTin - đọc file thong-tin.md: tác giả/thể loại/mô tả)
 │   ├── kiem-tra-chuong.js           (kiemTraTinhLienTuc/laySoChuongTuTieuDe - kiểm tra thiếu chương/lệch số trong nguồn cục bộ)
-│   └── sync-truyen.mjs              (CLI "check [tên truyện]" - đồng bộ chương + metadata lên Supabase, in báo cáo tính liên tục sau khi đăng)
+│   ├── sync-truyen.mjs              (CLI "check [tên truyện]" - đồng bộ chương + metadata lên Supabase, in báo cáo tính liên tục sau khi đăng)
+│   ├── xac-nhan-thanh-toan-logic.js (tinhHanMoi/SO_NGAY_THEO_GOI/TEN_GOI - hàm thuần dùng cho script CLI dưới, tách riêng khỏi lib/ vì scripts/ là JS thuần không qua TypeScript)
+│   └── xac-nhan-thanh-toan.mjs      (CLI xác nhận thanh toán gói VIP thủ công: `node --env-file=.env.local scripts/xac-nhan-thanh-toan.mjs <MA_GIAO_DICH>`, dùng SUPABASE_SERVICE_ROLE_KEY, idempotent)
 ├── supabase/schema.sql              (schema tích luỹ - áp dụng thủ công qua SQL Editor)
 ├── __smoke__/smoke.test.ts
 ├── .env.local.example / .env.local  (biến môi trường; .env.local gitignore)
@@ -85,11 +94,14 @@ website truyện chữ AI/
   — bảng dedup, không cho client đọc/ghi trực tiếp, chỉ qua RPC `ghi_luot_xem`.
 - `truyen_da_luu` — nguoi_dung_id, truyen_id, luu_luc, PK kép — bookmark truyện, RLS theo user, ghi
   qua server actions `luuTruyen`/`boLuuTruyen` (`app/truyen/[slug]/actions-luu.ts`).
-- `nguoi_dung` — id (= `auth.users.id`), ten_nguoi_dung, tao_luc. Hồ sơ người dùng riêng biệt với
-  `auth.users` (Profile Pattern chuẩn của Supabase), tự tạo qua trigger `khi_co_tai_khoan_moi` mỗi
-  khi có tài khoản mới (email/mật khẩu lẫn Google). Nền tảng cho tính năng nạp tiền/mua chương sau
-  này — mọi bảng nghiệp vụ về sau nên tham chiếu vào `nguoi_dung.id`, không phải `auth.users` trực
-  tiếp.
+- `nguoi_dung` — id (= `auth.users.id`), ten_nguoi_dung, tao_luc, **goi_loai, goi_het_han** (thêm
+  2026-09-13 cho gói VIP). Hồ sơ người dùng riêng biệt với `auth.users` (Profile Pattern chuẩn của
+  Supabase), tự tạo qua trigger `khi_co_tai_khoan_moi` mỗi khi có tài khoản mới (email/mật khẩu lẫn
+  Google). Trigger `chan_tu_sua_goi_vip` (before update) chặn user tự sửa `goi_loai`/`goi_het_han`
+  qua tài khoản thường — chỉ service role key (script `xac-nhan-thanh-toan.mjs`) mới sửa được.
+- `giao_dich` — id, nguoi_dung_id, ma_giao_dich (unique, dạng `VIP-XXXXXX`), goi_loai, so_tien,
+  trang_thai (`cho_thanh_toan`/`da_thanh_toan`), tao_luc, thanh_toan_luc — lịch sử mua gói VIP, tạo
+  qua server action `taoGiaoDich`, đánh dấu đã thanh toán qua script CLI `xac-nhan-thanh-toan.mjs`.
 - Storage bucket `anh-bia` (public) — ảnh bìa từng truyện, tên object = `[slug-truyen].jpg`.
 
 ## Auth (Supabase Auth)

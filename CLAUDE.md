@@ -104,21 +104,27 @@ gọn/xem thêm ở trang truyện; và 3 fix UX phát sinh sau khi user tự te
 trang + `loading.tsx` cho các route động — xem `docs/handoff/thanh-loading-chuyen-trang.md`). Chi
 tiết đầy đủ xem `NEXT_SESSION.md`.
 
-## Kế hoạch tiếp theo — Hệ thống trả phí / tài khoản VIP (đang bàn, CHƯA code)
-User đã đồng ý làm phần trả phí sau khi deploy (deploy xong rồi — xem trên). Ý tưởng ban đầu của
-user (**chưa chốt, cần brainstorm kỹ trước khi code** — đây là tính năng lớn, phải dùng skill
-`brainstorming` + `writing-plans` trước, KHÔNG code thẳng):
-- Mỗi bộ truyện: 50 chương đầu đọc free, chương sau phải mua gói mới mở khoá.
-- Gói theo thời gian (không phải theo từng chương) — user lấy cảm hứng từ "gói 4G" nhà mạng: gói
-  ngày (~6k/ngày), gói tuần (~39k/7 ngày, giảm ~7%), gói tháng (~162k/30 ngày, giảm ~10%). Kích hoạt
-  gói nào thì mở toàn bộ mọi truyện không giới hạn chương trong thời gian đó (không phải mở riêng
-  từng bộ) — đơn giản hơn quản lý theo từng truyện.
-- User muốn thanh toán tự động nâng cấp tài khoản ngay sau khi trả tiền (ưu tiên chi phí gần 0đ) —
-  cần cổng thanh toán VN có webhook (VNPay/Momo/PayOS...), chưa chọn cổng nào.
-- Lý do quyết định làm free-trial 50 chương thay vì trả tiền từng chương như đa số trang dịch AI
-  khác (ví dụ truyendich.ai) — user tự tin chất lượng dịch hơn nhờ duyệt lại 2 lần.
+## Hệ thống trả phí / Gói VIP (bản thủ công v1) — ĐÃ CODE XONG, chờ user tự test end-to-end
+Brainstorm → spec `docs/superpowers/specs/2026-09-13-goi-vip-tra-phi-design.md` → plan
+`docs/superpowers/plans/2026-09-13-goi-vip-tra-phi.md` (9 Task, giao Antigravity qua MCP) — build
+sạch, 62/62 test pass, đã kiểm chứng qua browser các phần không cần đăng nhập (icon khoá, gate
+chương >50, redirect đăng nhập). Phần cần đăng nhập (mua gói, script xác nhận thanh toán) **user tự
+test bằng trình duyệt thật** — xem việc cần làm đầu phiên sau trong `NEXT_SESSION.md`.
 
-Xem `NEXT_SESSION.md` để biết bước tiếp theo cụ thể.
+- Mỗi bộ truyện: 50 chương đầu đọc free, chương sau phải có gói VIP đang hiệu lực.
+- 3 gói theo thời gian (kích hoạt gói nào mở toàn bộ mọi truyện không giới hạn chương trong thời
+  gian đó): Sơ cấp 1 ngày 6.000đ, Trung cấp 7 ngày 39.000đ (giảm ~7%), Cao cấp 30 ngày 162.000đ
+  (giảm ~10%). Mua gói mới **thay thế** hạn cũ (không cộng dồn) — quyết định của user, tránh phiền
+  phức quản lý nhiều gói chồng nhau.
+- **Thanh toán v1 làm THỦ CÔNG** (PayOS/webhook tự động hoãn sang phiên sau — user chưa có tài
+  khoản PayOS, số khách hiện còn ít nên chưa cần tự động hoá ngay): web tạo mã giao dịch
+  `VIP-XXXXXX`, user chuyển khoản MoMo cá nhân của chủ site kèm mã đó, chủ site tự đối chiếu rồi
+  chạy `node --env-file=.env.local scripts/xac-nhan-thanh-toan.mjs <mã>` để nâng cấp tài khoản.
+- Free-trial 50 chương (không trả tiền từng chương như đa số trang dịch AI khác, ví dụ
+  truyendich.ai) — user tự tin chất lượng dịch hơn nhờ duyệt lại 2 lần.
+
+**Việc tiếp theo sau khi user test xong bản thủ công**: tích hợp PayOS để tự động hoá webhook nâng
+cấp tài khoản ngay sau khi thanh toán — xem `NEXT_SESSION.md`.
 
 ## Quy tắc an toàn khi test
 Claude KHÔNG tự bấm submit form đăng ký/đăng nhập thật trên Supabase Auth của user (dù chỉ để
