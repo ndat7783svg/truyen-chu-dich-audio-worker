@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { taoSupabaseServerClient } from '@/lib/supabase/server';
+import { conHieuLucGoi } from '@/lib/utils/gia-han-vip';
 import NutDangXuat from '@/components/NutDangXuat';
 import ChonTheme from '@/components/ChonTheme';
+import ChonGoiVip from '@/components/ChonGoiVip';
 
 export default async function TrangTaiKhoan() {
   const supabase = await taoSupabaseServerClient();
@@ -10,13 +12,15 @@ export default async function TrangTaiKhoan() {
   } = await supabase.auth.getUser();
 
   let tenNguoiDung: string | null = null;
+  let goiHetHan: string | null = null;
   if (user) {
     const { data: hoSo } = await supabase
       .from('nguoi_dung')
-      .select('ten_nguoi_dung')
+      .select('ten_nguoi_dung, goi_het_han')
       .eq('id', user.id)
       .maybeSingle();
     tenNguoiDung = hoSo?.ten_nguoi_dung ?? null;
+    goiHetHan = hoSo?.goi_het_han ?? null;
   }
 
   return (
@@ -53,6 +57,30 @@ export default async function TrangTaiKhoan() {
           </div>
         )}
       </section>
+
+      {user && (
+        <section className="border border-border bg-surface rounded-lg p-4 space-y-3">
+          <h2 className="text-sm font-semibold uppercase text-muted-foreground">Gói VIP</h2>
+          {conHieuLucGoi(goiHetHan) ? (
+            <p className="text-sm">
+              Đang có gói VIP, hiệu lực đến{' '}
+              <strong>
+                {new Date(goiHetHan as string).toLocaleString('vi-VN', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                })}
+              </strong>
+              .
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">Chưa có gói VIP đang hiệu lực.</p>
+          )}
+          <ChonGoiVip />
+        </section>
+      )}
 
       <section className="border border-border bg-surface rounded-lg p-4">
         <h2 className="text-sm font-semibold uppercase text-muted-foreground mb-3">Giao diện</h2>
