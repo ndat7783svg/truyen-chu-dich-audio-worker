@@ -207,10 +207,11 @@ này co lại theo nội dung thay vì full width) — sửa bằng cách thêm 
 
 ## Bước tiếp theo — chọn 1 trong các hướng sau, hỏi user trước khi làm
 
-1. **Quay lại v1 còn dở**: Task 11 (deploy Vercel) — Task 10 dark mode đã xong (gộp vào Đợt C).
-2. **Nội dung thật của trang Tủ truyện** (3 tab Đã đọc/Đã lưu/Đã thêm) — cần bàn thiết kế riêng vì
-   "Đã lưu" cần thêm tính năng lưu truyện (bookmark) chưa có; "Đã đọc" có thể tận dụng
-   `tien_do_doc` sẵn có.
+1. **Quay lại v1 còn dở**: Task 11 (deploy Vercel) — user dự định tự làm sau đó mua domain
+   Namecheap. Task 10 dark mode đã xong (gộp vào Đợt C).
+2. **Nội dung thật còn lại của trang Tủ truyện** (2 tab Đã đọc/Đã thêm — "Đã lưu" đã xong hoàn toàn
+   2026-09-13) — "Đã đọc" có thể tận dụng `tien_do_doc` sẵn có, "Đã thêm" chưa rõ ý nghĩa, cần hỏi
+   lại user.
 3. **Việc nhỏ còn sót của Đợt B lượt xem**: kịch bản 4 (verify `visitor_key = nguoidung:<user_id>`
    khi đăng nhập đọc chương) — giờ đã có tài khoản thật đăng nhập được, có thể nhờ user tiện thể đọc
    1 chương lúc đang đăng nhập rồi kiểm tra bảng `luot_xem_da_doc`.
@@ -220,11 +221,16 @@ này co lại theo nội dung thay vì full width) — sửa bằng cách thêm 
 ## Lưu ý quan trọng
 - `.env.local` đã điền đủ 4 biến (kể cả `SUPABASE_SERVICE_ROLE_KEY`) — không hỏi lại, không in
   giá trị ra chat.
-- Chạy `sync-truyen.mjs` phải dùng `node --env-file=.env.local scripts/sync-truyen.mjs ...`.
-- Xem `HANDOFF.md` → `docs/handoff/` nếu gặp lại: lỗi mạng lạ (không phải lỗi code), BOM trong
-  `.env.local`, hay nghi ngờ số liệu chương lệch design doc.
-- Dữ liệu chương thật của "Tà Tu Hảo A..." có khoảng trống số chương (2-10 không tồn tại) — không
-  phải bug hiển thị, đã xác nhận file gốc bên `D:\translate truyen` cũng không có các file đó.
+- Chạy `sync-truyen.mjs` phải dùng `node --env-file=.env.local scripts/sync-truyen.mjs ...`. Từ
+  2026-09-13 script tự in thêm báo cáo kiểm tra tính liên tục số chương sau khi đăng — xem mục cập
+  nhật truyện 2026-09-13 ở trên trước khi hỏi lại user về việc này.
+- **[ĐÃ LỖI THỜI — xem lại]** Ghi chú cũ "Tà Tu Hảo A có khoảng trống chương 2-10" KHÔNG còn đúng —
+  đã cập nhật đủ 510/510 chương ngày 2026-09-13 (nguồn dịch đã bổ sung các chương đó). Không cần
+  nhắc lại ghi chú này nữa.
+- Nếu 1 bộ truyện mới "check" báo lỗi parse/thiếu hàng loạt (gần như toàn bộ file), xem
+  `docs/handoff/cap-nhat-truyen-loi-mang-va-dinh-dang.md` trước khi báo user — khả năng cao là do
+  nguồn dịch khác định dạng (đã gặp 2 lần: dấu `#` tiêu đề chương, dấu phân cách thể loại), không
+  phải lỗi code hay lỗi mạng.
 
 ## Quyết định đang chờ user
 - Chọn hướng làm tiếp theo ở mục "Bước tiếp theo" phía trên.
