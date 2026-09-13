@@ -72,6 +72,12 @@ export default async function TrangDocChuong({
       .maybeSingle(),
   ]);
 
+  const { data: dsChuong } = await supabase
+    .from('chuong')
+    .select('so_chuong, tieu_de')
+    .eq('truyen_id', truyen.id)
+    .order('so_chuong', { ascending: true });
+
   return (
     <>
       <LuuTienDo truyenId={truyen.id} chuongId={chuong.id} />
@@ -83,6 +89,7 @@ export default async function TrangDocChuong({
         noiDung={chuong.noi_dung}
         soChuongTruoc={chuongTruoc?.so_chuong}
         soChuongSau={chuongSau?.so_chuong}
+        dsChuong={(dsChuong ?? []).map((c) => ({ soChuong: c.so_chuong, tieuDe: c.tieu_de }))}
       />
     </>
   );

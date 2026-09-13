@@ -11,6 +11,7 @@ import {
   type CaiDatDoc,
 } from '@/lib/utils/cai-dat-doc';
 import PanelCaiDatDoc from './PanelCaiDatDoc';
+import DanhSachChuong, { type MucChuong } from './DanhSachChuong';
 
 const notoSerif = Noto_Serif({
   subsets: ['vietnamese', 'latin'],
@@ -25,6 +26,7 @@ export default function KhungDocChuong({
   noiDung,
   soChuongTruoc,
   soChuongSau,
+  dsChuong,
 }: {
   tenTruyen: string;
   slugTruyen: string;
@@ -33,6 +35,7 @@ export default function KhungDocChuong({
   noiDung: string;
   soChuongTruoc?: number;
   soChuongSau?: number;
+  dsChuong: MucChuong[];
 }) {
   const [caiDat, setCaiDat] = useState<CaiDatDoc>(CAI_DAT_MAC_DINH);
 
@@ -78,6 +81,11 @@ export default function KhungDocChuong({
           />
         </svg>
       </Link>
+      <DanhSachChuong
+        slugTruyen={slugTruyen}
+        soChuongHienTai={soChuong}
+        dsChuong={dsChuong}
+      />
       <PanelCaiDatDoc caiDat={caiDat} onDoiCaiDat={capNhatCaiDat} />
       <p className="text-sm opacity-70">
         <Link href={`/truyen/${slugTruyen}`} className="hover:underline">

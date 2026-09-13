@@ -33,6 +33,7 @@ website truyện chữ AI/
 │   │       ├── page.tsx             (trang đọc chương - fetch dữ liệu + ghi RPC ghi_luot_xem, render KhungDocChuong)
 │   │       ├── KhungDocChuong.tsx   (client - khung đọc, quản lý state cài đặt đọc + áp dụng màu nền/cỡ chữ/phông/giãn dòng)
 │   │       ├── PanelCaiDatDoc.tsx   (client - nút "Aa" + dropdown 4 mục cài đặt đọc)
+│   │       ├── DanhSachChuong.tsx   (client - nút "Danh sách" + dropdown chuyển nhanh chương tại chỗ)
 │   │       └── LuuTienDo.tsx        (client component ghi tien_do_doc khi mở trang)
 │   ├── the-loai/[slug]/page.tsx     (trang lọc truyện theo 1 thể loại)
 │   ├── dang-ky/page.tsx             (đăng ký: tên/email/mật khẩu/xác nhận + nút Google)
