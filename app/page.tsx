@@ -1,5 +1,4 @@
 import { taoSupabaseServerClient } from '@/lib/supabase/server';
-import SearchBox from '@/components/SearchBox';
 import TheTruyen, { type TruyenThe } from '@/components/TheTruyen';
 
 type HangTruyen = {
@@ -42,9 +41,7 @@ export default async function TrangChu({
 
   return (
     <main className="w-full max-w-5xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Truyện dịch AI</h1>
-      <SearchBox defaultValue={q ?? ''} />
-      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {dsThe.map((truyen) => (
           <TheTruyen key={truyen.slug} truyen={truyen} />
         ))}
