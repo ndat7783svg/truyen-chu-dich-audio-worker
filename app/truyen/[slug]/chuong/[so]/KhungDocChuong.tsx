@@ -47,6 +47,14 @@ export default function KhungDocChuong({
 
   const mauSac = mauSacTheo(caiDat.mauNen);
 
+  function chanChuotPhai(e: React.MouseEvent) {
+    e.preventDefault();
+  }
+
+  function chanSaoChep(e: React.ClipboardEvent) {
+    e.preventDefault();
+  }
+
   return (
     <main
       className="w-full max-w-2xl mx-auto p-4 relative"
@@ -66,8 +74,11 @@ export default function KhungDocChuong({
         Chương {soChuong}: {tieuDe}
       </h1>
       <article
-        className="mt-4 whitespace-pre-line"
+        className="mt-4 whitespace-pre-line select-none"
         style={{ fontSize: `${caiDat.coChu}px`, lineHeight: caiDat.giaiDong }}
+        onContextMenu={chanChuotPhai}
+        onCopy={chanSaoChep}
+        onCut={chanSaoChep}
       >
         {noiDung}
       </article>
