@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { taoSlug } from './slug.js';
 import { parseChuong } from './parse-chuong.js';
 import { parseThongTin } from './parse-thong-tin.js';
+import { laySoChuongTuTieuDe, kiemTraTinhLienTuc } from './kiem-tra-chuong.js';
 
 const THU_MUC_GOC =
   process.env.TRANSLATE_TRUYEN_DIR || 'D:\\translate truyen\\danh-sach-truyen';
@@ -227,6 +228,7 @@ async function main() {
   }
   const fileChuong = readdirSync(thuMucChuong).filter((f) => /^chuong-\d{3}\.md$/.test(f));
 
+  const danhSachKiemTra = [];
   const daDang = [];
   const boQua = [];
   for (const tenFile of fileChuong) {
@@ -234,6 +236,11 @@ async function main() {
     try {
       const noiDungFile = readFileSync(join(thuMucChuong, tenFile), 'utf-8');
       thongTinChuong = parseChuong(tenFile, noiDungFile);
+      const dongDauTien = (noiDungFile.split('\n')[0] || '').trim();
+      danhSachKiemTra.push({
+        soChuongFile: thongTinChuong.soChuong,
+        soChuongTieuDe: laySoChuongTuTieuDe(dongDauTien),
+      });
     } catch (err) {
       console.error(`Bo qua file loi dinh dang "${tenFile}": ${err.message}`);
       boQua.push(tenFile);
@@ -263,6 +270,20 @@ async function main() {
   }
   if (boQua.length > 0) {
     console.log(`Bo qua ${boQua.length} file loi: ${boQua.join(', ')}`);
+  }
+
+  const { thieu, lechTieuDe, tongSo, min, max } = kiemTraTinhLienTuc(danhSachKiemTra);
+  console.log(`--- Kiem tra tinh lien tuc so chuong (${tongSo} file, tu ${min} den ${max}) ---`);
+  if (thieu.length === 0) {
+    console.log('Khong phat hien thieu chuong nao trong khoang tren.');
+  } else {
+    console.log(`CANH BAO: thieu ${thieu.length} chuong trong khoang tren: ${thieu.join(', ')}`);
+  }
+  if (lechTieuDe.length > 0) {
+    console.log(
+      `CANH BAO: ${lechTieuDe.length} file co so chuong trong tieu de khac ten file (nghi trung/nham so): ` +
+        lechTieuDe.map((l) => `file ${l.soChuongFile} ghi tieu de Chuong ${l.soChuongTieuDe}`).join('; ')
+    );
   }
 }
 

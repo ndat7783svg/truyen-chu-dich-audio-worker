@@ -30,6 +30,14 @@ describe('parseChuong', () => {
     expect(() => parseChuong('chuong-1.md', MAU_HOP_LE)).toThrow();
   });
 
+  it('chap nhan dong tieu de khong co dau "#" (dinh dang khac tu D:\\translate truyen)', () => {
+    const noiDung = `Chương 5: Mở đầu mới\n\nNoi dung chuong 5.\n`;
+    const kq = parseChuong('chuong-005.md', noiDung);
+    expect(kq.soChuong).toBe(5);
+    expect(kq.tieuDe).toBe('Mở đầu mới');
+    expect(kq.noiDung).toBe('Noi dung chuong 5.');
+  });
+
   it('nem loi neu file thieu dong tieu de bat dau bang #', () => {
     expect(() => parseChuong('chuong-002.md', 'Khong co tieu de\n\nNoi dung')).toThrow();
   });

@@ -7,12 +7,20 @@ export function parseChuong(tenFile, noiDungFile) {
 
   const dong = noiDungFile.split('\n');
   const dongDauTien = (dong[0] || '').trim();
-  if (!dongDauTien.startsWith('#')) {
-    throw new Error(`File ${tenFile} thieu dong tieu de bat dau bang "#"`);
-  }
 
-  const khopTieuDe = dongDauTien.match(/^#\s*Ch[uư][oơ]ng\s+\d+\s*:\s*(.+)$/i);
-  const tieuDe = khopTieuDe ? khopTieuDe[1].trim() : dongDauTien.replace(/^#\s*/, '').trim();
+  let tieuDe;
+  if (dongDauTien.startsWith('#')) {
+    const khopTieuDe = dongDauTien.match(/^#\s*Ch[uư][oơ]ng\s+\d+\s*:\s*(.+)$/i);
+    tieuDe = khopTieuDe ? khopTieuDe[1].trim() : dongDauTien.replace(/^#\s*/, '').trim();
+  } else {
+    const khopTieuDe = dongDauTien.match(/^Ch[uư][oơ]ng\s+\d+\s*:\s*(.+)$/i);
+    if (!khopTieuDe) {
+      throw new Error(
+        `File ${tenFile} thieu dong tieu de bat dau bang "#" hoac dung dinh dang "Chuong N: ..."`
+      );
+    }
+    tieuDe = khopTieuDe[1].trim();
+  }
 
   const noiDung = dong.slice(1).join('\n').trim();
   if (!noiDung) {
