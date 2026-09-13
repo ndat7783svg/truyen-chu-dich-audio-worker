@@ -1,5 +1,35 @@
 # NEXT_SESSION.md
 
+## Bật Vercel Analytics + chặn copy nội dung chương (2026-09-13)
+
+- **Bật Vercel Analytics**: cài `@vercel/analytics`, thêm `<Analytics/>` vào `app/layout.tsx`. Đã
+  deploy production (`npx vercel --prod --yes`), xem số liệu tại Vercel Dashboard → Analytics.
+- **Phát hiện bot crawl mạnh sau khi có domain thật**: tra `luot_xem_da_doc` bằng service role key
+  thấy chỉ trong ~19 phút có 7 cookie khách đọc gần 1000 chương (1 cookie đọc 254 chương liên tiếp,
+  cách nhau 1-2 giây) — không phải lỗi đếm trùng, cơ chế dedup vẫn đúng, chỉ là bot không giữ cookie
+  nên mỗi lần bị tính "khách mới". Khả năng là Googlebot/Bing index trang mới, chưa chắc là ăn cắp
+  nội dung.
+- **Chặn copy nội dung chương (mức cơ bản, đã xong)**: brainstorm → spec
+  `docs/superpowers/specs/2026-09-13-chan-copy-noi-dung-chuong-design.md` → Claude tự code (việc
+  nhỏ 1 file) → kiểm chứng qua browser thật (dispatch event `contextmenu`/`copy` bị chặn đúng trong
+  `<article>`, nhưng vẫn cho phép ở phần tử khác ngoài phạm vi). `user-select: none` +
+  `onContextMenu`/`onCopy`/`onCut` chặn trong `KhungDocChuong.tsx`, chỉ áp dụng khối nội dung
+  chương, không ảnh hưởng SEO (nội dung vẫn text thật trong DOM). Build + 52/52 test pass, đã
+  commit — **CHƯA deploy lên production** (user sắp hết giới hạn token tuần, để dành phiên sau).
+
+## Việc bảo mật còn lại — làm ở phiên sau (theo thứ tự đã bàn với user)
+User lo ngại bị "ăn cắp truyện" sau khi thấy lượt xem tăng bất thường (thực ra là bot, xem trên).
+Đã tách thành 3 việc độc lập, mới làm xong việc 1 (bản cơ bản):
+1. ~~Chặn copy nội dung chương (mức cơ bản)~~ — xong, xem trên.
+2. **Chặn copy nâng cao** (user yêu cầu để dành lần sau): rate limit theo IP, CAPTCHA khi nghi
+   ngờ, obfuscate DOM để scraper tự động khó cào hàng loạt — cần cân nhắc kỹ vì có thể ảnh hưởng
+   SEO/trải nghiệm đọc thật, phải brainstorm riêng.
+3. **Chống bot đọc trang** (làm sai lệch lượt xem) — cân nhắc: lọc theo User-Agent chứa
+   bot/crawler/spider trước khi gọi RPC `ghi_luot_xem`, nhưng KHÔNG được chặn hẳn Googlebot/Bing
+   truy cập trang (cần cho SEO) — chỉ nên loại chúng khỏi việc đếm lượt xem, không chặn crawl.
+4. **Rà soát bảo mật tổng thể** (auth, RLS Supabase, secrets, API) — việc lớn nhất, nên làm dạng
+   audit riêng, dùng skill `security-review` hoặc brainstorm kỹ trước khi động vào.
+
 ## Deploy production + mua domain + thêm truyện mới + banner fanpage (2026-09-13)
 
 - **Thêm bộ truyện thứ 5** "Mở Đầu Giao Nộp Tu Tiên Giới, Quốc Gia Cho Ta Thành Tiên Trước" — 767/767
