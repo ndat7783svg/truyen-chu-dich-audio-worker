@@ -31,3 +31,14 @@
   Đã fix bằng Cloudflare WARP (chế độ **WARP** đầy đủ, không phải "DNS only").
 - Nếu gặp lại triệu chứng "vào được vài trang, không vào được vài trang khác, DNS vẫn đúng" trên
   máy này → nghi ISP chặn domain trước, đừng nghĩ ngay là lỗi code/deploy.
+
+### 2026-09-11 — `use_antigravity` với `mode: "plan"` vẫn tự thực thi thật (ghi file/chạy lệnh)
+- **Hiện tượng**: gọi tool với `mode: "plan"` (đáng lẽ chỉ đọc/phân tích, chưa ghi gì) nhưng
+  Antigravity vẫn tự tạo/sửa file thật, tự chạy `npm run build`/`npm run test` luôn trong cùng 1
+  lượt gọi — đã lặp lại ít nhất 2 lần (đợt cài đặt đọc chương 2026-09-10, đợt thanh điều
+  hướng/Tài khoản/theme 2026-09-11), không phải sự cố ngẫu nhiên.
+- **Không gây hại** vì Antigravity không tự `git commit` — Claude vẫn kiểm tra `git status`/đọc lại
+  file/chạy build+test độc lập trước khi commit, nên sai sót (nếu có) vẫn bị chặn lại ở bước duyệt.
+- **Cách xử lý**: coi `mode: "plan"` chỉ là gợi ý hành vi (best-effort), không phải cam kết kỹ
+  thuật thật của công cụ — luôn tự kiểm tra `git status`/`git diff` ngay sau lời gọi đầu tiên (dù
+  là "plan") thay vì đợi tới bước `accept-edits` mới kiểm tra.
