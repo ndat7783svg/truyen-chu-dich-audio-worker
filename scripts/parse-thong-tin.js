@@ -16,7 +16,7 @@ function timTheLoai(noiDung) {
   if (!khop) return [];
   const phanThoLoai = khop[1].split('(')[0];
   return phanThoLoai
-    .split('/')
+    .split(/[/,]/)
     .map((s) => s.trim())
     .filter(Boolean);
 }

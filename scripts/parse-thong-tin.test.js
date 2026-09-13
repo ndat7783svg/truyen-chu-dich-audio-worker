@@ -51,6 +51,27 @@ describe('parseThongTin', () => {
     expect(kq.theLoai).toEqual(['A', 'B', 'C']);
   });
 
+  it('tach dung the loai khi dung dau phay thay vi dau /', () => {
+    const noiDung = '**Thể loại:** Huyền huyễn, Dị giới, Xuyên không, Hệ thống';
+    const kq = parseThongTin(noiDung);
+    expect(kq.theLoai).toEqual(['Huyền huyễn', 'Dị giới', 'Xuyên không', 'Hệ thống']);
+  });
+
+  it('tach dung the loai khi tron lan dau phay va dau /', () => {
+    const noiDung =
+      '**Thể loại:** Huyền huyễn, Dị giới, Xuyên không, Hệ thống / Tăng phúc mỗi ngày, Nhục thân thành thánh, Vô địch lưu';
+    const kq = parseThongTin(noiDung);
+    expect(kq.theLoai).toEqual([
+      'Huyền huyễn',
+      'Dị giới',
+      'Xuyên không',
+      'Hệ thống',
+      'Tăng phúc mỗi ngày',
+      'Nhục thân thành thánh',
+      'Vô địch lưu',
+    ]);
+  });
+
   it('tac_gia la null neu thieu dong Tac gia goc', () => {
     const noiDung = '**Thể loại:** A';
     const kq = parseThongTin(noiDung);
