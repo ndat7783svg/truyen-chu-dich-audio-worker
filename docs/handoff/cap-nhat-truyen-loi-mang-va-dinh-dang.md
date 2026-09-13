@@ -55,3 +55,19 @@ mới `scripts/kiem-tra-chuong.js`):
 lỗi mạng giữa chừng (xem mục đầu file này), báo cáo này vẫn có thể nói "không thiếu chương nào" dù
 DB thực tế đang thiếu — vì nó chỉ nhìn vào file, không nhìn vào DB. Muốn biết DB có đủ chương chưa,
 phải tra trực tiếp bằng service role key như ở trên.
+
+### 2026-09-13 — `parseThongTin` chỉ tách thể loại theo dấu `/`, một số bộ mới dùng dấu `,`
+
+- **Hiện tượng**: thẻ truyện hiện thể loại bị gộp thành 1 cụm dài (ví dụ
+  "Huyền huyễn, Dị giới, Xuyên không, Hệ thống" hiện thành 1 tag duy nhất thay vì 4 tag riêng).
+- **Nguyên nhân**: `scripts/parse-thong-tin.js` chỉ `split('/')` dòng `**Thể loại:**`. Bộ truyện
+  cũ ("Tà Tu Hảo A") dùng đúng dấu `/`, nhưng các bộ mới hơn từ `D:\translate truyen` lại dùng dấu
+  phẩy `,` — không phải lỗi web, là khác quy ước xuất file giữa các đợt dịch.
+- **Đã sửa**: đổi sang `split(/[/,]/)` để chấp nhận cả 2 dấu — không ảnh hưởng các bộ đã dùng đúng
+  dấu `/` từ trước.
+- **Phải dọn dữ liệu cũ đã lỡ đăng sai**: sửa code không tự động sửa lại dữ liệu đã có trong DB —
+  phải tự viết script 1 lần dùng `SUPABASE_SERVICE_ROLE_KEY` để tìm các dòng `the_loai` có tên chứa
+  dấu phẩy (dấu hiệu bị gộp sai), xoá `truyen_the_loai` liên quan rồi xoá dòng `the_loai` đó, sau đó
+  chạy lại `sync-truyen.mjs` cho đúng các bộ bị ảnh hưởng để nó tự gán lại thể loại tách đúng.
+- **Ghi nhớ cho lần sau**: nếu thấy thẻ truyện hiện 1 tag thể loại dài bất thường (nhiều chữ nối
+  bằng dấu phẩy), nghi ngay lỗi delimiter parse này, không phải lỗi hiển thị CSS.

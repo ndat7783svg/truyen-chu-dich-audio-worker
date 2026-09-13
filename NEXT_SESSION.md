@@ -1,5 +1,20 @@
 # NEXT_SESSION.md
 
+## Sửa bug thể loại bị gộp sai + thêm số chương/nhãn AI vào thẻ truyện (2026-09-13)
+
+- **Bug phát hiện**: `parseThongTin` chỉ tách thể loại theo dấu `/`, nhưng 3 bộ mới cập nhật dùng
+  dấu phẩy `,` — khiến cả cụm thể loại bị gộp thành 1 the_loai duy nhất (tên dài lằng nhằng). Đã sửa
+  `scripts/parse-thong-tin.js` chấp nhận cả `/` và `,` (TDD, 3 test mới). Đã viết script dọn dữ liệu
+  cũ bị gộp sai trong Supabase (xoá 4 dòng `the_loai` lỗi + 4 liên kết `truyen_the_loai`), sau đó
+  chạy lại `sync-truyen.mjs` cho cả 3 bộ để gán lại đúng thể loại tách riêng.
+- **Thêm mới thẻ truyện** (`components/TheTruyen.tsx` + query `app/page.tsx` và
+  `app/the-loai/[slug]/page.tsx`): hiện số chương (qua Supabase embedded count `chuong(count)`) và
+  nhãn "AI" màu tím góc phải trên ảnh bìa (báo cho độc giả biết truyện dịch bằng AI).
+- Đã thêm thành công truyện mới "Sức Mạnh Mỗi Ngày Tăng 1%, Ta Vô Địch Rồi" (679 chương, ảnh bìa
+  phải đổi tên đúng `anh-bia.jpg` mới nhận diện được — file gốc user lưu tên khác `.png`).
+- Kiểm chứng qua browser: trang chủ + trang thể loại đều hiện đúng thể loại tách riêng, số chương,
+  nhãn AI. Console sạch lỗi. Build + 48/48 test pass.
+
 ## Cập nhật 3 bộ truyện + mở rộng `sync-truyen.mjs` kiểm tra tính liên tục số chương (2026-09-13)
 
 Lệnh "check [tên truyện]" chạy cho 3 bộ: Tà Tu Hảo A - Tà Tu Thăng Cấp Khoái, Phàm Trần Phi Tiên,

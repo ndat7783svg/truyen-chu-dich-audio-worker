@@ -44,7 +44,7 @@ website truyện chữ AI/
 │   ├── DropdownTheLoai.tsx          (client component - menu thể loại trong Header)
 │   ├── NutDangXuat.tsx              (client component - nút đăng xuất, dùng trong trang Tài khoản)
 │   ├── SearchBox.tsx                (ô tìm kiếm, nằm trong Header, submit điều hướng về `/?q=...`)
-│   └── TheTruyen.tsx                (thẻ truyện dùng chung - trang chủ + trang thể loại, hiện lượt xem)
+│   └── TheTruyen.tsx                (thẻ truyện dùng chung - trang chủ + trang thể loại, hiện lượt xem, số chương, nhãn "AI")
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts                (taoSupabaseClient - Client Component)
