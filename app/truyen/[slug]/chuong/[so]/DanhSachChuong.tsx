@@ -33,7 +33,7 @@ export default function DanhSachChuong({
   }, [moDanhSach]);
 
   return (
-    <div ref={boxRef} className="fixed top-3 left-14 z-40">
+    <div ref={boxRef} className="absolute top-3 left-14 z-40">
       <button
         type="button"
         onClick={() => setMoDanhSach((truoc) => !truoc)}

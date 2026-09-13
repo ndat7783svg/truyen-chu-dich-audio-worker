@@ -25,7 +25,7 @@ export default function ChromeToanSite({
     <>
       {dieuHuong}
       {header}
-      {children}
+      <div className="pb-16 md:pb-0">{children}</div>
     </>
   );
 }

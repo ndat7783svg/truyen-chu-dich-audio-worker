@@ -39,3 +39,20 @@ body {
   color: var(--color-foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes thanh-tien-trinh {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 70%;
+  }
+  100% {
+    width: 90%;
+  }
+}
+
+.animate-thanh-tien-trinh {
+  width: 0%;
+  animation: thanh-tien-trinh 1.2s ease-out forwards;
+}

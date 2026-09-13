@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
@@ -6,6 +7,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import ChromeToanSite from "@/components/ChromeToanSite";
+import ThanhTienTrinh from "@/components/ThanhTienTrinh";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +44,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Script id="chong-fouc-theme" strategy="beforeInteractive">
           {SCRIPT_CHONG_FOUC}
         </Script>
+        <Suspense fallback={null}>
+          <ThanhTienTrinh />
+        </Suspense>
         <ChromeToanSite header={<Header />} dieuHuong={<ThanhDieuHuong />}>
           {children}
         </ChromeToanSite>

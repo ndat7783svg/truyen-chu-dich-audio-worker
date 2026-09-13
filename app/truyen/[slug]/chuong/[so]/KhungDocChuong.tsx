@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Noto_Serif } from 'next/font/google';
 import {
@@ -38,9 +38,26 @@ export default function KhungDocChuong({
   dsChuong: MucChuong[];
 }) {
   const [caiDat, setCaiDat] = useState<CaiDatDoc>(CAI_DAT_MAC_DINH);
+  const [hienThanhTop, setHienThanhTop] = useState(true);
+  const scrollYTruocRef = useRef(0);
 
   useEffect(() => {
     setCaiDat(docCaiDatDoc());
+  }, []);
+
+  useEffect(() => {
+    function xuLyCuon() {
+      const scrollY = window.scrollY;
+      const truoc = scrollYTruocRef.current;
+      if (scrollY > truoc && scrollY > 80) {
+        setHienThanhTop(false);
+      } else if (scrollY < truoc) {
+        setHienThanhTop(true);
+      }
+      scrollYTruocRef.current = scrollY;
+    }
+    window.addEventListener('scroll', xuLyCuon, { passive: true });
+    return () => window.removeEventListener('scroll', xuLyCuon);
   }, []);
 
   function capNhatCaiDat(caiDatMoi: CaiDatDoc) {
@@ -67,26 +84,32 @@ export default function KhungDocChuong({
         fontFamily: caiDat.phong === 'co-dien' ? notoSerif.style.fontFamily : undefined,
       }}
     >
-      <Link
-        href="/"
-        aria-label="Về trang chủ"
-        className="fixed top-3 left-3 z-40 w-9 h-9 rounded-full border flex items-center justify-center bg-white/80 text-gray-900"
+      <div
+        className={`fixed top-0 inset-x-0 z-40 h-14 transition-transform duration-300 ${
+          hienThanhTop ? 'translate-y-0' : '-translate-y-full'
+        }`}
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-          />
-        </svg>
-      </Link>
-      <DanhSachChuong
-        slugTruyen={slugTruyen}
-        soChuongHienTai={soChuong}
-        dsChuong={dsChuong}
-      />
-      <PanelCaiDatDoc caiDat={caiDat} onDoiCaiDat={capNhatCaiDat} />
+        <Link
+          href="/"
+          aria-label="Về trang chủ"
+          className="absolute top-3 left-3 w-9 h-9 rounded-full border flex items-center justify-center bg-white/80 text-gray-900"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+          </svg>
+        </Link>
+        <DanhSachChuong
+          slugTruyen={slugTruyen}
+          soChuongHienTai={soChuong}
+          dsChuong={dsChuong}
+        />
+        <PanelCaiDatDoc caiDat={caiDat} onDoiCaiDat={capNhatCaiDat} />
+      </div>
       <p className="text-sm opacity-70">
         <Link href={`/truyen/${slugTruyen}`} className="hover:underline">
           {tenTruyen}
