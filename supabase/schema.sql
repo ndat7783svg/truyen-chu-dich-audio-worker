@@ -172,3 +172,51 @@ create policy "user luu truyen cho minh" on truyen_da_luu
 drop policy if exists "user bo luu truyen cua minh" on truyen_da_luu;
 create policy "user bo luu truyen cua minh" on truyen_da_luu
   for delete using (auth.uid() = nguoi_dung_id);
+
+-- Hệ thống gói VIP (2026-09-13, bản thủ công v1 — chưa tích hợp PayOS)
+alter table nguoi_dung add column if not exists goi_loai text;
+alter table nguoi_dung add column if not exists goi_het_han timestamptz;
+
+-- Chặn user tự sửa gói VIP của mình qua API thường (chỉ service role key mới sửa được, dùng trong
+-- scripts/xac-nhan-thanh-toan.mjs) — chính sách update sẵn có của nguoi_dung cho phép user sửa hồ
+-- sơ của chính mình, nếu không có trigger này họ có thể tự set goi_het_han bất kỳ.
+create or replace function public.chan_tu_sua_goi_vip()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.role() <> 'service_role' then
+    new.goi_loai := old.goi_loai;
+    new.goi_het_han := old.goi_het_han;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists truoc_khi_sua_nguoi_dung on public.nguoi_dung;
+create trigger truoc_khi_sua_nguoi_dung
+  before update on public.nguoi_dung
+  for each row execute function public.chan_tu_sua_goi_vip();
+
+create table if not exists giao_dich (
+  id uuid primary key default gen_random_uuid(),
+  nguoi_dung_id uuid not null references nguoi_dung(id) on delete cascade,
+  ma_giao_dich text not null unique,
+  goi_loai text not null,
+  so_tien integer not null,
+  trang_thai text not null default 'cho_thanh_toan',
+  tao_luc timestamptz not null default now(),
+  thanh_toan_luc timestamptz
+);
+
+alter table giao_dich enable row level security;
+
+drop policy if exists "user xem giao dich cua minh" on giao_dich;
+create policy "user xem giao dich cua minh" on giao_dich
+  for select using (auth.uid() = nguoi_dung_id);
+
+drop policy if exists "user tao giao dich cho minh" on giao_dich;
+create policy "user tao giao dich cho minh" on giao_dich
+  for insert with check (auth.uid() = nguoi_dung_id and trang_thai = 'cho_thanh_toan');
