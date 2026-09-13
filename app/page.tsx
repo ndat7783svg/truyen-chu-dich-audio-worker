@@ -41,7 +41,7 @@ export default async function TrangChu({
 
   return (
     <main className="w-full max-w-5xl mx-auto p-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
         {dsThe.map((truyen) => (
           <TheTruyen key={truyen.slug} truyen={truyen} />
         ))}
