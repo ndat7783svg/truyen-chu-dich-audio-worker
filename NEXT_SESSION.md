@@ -1,5 +1,41 @@
 # NEXT_SESSION.md
 
+## Redesign giao diện mobile-first (2026-09-13): xong hoàn toàn 8/8 Task + kiểm chứng thật
+
+User chủ yếu đọc trên điện thoại, phản hồi 6 vấn đề UX qua ảnh chụp thật (thanh điều hướng đè
+chữ, Header thừa trong trang đọc, bug vị trí nút Aa, thiếu nút bắt đầu đọc/danh sách chương, mô tả
+truyện không có cấu trúc). Brainstorm (dùng skill `ask-before-do` xác nhận hiểu đúng ý trước khi
+làm) → spec `docs/superpowers/specs/2026-09-13-redesign-mobile-doc-truyen-design.md` → plan 8 Task
+`docs/superpowers/plans/2026-09-13-redesign-mobile-doc-truyen.md` → giao từng Task cho Antigravity
+qua MCP, Claude tự duyệt diff + build/test + kiểm chứng qua Browser pane (resize 375px/320px) sau
+mỗi Task trước khi sang Task kế — **cả 8 Task đều xong, không Task nào bị bỏ dở.**
+
+- [x] Task 1: `ChromeToanSite.tsx` — ẩn Header/ThanhDieuHuong ở trang đọc chương theo route.
+- [x] Task 2: `ThanhDieuHuong.tsx` responsive — thanh ngang dưới đáy trên mobile, giữ icon nổi dọc
+      trên desktop.
+- [x] Task 3: Icon nhà + nút Aa `fixed` trong trang đọc chương, sửa bug đè chữ (phát hiện qua
+      browser thật, agy làm đúng theo plan nhưng thiếu `pt-14` cho `<main>` — Claude tự thêm sau
+      khi thấy đè chữ trên viewport 375px).
+- [x] Task 4: Nút "Danh sách chương" dropdown tại chỗ, cuộn được, tô đậm chương đang đọc.
+- [x] Task 5: Nút Chương trước/sau đổi thành nút có viền, cao 44px (chuẩn touch target).
+- [x] Task 6: Nút "Bắt đầu đọc" ở trang truyện, cạnh nút "Đọc tiếp" (nếu có tiến độ).
+- [x] Task 7: Khối "Giới thiệu truyện" tách riêng, line-clamp-4 + toggle Xem thêm/Thu gọn.
+- [x] Task 8: Kiểm chứng tổng thể — build sạch, 52/52 test pass, console sạch (xác nhận qua tab
+      trình duyệt mới hoàn toàn, không tính nhiễu HMR ở tab cũ đã trải qua nhiều lần restart dev
+      server), desktop giữ nguyên layout cũ (không hồi quy).
+
+**Sự cố hạ tầng gặp giữa chừng (không phải lỗi code Task 5)**: sau nhiều lần gọi `npm run build`
+liên tiếp song song với `next dev` đang chạy trên cùng thư mục `.next`, dev server bị lỗi 404 toàn
+bộ route động. Đã xử lý: kill process cũ + xoá `.next` + khởi động lại qua `preview_start`. Sau đó
+phát hiện thêm nguyên nhân thật khiến chậm là **WARP bị tắt** (lặp lại sự cố đã ghi ở
+`docs/handoff/moi-truong-va-cong-cu.md`) — user bật lại WARP là hết. Bài học mới: tránh chạy
+`npm run build` nhiều lần liên tục khi có `next dev` đang chạy cùng thư mục dự án — cân nhắc chỉ
+chạy build 1 lần ở cuối (Task 8) thay vì sau mỗi Task, hoặc dùng thư mục `.next` khác cho build tạm
+nếu cần kiểm tra type giữa chừng thường xuyên.
+
+**Chưa deploy lên production** — cần chạy `npx vercel --prod --yes` khi user sẵn sàng (đã hỏi xác
+nhận trước theo quy tắc an toàn).
+
 ## Bật Vercel Analytics + chặn copy nội dung chương (2026-09-13)
 
 - **Bật Vercel Analytics**: cài `@vercel/analytics`, thêm `<Analytics/>` vào `app/layout.tsx`. Đã
