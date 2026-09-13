@@ -41,6 +41,8 @@ export default async function TrangTruyen({
     .eq('truyen_id', truyen.id)
     .order('so_chuong', { ascending: true });
 
+  const chuongDauTien = (dsChuong ?? [])[0] ?? null;
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -135,14 +137,24 @@ export default async function TrangTruyen({
         </div>
       </div>
       {truyen.mo_ta && <p className="mt-4 text-muted-foreground whitespace-pre-line">{truyen.mo_ta}</p>}
-      {chuongDangDoc && (
-        <Link
-          href={`/truyen/${slug}/chuong/${chuongDangDoc.so_chuong}`}
-          className="inline-block mt-4 px-4 py-2 rounded bg-blue-600 text-white"
-        >
-          Đọc tiếp Chương {chuongDangDoc.so_chuong}
-        </Link>
-      )}
+      <div className="mt-4 flex flex-wrap gap-3">
+        {chuongDauTien && (
+          <Link
+            href={`/truyen/${slug}/chuong/${chuongDauTien.so_chuong}`}
+            className="px-4 py-2 rounded bg-blue-600 text-white font-medium"
+          >
+            Bắt đầu đọc
+          </Link>
+        )}
+        {chuongDangDoc && (
+          <Link
+            href={`/truyen/${slug}/chuong/${chuongDangDoc.so_chuong}`}
+            className="px-4 py-2 rounded border border-border font-medium hover:bg-black/5"
+          >
+            Đọc tiếp Chương {chuongDangDoc.so_chuong}
+          </Link>
+        )}
+      </div>
       <ul className="mt-6 space-y-1">
         {(dsChuong ?? []).map((chuong) => (
           <li key={chuong.id}>
