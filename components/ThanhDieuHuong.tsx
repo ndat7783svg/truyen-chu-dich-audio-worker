@@ -53,15 +53,42 @@ export default function ThanhDieuHuong() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed left-4 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-2 p-2 rounded-full border border-border bg-surface shadow-md">
-      {MUC.map((muc) => {
-        const dangHoatDong = pathname === muc.duongDan;
-        return (
-          <div key={muc.duongDan} className="group relative">
+    <>
+      {/* Desktop: icon nổi dọc bên trái */}
+      <nav className="hidden md:flex fixed left-4 top-1/2 -translate-y-1/2 z-30 flex-col gap-2 p-2 rounded-full border border-border bg-surface shadow-md">
+        {MUC.map((muc) => {
+          const dangHoatDong = pathname === muc.duongDan;
+          return (
+            <div key={muc.duongDan} className="group relative">
+              <Link
+                href={muc.duongDan}
+                aria-label={muc.nhan}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                  dangHoatDong
+                    ? 'bg-foreground text-background'
+                    : 'text-foreground hover:bg-background'
+                }`}
+              >
+                {muc.icon}
+              </Link>
+              <span className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap rounded bg-foreground text-background text-xs px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {muc.nhan}
+              </span>
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* Mobile: thanh ngang cố định dưới đáy */}
+      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 z-30 justify-center gap-6 border-t border-border bg-surface py-2 shadow-md">
+        {MUC.map((muc) => {
+          const dangHoatDong = pathname === muc.duongDan;
+          return (
             <Link
+              key={muc.duongDan}
               href={muc.duongDan}
               aria-label={muc.nhan}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+              className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
                 dangHoatDong
                   ? 'bg-foreground text-background'
                   : 'text-foreground hover:bg-background'
@@ -69,12 +96,9 @@ export default function ThanhDieuHuong() {
             >
               {muc.icon}
             </Link>
-            <span className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap rounded bg-foreground text-background text-xs px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              {muc.nhan}
-            </span>
-          </div>
-        );
-      })}
-    </nav>
+          );
+        })}
+      </nav>
+    </>
   );
 }
