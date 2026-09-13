@@ -151,3 +151,24 @@ create trigger khi_co_tai_khoan_moi
   after insert on auth.users
   for each row execute function public.tao_ho_so_nguoi_dung();
 
+-- Tính năng "Đã lưu" (2026-09-13): bookmark truyện
+create table if not exists truyen_da_luu (
+  nguoi_dung_id uuid not null references nguoi_dung(id) on delete cascade,
+  truyen_id uuid not null references truyen(id) on delete cascade,
+  luu_luc timestamptz not null default now(),
+  primary key (nguoi_dung_id, truyen_id)
+);
+
+alter table truyen_da_luu enable row level security;
+
+drop policy if exists "user xem truyen da luu cua minh" on truyen_da_luu;
+create policy "user xem truyen da luu cua minh" on truyen_da_luu
+  for select using (auth.uid() = nguoi_dung_id);
+
+drop policy if exists "user luu truyen cho minh" on truyen_da_luu;
+create policy "user luu truyen cho minh" on truyen_da_luu
+  for insert with check (auth.uid() = nguoi_dung_id);
+
+drop policy if exists "user bo luu truyen cua minh" on truyen_da_luu;
+create policy "user bo luu truyen cua minh" on truyen_da_luu
+  for delete using (auth.uid() = nguoi_dung_id);
