@@ -27,13 +27,14 @@ export default async function TrangTruyen({
   const { slug } = await params;
   const supabase = await taoSupabaseServerClient();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('truyen')
     .select(
       'id, ten, mo_ta, anh_bia, trang_thai, tac_gia, luot_xem, truyen_the_loai(the_loai(ten, slug))'
     )
     .eq('slug', slug)
     .maybeSingle();
+  if (error) throw new Error(`Lỗi tải truyện "${slug}": ${error.message}`);
   const truyen = data as unknown as HangTruyen | null;
 
   if (!truyen) notFound();

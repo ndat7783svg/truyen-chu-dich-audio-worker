@@ -23,11 +23,12 @@ export default async function TrangTheLoai({
   const { slug } = await params;
   const supabase = await taoSupabaseServerClient();
 
-  const { data: theLoai } = await supabase
+  const { data: theLoai, error: loiTheLoai } = await supabase
     .from('the_loai')
     .select('id, ten, slug')
     .eq('slug', slug)
     .maybeSingle();
+  if (loiTheLoai) throw new Error(`Lỗi tải thể loại "${slug}": ${loiTheLoai.message}`);
 
   if (!theLoai) notFound();
 

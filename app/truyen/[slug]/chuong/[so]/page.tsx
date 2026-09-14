@@ -16,19 +16,21 @@ export default async function TrangDocChuong({
   const soChuong = parseInt(so, 10);
   const supabase = await taoSupabaseServerClient();
 
-  const { data: truyen } = await supabase
+  const { data: truyen, error: loiTruyen } = await supabase
     .from('truyen')
     .select('id, ten')
     .eq('slug', slug)
     .maybeSingle();
+  if (loiTruyen) throw new Error(`Lỗi tải truyện "${slug}": ${loiTruyen.message}`);
   if (!truyen) notFound();
 
-  const { data: chuong } = await supabase
+  const { data: chuong, error: loiChuong } = await supabase
     .from('chuong')
     .select('id, truyen_id, so_chuong, tieu_de, noi_dung')
     .eq('truyen_id', truyen.id)
     .eq('so_chuong', soChuong)
     .maybeSingle();
+  if (loiChuong) throw new Error(`Lỗi tải chương ${soChuong} của truyện "${slug}": ${loiChuong.message}`);
   if (!chuong) notFound();
 
   const {
