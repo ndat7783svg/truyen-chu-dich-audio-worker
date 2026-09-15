@@ -37,6 +37,12 @@ export default function PanelDocAudio({
   const tocDoRef = useRef(CAI_DAT_AUDIO_MAC_DINH.tocDo);
   const queueRef = useRef<string[]>([]);
   const indexRef = useRef(0);
+  // Đánh số "thế hệ" mỗi lần chủ động huỷ utterance đang đọc (tạm dừng/đổi tốc độ/đổi chương/đọc
+  // lại từ đầu). onend/onerror của utterance cũ so khớp lại số này - khác thì bỏ qua (utterance cũ,
+  // không phải utterance hiện tại). Không dùng cờ boolean vì cancel() không đảm bảo luôn bắn
+  // onend/onerror cho utterance bị huỷ ở mọi trình duyệt - cờ boolean có thể bị kẹt mãi ở true và
+  // làm mọi lần đọc xong sau đó bị hiểu nhầm là chủ động huỷ, im lặng dừng giữa chừng.
+  const theHeRef = useRef(0);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
@@ -51,6 +57,7 @@ export default function PanelDocAudio({
   useEffect(() => {
     return () => {
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        theHeRef.current += 1;
         window.speechSynthesis.cancel();
       }
     };
@@ -59,7 +66,10 @@ export default function PanelDocAudio({
   useEffect(() => {
     // Chương vừa đổi (dù tự động hay người dùng tự bấm) - luôn dừng audio của chương cũ trước,
     // tránh tình trạng đọc lệch nội dung khi người dùng tự điều hướng trong lúc đang nghe dở.
-    if (hoTro) window.speechSynthesis.cancel();
+    if (hoTro) {
+      theHeRef.current += 1;
+      window.speechSynthesis.cancel();
+    }
     setDangDoc(false);
     setDangTamDung(false);
 
@@ -105,14 +115,17 @@ export default function PanelDocAudio({
       return;
     }
 
+    const theHeKhiTao = theHeRef.current;
     const utter = new SpeechSynthesisUtterance(queue[idx]);
     utter.lang = 'vi-VN';
     utter.rate = tocDoRef.current;
     utter.onend = () => {
+      if (theHeKhiTao !== theHeRef.current) return; // utterance cũ đã bị huỷ, bỏ qua
       indexRef.current += 1;
       docDoanTiep();
     };
     utter.onerror = () => {
+      if (theHeKhiTao !== theHeRef.current) return; // utterance cũ đã bị huỷ, bỏ qua
       setDangDoc(false);
       setDangTamDung(false);
     };
@@ -120,6 +133,7 @@ export default function PanelDocAudio({
   }
 
   function batDauDoc() {
+    theHeRef.current += 1;
     window.speechSynthesis.cancel();
     queueRef.current = taoDoanDoc(`${tieuDe}. ${noiDung}`);
     indexRef.current = 0;
@@ -133,11 +147,15 @@ export default function PanelDocAudio({
       batDauDoc();
       return;
     }
+    // Không dùng speechSynthesis.pause()/resume() gốc - hành vi rất khác nhau giữa các trình duyệt
+    // (desktop hay tự phát lại từ đầu, mobile hay mất tiếng sau khi resume). Thay vào đó tự huỷ đoạn
+    // đang đọc rồi tự đọc lại đúng đoạn đó khi bấm tiếp tục - đáng tin cậy hơn trên mọi trình duyệt.
     if (dangTamDung) {
-      window.speechSynthesis.resume();
       setDangTamDung(false);
+      docDoanTiep();
     } else {
-      window.speechSynthesis.pause();
+      theHeRef.current += 1;
+      window.speechSynthesis.cancel();
       setDangTamDung(true);
     }
   }
@@ -148,6 +166,7 @@ export default function PanelDocAudio({
     ghiCaiDatAudio(caiDatMoi);
     tocDoRef.current = tocDoMoi;
     if (dangDoc && !dangTamDung) {
+      theHeRef.current += 1;
       window.speechSynthesis.cancel();
       docDoanTiep();
     }
