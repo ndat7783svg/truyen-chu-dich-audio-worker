@@ -220,3 +220,65 @@ create policy "user xem giao dich cua minh" on giao_dich
 drop policy if exists "user tao giao dich cho minh" on giao_dich;
 create policy "user tao giao dich cho minh" on giao_dich
   for insert with check (auth.uid() = nguoi_dung_id and trang_thai = 'cho_thanh_toan');
+
+-- Vá bảo mật (2026-09-15, bản 1 - ĐÃ THAY THẾ bằng bản dưới): policy chặn theo HÀNG (row) khiến
+-- toàn bộ metadata (tiêu đề...) của chương VIP cũng bị ẩn theo, làm vỡ danh sách chương công khai +
+-- trang chương VIP trả 404 thay vì đúng ra phải mời đăng nhập/mua gói. Giữ policy đọc công khai theo
+-- HÀNG như cũ, chuyển sang chặn theo CỘT (chỉ chặn noi_dung) ở bản vá bên dưới.
+drop policy if exists "chuong doc theo quyen vip" on chuong;
+drop policy if exists "chuong doc cong khai" on chuong;
+create policy "chuong doc cong khai" on chuong for select using (true);
+
+-- Vá bảo mật (2026-09-15, bản 2 - đúng): chính sách RLS của Postgres chỉ chặn được theo HÀNG, không
+-- chặn riêng theo CỘT, nên không thể vừa cho đọc công khai tiêu đề/metadata mọi chương (cần cho danh
+-- sách chương + icon khoá) vừa chặn riêng nội dung (noi_dung) chương VIP bằng 1 policy duy nhất.
+-- Giải pháp: giữ nguyên hàng công khai (policy trên), nhưng THU HỒI quyền đọc trực tiếp cột noi_dung
+-- của anon/authenticated, bắt buộc phải đọc nội dung qua hàm lay_noi_dung_chuong() bên dưới - hàm
+-- này tự kiểm tra chương <= 50 hoặc có gói VIP hiệu lực mới trả về nội dung thật, ngược lại trả về
+-- null. Áp dụng cho: app/truyen/[slug]/chuong/[so]/page.tsx (đã sửa để gọi RPC thay vì select thẳng
+-- cột noi_dung). Số 50 khớp SO_CHUONG_FREE trong lib/config/goi-vip.ts.
+-- LƯU Ý: phải revoke SELECT toàn bảng trước rồi mới grant lại đúng các cột an toàn - chỉ revoke
+-- riêng 1 cột (bản đầu tiên mình viết, ĐÃ SAI) không có tác dụng vì quyền SELECT toàn bảng cấp sẵn
+-- mặc định cho anon/authenticated vẫn bao trùm mọi cột, không bị 1 revoke cột đơn lẻ ghi đè.
+revoke select on chuong from anon, authenticated;
+grant select (id, truyen_id, so_chuong, tieu_de, created_at, luot_xem) on chuong to anon, authenticated;
+
+create or replace function public.lay_noi_dung_chuong(p_chuong_id uuid)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_so_chuong int;
+  v_noi_dung text;
+  v_co_vip boolean;
+begin
+  select so_chuong, noi_dung into v_so_chuong, v_noi_dung
+  from chuong
+  where id = p_chuong_id;
+
+  if v_so_chuong is null then
+    return null;
+  end if;
+
+  if v_so_chuong <= 50 then
+    return v_noi_dung;
+  end if;
+
+  select exists(
+    select 1 from nguoi_dung
+    where id = auth.uid()
+      and goi_het_han is not null
+      and goi_het_han > now()
+  ) into v_co_vip;
+
+  if v_co_vip then
+    return v_noi_dung;
+  end if;
+
+  return null;
+end;
+$$;
+
+grant execute on function public.lay_noi_dung_chuong(uuid) to anon, authenticated;

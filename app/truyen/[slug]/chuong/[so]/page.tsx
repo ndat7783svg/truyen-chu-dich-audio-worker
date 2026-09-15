@@ -27,7 +27,7 @@ export default async function TrangDocChuong({
 
   const { data: chuong, error: loiChuong } = await supabase
     .from('chuong')
-    .select('id, truyen_id, so_chuong, tieu_de, noi_dung')
+    .select('id, truyen_id, so_chuong, tieu_de')
     .eq('truyen_id', truyen.id)
     .eq('so_chuong', soChuong)
     .maybeSingle();
@@ -51,6 +51,12 @@ export default async function TrangDocChuong({
       return <ChanChuongVip tenTruyen={truyen.ten} slugTruyen={slug} soChuong={chuong.so_chuong} />;
     }
   }
+
+  const { data: noiDung, error: loiNoiDung } = await supabase.rpc('lay_noi_dung_chuong', {
+    p_chuong_id: chuong.id,
+  });
+  if (loiNoiDung) throw new Error(`Lỗi tải nội dung chương ${soChuong}: ${loiNoiDung.message}`);
+  if (noiDung == null) notFound();
 
   // Ghi nhận lượt xem (chống trùng vĩnh viễn, không chặn render nội dung)
   try {
@@ -123,7 +129,7 @@ export default async function TrangDocChuong({
         truyenId={truyen.id}
         soChuong={chuong.so_chuong}
         tieuDe={chuong.tieu_de}
-        noiDung={chuong.noi_dung}
+        noiDung={noiDung}
         soChuongTruoc={chuongTruoc?.so_chuong}
         soChuongSau={chuongSau?.so_chuong}
         tongSoChuong={tongSoChuong}
