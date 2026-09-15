@@ -14,7 +14,7 @@ website truyện chữ AI/
 │   ├── superpowers/specs/           (spec đã brainstorm + user duyệt)
 │   ├── superpowers/plans/           (implementation plan theo từng spec)
 │   └── handoff/                     (nhật ký kỹ thuật chi tiết theo chủ đề)
-├── middleware.ts                    (rate limit /truyen/* qua Upstash Redis + refresh session Supabase Auth + cấp cookie khach_id mỗi request)
+├── middleware.ts                    (rate limit /truyen/* qua Upstash Redis + refresh session Supabase Auth cho user đã đăng nhập (Fast-path bypass cho khách) + cấp cookie khach_id mỗi request)
 ├── next.config.ts                   (cho phép next/image tải ảnh bìa từ Supabase Storage)
 ├── app/                             (Next.js App Router)
 │   ├── layout.tsx                   (root layout, bọc <ChromeToanSite/> quanh Header+ThanhDieuHuong, <ThanhTienTrinh/> (Suspense), script chống FOUC, metadata.title "Truyện chữ dịch")
@@ -34,12 +34,13 @@ website truyện chữ AI/
 │   │   ├── actions-luu.ts           (server actions luuTruyen/boLuuTruyen cho tính năng Đã lưu)
 │   │   ├── NutLuuTruyen.tsx         (client - nút icon bookmark lưu/bỏ lưu, khoá nút lúc đang xử lý)
 │   │   ├── MoTaTruyen.tsx           (client - khối "Giới thiệu truyện", line-clamp-4 + toggle Xem thêm/Thu gọn)
+│   │   ├── DanhSachChuongTruyen.tsx (client - danh sách chương chia nhóm 50 chương tại chỗ)
 │   │   └── chuong/[so]/
-│   │       ├── page.tsx             (trang đọc chương - fetch dữ liệu + dsChuong + ghi RPC ghi_luot_xem, render KhungDocChuong)
+│   │       ├── page.tsx             (trang đọc chương - SSR 1 nhóm 50 chương chứa chương đang đọc + tổng số chương + ghi RPC ghi_luot_xem, render KhungDocChuong)
 │   │       ├── loading.tsx          (fallback "Đang tải..." cho route trang đọc chương)
 │   │       ├── KhungDocChuong.tsx   (client - khung đọc, chặn copy nội dung; icon nhà + Aa + Danh sách chương bọc trong 1 khung fixed tự ẩn khi cuộn xuống/hiện khi cuộn lên)
 │   │       ├── PanelCaiDatDoc.tsx   (client - nút "Aa" + dropdown 4 mục cài đặt đọc, `absolute` trong khung cha)
-│   │       ├── DanhSachChuong.tsx   (client - nút "Danh sách" + dropdown chuyển nhanh chương tại chỗ, `absolute` trong khung cha)
+│   │       ├── DanhSachChuong.tsx   (client - nút "Danh sách" + dropdown chuyển nhóm chương tải on-demand + cache state, `absolute` trong khung cha)
 │   │       ├── ChanChuongVip.tsx    (chặn chương >50 khi chưa có gói VIP hiệu lực, hiện <ChonGoiVip/>)
 │   │       └── LuuTienDo.tsx        (client component ghi tien_do_doc khi mở trang)
 │   ├── the-loai/[slug]/
@@ -59,6 +60,8 @@ website truyện chữ AI/
 │   ├── TheTruyen.tsx                (thẻ truyện dùng chung - trang chủ + trang thể loại, hiện lượt xem, số chương, nhãn "AI")
 │   └── ChonGoiVip.tsx               (client - modal chọn 1 trong 3 gói VIP + hướng dẫn chuyển khoản MoMo (QR + tên/ngân hàng/STK có nút copy), dùng chung ở trang Tài khoản và ChanChuongVip)
 ├── lib/
+│   ├── actions/
+│   │   └── lay-nhom-chuong.ts       (server action layNhomChuong - tải 50 chương theo nhóm on-demand)
 │   ├── config/
 │   │   └── goi-vip.ts               (DANH_SACH_GOI 3 gói, SO_CHUONG_FREE=50, layThongTinGoi, THONG_TIN_NHAN_TIEN nhận tiền MoMo)
 │   ├── rate-limit/
@@ -69,6 +72,7 @@ website truyện chữ AI/
 │   └── utils/
 │       ├── theme.ts                 (ThemeToanSite - đọc/ghi theme toàn site qua localStorage)
 │       ├── format.ts                (dinhDangSoRutGon - rút gọn số kiểu 12.5K/3.4M)
+│       ├── chuong.ts                (tinhSoNhom, tinhNhomCuaChuong, taoDanhSachNhom, catChuongTheoNhom - phân nhóm chương 50)
 │       ├── dich-loi-supabase.ts     (dichLoiSupabase - dịch lỗi Supabase Auth sang tiếng Việt)
 │       ├── cai-dat-doc.ts           (đọc/ghi cài đặt đọc chương qua localStorage, chuẩn hóa dữ liệu, màu theo theme)
 │       ├── gia-han-vip.ts           (tinhHanMoi, conHieuLucGoi, sinhMaGiaoDich - hàm thuần cho gói VIP)

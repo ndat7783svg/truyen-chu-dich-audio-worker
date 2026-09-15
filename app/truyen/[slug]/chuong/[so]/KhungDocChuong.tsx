@@ -21,21 +21,27 @@ const notoSerif = Noto_Serif({
 export default function KhungDocChuong({
   tenTruyen,
   slugTruyen,
+  truyenId,
   soChuong,
   tieuDe,
   noiDung,
   soChuongTruoc,
   soChuongSau,
-  dsChuong,
+  tongSoChuong,
+  soNhomBanDau,
+  dsChuongBanDau,
 }: {
   tenTruyen: string;
   slugTruyen: string;
+  truyenId: string;
   soChuong: number;
   tieuDe: string;
   noiDung: string;
   soChuongTruoc?: number;
   soChuongSau?: number;
-  dsChuong: MucChuong[];
+  tongSoChuong: number;
+  soNhomBanDau: number;
+  dsChuongBanDau: MucChuong[];
 }) {
   const [caiDat, setCaiDat] = useState<CaiDatDoc>(CAI_DAT_MAC_DINH);
   const [hienThanhTop, setHienThanhTop] = useState(true);
@@ -105,8 +111,11 @@ export default function KhungDocChuong({
         </Link>
         <DanhSachChuong
           slugTruyen={slugTruyen}
+          truyenId={truyenId}
           soChuongHienTai={soChuong}
-          dsChuong={dsChuong}
+          tongSoChuong={tongSoChuong}
+          soNhomBanDau={soNhomBanDau}
+          dsChuongBanDau={dsChuongBanDau}
         />
         <PanelCaiDatDoc caiDat={caiDat} onDoiCaiDat={capNhatCaiDat} />
       </div>

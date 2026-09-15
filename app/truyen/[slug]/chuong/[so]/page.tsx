@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { taoSupabaseServerClient } from '@/lib/supabase/server';
 import { SO_CHUONG_FREE } from '@/lib/config/goi-vip';
 import { conHieuLucGoi } from '@/lib/utils/gia-han-vip';
+import { tinhNhomCuaChuong, KICH_THUOC_NHOM_CHUONG } from '@/lib/utils/chuong';
 import LuuTienDo from './LuuTienDo';
 import KhungDocChuong from './KhungDocChuong';
 import ChanChuongVip from './ChanChuongVip';
@@ -73,30 +74,45 @@ export default async function TrangDocChuong({
     console.error('Lỗi khi ghi lượt xem:', error);
   }
 
-  const [{ data: chuongTruoc }, { data: chuongSau }] = await Promise.all([
-    supabase
-      .from('chuong')
-      .select('so_chuong')
-      .eq('truyen_id', truyen.id)
-      .lt('so_chuong', soChuong)
-      .order('so_chuong', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('chuong')
-      .select('so_chuong')
-      .eq('truyen_id', truyen.id)
-      .gt('so_chuong', soChuong)
-      .order('so_chuong', { ascending: true })
-      .limit(1)
-      .maybeSingle(),
-  ]);
+  const soNhomBanDau = tinhNhomCuaChuong(soChuong);
+  const tuChuong = soNhomBanDau * KICH_THUOC_NHOM_CHUONG + 1;
+  const denChuong = (soNhomBanDau + 1) * KICH_THUOC_NHOM_CHUONG;
 
-  const { data: dsChuong } = await supabase
-    .from('chuong')
-    .select('so_chuong, tieu_de')
-    .eq('truyen_id', truyen.id)
-    .order('so_chuong', { ascending: true });
+  const [{ data: chuongTruoc }, { data: chuongSau }, { data: dsChuongBanDau }, { data: chuongCuoi }] =
+    await Promise.all([
+      supabase
+        .from('chuong')
+        .select('so_chuong')
+        .eq('truyen_id', truyen.id)
+        .lt('so_chuong', soChuong)
+        .order('so_chuong', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('chuong')
+        .select('so_chuong')
+        .eq('truyen_id', truyen.id)
+        .gt('so_chuong', soChuong)
+        .order('so_chuong', { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('chuong')
+        .select('so_chuong, tieu_de')
+        .eq('truyen_id', truyen.id)
+        .gte('so_chuong', tuChuong)
+        .lte('so_chuong', denChuong)
+        .order('so_chuong', { ascending: true }),
+      supabase
+        .from('chuong')
+        .select('so_chuong')
+        .eq('truyen_id', truyen.id)
+        .order('so_chuong', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+  const tongSoChuong = chuongCuoi?.so_chuong ?? 0;
 
   return (
     <>
@@ -104,12 +120,18 @@ export default async function TrangDocChuong({
       <KhungDocChuong
         tenTruyen={truyen.ten}
         slugTruyen={slug}
+        truyenId={truyen.id}
         soChuong={chuong.so_chuong}
         tieuDe={chuong.tieu_de}
         noiDung={chuong.noi_dung}
         soChuongTruoc={chuongTruoc?.so_chuong}
         soChuongSau={chuongSau?.so_chuong}
-        dsChuong={(dsChuong ?? []).map((c) => ({ soChuong: c.so_chuong, tieuDe: c.tieu_de }))}
+        tongSoChuong={tongSoChuong}
+        soNhomBanDau={soNhomBanDau}
+        dsChuongBanDau={(dsChuongBanDau ?? []).map((c) => ({
+          soChuong: c.so_chuong,
+          tieuDe: c.tieu_de,
+        }))}
       />
     </>
   );
