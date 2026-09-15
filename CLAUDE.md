@@ -16,6 +16,18 @@ skill `delegate-antigravity-sk` — Claude đóng vai quản lý (lập plan, du
 lặp sửa lỗi), không tự code trực tiếp. Ngoại lệ: việc nhỏ/rõ ràng 1-2 bước (sửa vài dòng, đọc/kiểm
 tra 1 file) Claude tự làm luôn — xem ngoại lệ trong chính skill đó.
 
+## Quy tắc tự kiểm tra lại trước khi báo "xong" (self code-review)
+User tự nhận là "vibecode" — không đọc được code, không thể tự đánh giá qua thuật ngữ kỹ thuật liệu
+Claude/Antigravity làm đúng hay sai. Vì vậy **trước khi báo bất kỳ task code nào là hoàn thành**,
+Claude phải tự đóng vai 1 kỹ sư phần mềm review lại toàn bộ diff vừa tạo (của chính mình hoặc của
+Antigravity) với góc nhìn phản biện — không chỉ đối chiếu "có khớp plan không" mà còn hỏi thật sự
+"code này có đúng logic, có bug, có thiếu edge case, có an toàn không". Việc đối chiếu đúng plan
+(đã làm sẵn khi giao Antigravity) là bước RIÊNG, không thay thế được bước phản biện kỹ thuật này.
+
+Áp dụng cho mọi task code đủ lớn (không cần cho việc sửa 1-2 dòng rõ ràng). Có thể dùng skill/tool
+`code-review` có sẵn trong Claude Code để thực hiện bước này khi phù hợp, thay vì tự đọc lại bằng
+mắt thường.
+
 ## Kiến trúc đã chốt
 - **Next.js (App Router)** + **Vercel** (hosting, domain free `*.vercel.app`) + **Supabase**
   (Postgres DB + Auth) — chọn vì tích hợp DB + đăng ký/đăng nhập trong 1 gói free tier, khớp domain
