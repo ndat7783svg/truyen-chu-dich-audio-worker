@@ -282,3 +282,19 @@ end;
 $$;
 
 grant execute on function public.lay_noi_dung_chuong(uuid) to anon, authenticated;
+
+-- Vá bảo mật (2026-09-15, bản 3 - sửa tác dụng phụ của bản 2): sau khi thu hồi SELECT toàn bảng
+-- chuong, tính năng đếm số chương lồng ghép của PostgREST (`chuong(count)`, dùng ở trang chủ +
+-- trang thể loại để hiện "X chương" trên thẻ truyện) bị từ chối hoàn toàn ("permission denied for
+-- table chuong") dù các cột cần thiết (truyen_id) đã được cấp quyền - PostgREST/Postgres đòi hỏi
+-- quyền SELECT ở cấp bảng cho kiểu đếm gộp này, không chấp nhận quyền cấp theo cột. Hậu quả: toàn
+-- bộ trang chủ mất trắng, hiện "Không tìm thấy truyện nào." dù dữ liệu vẫn còn nguyên trong DB.
+-- Giải pháp: tạo 1 view riêng chỉ chứa số đếm (không đụng noi_dung), cấp quyền công khai cho view
+-- này - trang chủ/trang thể loại chuyển sang đọc số chương từ view thay vì embed trực tiếp bảng
+-- chuong. Áp dụng cho: app/page.tsx, app/the-loai/[slug]/page.tsx.
+create or replace view public.truyen_so_chuong as
+select truyen_id, count(*)::int as so_chuong
+from chuong
+group by truyen_id;
+
+grant select on public.truyen_so_chuong to anon, authenticated;
