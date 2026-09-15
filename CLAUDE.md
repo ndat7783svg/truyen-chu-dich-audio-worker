@@ -116,6 +116,11 @@ gọn/xem thêm ở trang truyện; và 3 fix UX phát sinh sau khi user tự te
 trang + `loading.tsx` cho các route động — xem `docs/handoff/thanh-loading-chuyen-trang.md`). Chi
 tiết đầy đủ xem `NEXT_SESSION.md`.
 
+## Giới hạn tốc độ request chống bot cào quá tải — ĐÃ XONG, đã deploy production (2026-09-15)
+Rate limit 15 request/10 giây theo IP cho `/truyen/*` (Upstash Redis), bỏ qua hoàn toàn cho
+Googlebot/Bing thật (xác minh IP), fail-open khi Upstash lỗi. Đã kiểm chứng thật qua curl dồn dập
+trên production. Chi tiết + bug môi trường gặp phải xem `NEXT_SESSION.md`.
+
 ## Hệ thống trả phí / Gói VIP (bản thủ công v1) — ĐÃ CODE XONG, chờ user tự test end-to-end
 Brainstorm → spec `docs/superpowers/specs/2026-09-13-goi-vip-tra-phi-design.md` → plan
 `docs/superpowers/plans/2026-09-13-goi-vip-tra-phi.md` (9 Task, giao Antigravity qua MCP) — build

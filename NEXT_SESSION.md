@@ -1,5 +1,35 @@
 # NEXT_SESSION.md
 
+## Giới hạn tốc độ request chống bot cào quá tải — XONG, đã deploy production (2026-09-15)
+
+Sự cố tối 2026-09-13: 1 bot cào ~60 chương/3 giây làm nghẽn Supabase, gây 404 giả + site chậm cho
+khách thật đang đọc. Đã brainstorm → spec `docs/superpowers/specs/2026-09-14-gioi-han-bot-cao-du-lieu-design.md`
+→ plan `docs/superpowers/plans/2026-09-14-gioi-han-bot-cao-du-lieu.md` (3 Task, giao Antigravity qua
+MCP) → deploy production, kiểm chứng thật qua curl dồn dập.
+
+- Rate limit **15 request/10 giây theo IP**, chỉ áp dụng `/truyen/*` (trang truyện + trang đọc
+  chương) — vượt ngưỡng trả 429 ngay, không gọi Supabase. Dùng Upstash Redis (free tier, region
+  Singapore) để đếm dùng chung giữa các server function Vercel.
+- Googlebot/Bing **thật** (xác minh bằng đối chiếu IP với danh sách IP chính thức, cache 24h) được
+  **bỏ qua hoàn toàn** giới hạn — không ảnh hưởng SEO. Giả danh User-Agent "Googlebot" mà IP không
+  khớp vẫn bị giới hạn bình thường.
+- Lỗi Upstash (hết quota, mất kết nối) → fail-open, không làm sập site.
+- **Bug phát sinh khi kiểm chứng đã tự sửa**: sau khi code xong, test dồn dập 20 request đều ra
+  200, không hề có 429 nào — tra thẳng bằng debug tạm trong middleware phát hiện nguyên nhân thật:
+  user dán giá trị `UPSTASH_REDIS_REST_URL` vào Vercel Environment Variables **kèm dấu ngoặc kép
+  thừa** (`"https://..."` thay vì `https://...`), khiến Upstash Redis client từ chối kết nối, code
+  tự fail-open (đúng thiết kế an toàn) nên im lặng cho qua hết. User tự sửa lại giá trị đúng trên
+  Vercel Dashboard, xoá dấu ngoặc kép, deploy lại là hết. Bài học: khi 1 tính năng cần biến môi
+  trường mới hoàn toàn không hoạt động dù code đúng plan, nghi ngay giá trị biến môi trường (dấu
+  ngoặc kép/khoảng trắng thừa khi dán) trước khi nghi logic code — thêm 1 nhánh debug tạm trả lỗi
+  thật ra response (chỉ khi có query param riêng, xoá ngay sau khi xác định xong) là cách nhanh
+  nhất để thấy lỗi thật từ môi trường serverless, thay vì đoán.
+- Đã kiểm chứng thật qua curl dồn dập trên production: 15/20 request qua, 5 request bị 429; tự mở
+  lại sau 10 giây; trang chủ (không thuộc `/truyen/*`) hoàn toàn không bị ảnh hưởng.
+- Việc còn lại của mối lo bảo mật cũ (xem mục cũ bên dưới): mục 2 "chặn copy nâng cao" và mục 4 "rà
+  soát bảo mật tổng thể" vẫn chưa làm — mục 3 coi như đã giải quyết phần cốt lõi (giảm tải do bot)
+  qua việc này, dù cách tiếp cận khác 1 chút (giới hạn theo IP thay vì chỉ lọc User-Agent).
+
 ## Hệ thống gói VIP (bản thủ công v1) — code xong, CHỜ USER TỰ TEST end-to-end (2026-09-13)
 
 Brainstorm → spec `docs/superpowers/specs/2026-09-13-goi-vip-tra-phi-design.md` → plan 9 Task
