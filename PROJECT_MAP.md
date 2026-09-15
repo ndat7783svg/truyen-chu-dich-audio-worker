@@ -14,7 +14,7 @@ website truyện chữ AI/
 │   ├── superpowers/specs/           (spec đã brainstorm + user duyệt)
 │   ├── superpowers/plans/           (implementation plan theo từng spec)
 │   └── handoff/                     (nhật ký kỹ thuật chi tiết theo chủ đề)
-├── middleware.ts                    (refresh session Supabase Auth + cấp cookie khach_id mỗi request)
+├── middleware.ts                    (rate limit /truyen/* qua Upstash Redis + refresh session Supabase Auth + cấp cookie khach_id mỗi request)
 ├── next.config.ts                   (cho phép next/image tải ảnh bìa từ Supabase Storage)
 ├── app/                             (Next.js App Router)
 │   ├── layout.tsx                   (root layout, bọc <ChromeToanSite/> quanh Header+ThanhDieuHuong, <ThanhTienTrinh/> (Suspense), script chống FOUC, metadata.title "Truyện chữ dịch")
@@ -61,6 +61,8 @@ website truyện chữ AI/
 ├── lib/
 │   ├── config/
 │   │   └── goi-vip.ts               (DANH_SACH_GOI 3 gói, SO_CHUONG_FREE=50, layThongTinGoi, THONG_TIN_NHAN_TIEN nhận tiền MoMo)
+│   ├── rate-limit/
+│   │   └── gioi-han-bot.ts          (layDanhSachIpBotThat, taoRateLimiter - sliding window 15 req/10s qua Upstash Redis)
 │   ├── supabase/
 │   │   ├── client.ts                (taoSupabaseClient - Client Component)
 │   │   └── server.ts                (taoSupabaseServerClient - Server Component/Action)
@@ -69,7 +71,8 @@ website truyện chữ AI/
 │       ├── format.ts                (dinhDangSoRutGon - rút gọn số kiểu 12.5K/3.4M)
 │       ├── dich-loi-supabase.ts     (dichLoiSupabase - dịch lỗi Supabase Auth sang tiếng Việt)
 │       ├── cai-dat-doc.ts           (đọc/ghi cài đặt đọc chương qua localStorage, chuẩn hóa dữ liệu, màu theo theme)
-│       └── gia-han-vip.ts           (tinhHanMoi, conHieuLucGoi, sinhMaGiaoDich - hàm thuần cho gói VIP)
+│       ├── gia-han-vip.ts           (tinhHanMoi, conHieuLucGoi, sinhMaGiaoDich - hàm thuần cho gói VIP)
+│       └── xac-minh-bot.ts          (layIpTuHeader, ipTrongDaiCidr, ipTrongDanhSach - xác minh IP bot thật)
 ├── scripts/                         (chạy độc lập bằng node --env-file=.env.local)
 │   ├── slug.js                      (taoSlug - sinh slug từ tên có dấu)
 │   ├── parse-chuong.js              (parseChuong - đọc 1 file chuong-XXX.md, chấp nhận tiêu đề có/không có "#")

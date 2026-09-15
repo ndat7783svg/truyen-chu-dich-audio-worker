@@ -1,7 +1,15 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { Redis } from '@upstash/redis';
+import { layIpTuHeader, ipTrongDanhSach } from '@/lib/utils/xac-minh-bot';
+import { layDanhSachIpBotThat, taoRateLimiter } from '@/lib/rate-limit/gioi-han-bot';
 
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith('/truyen/')) {
+    const trangQuaNhanh = await bViQuaNhanh(request);
+    if (trangQuaNhanh) return trangQuaNhanh;
+  }
+
   let response = NextResponse.next({ request });
 
   // 1. Kiểm tra và cấp cookie khach_id nếu chưa tồn tại
@@ -46,6 +54,33 @@ export async function middleware(request: NextRequest) {
   }
 
   return response;
+}
+
+async function bViQuaNhanh(request: NextRequest): Promise<NextResponse | null> {
+  try {
+    const redis = Redis.fromEnv();
+    const ip = layIpTuHeader(request.headers.get('x-forwarded-for'));
+    if (!ip) return null;
+
+    const userAgent = request.headers.get('user-agent') ?? '';
+    const tuXungLaBotTot = /googlebot|bingbot/i.test(userAgent);
+
+    if (tuXungLaBotTot) {
+      const danhSachIp = await layDanhSachIpBotThat(redis);
+      if (ipTrongDanhSach(ip, danhSachIp)) return null;
+    }
+
+    const { success } = await taoRateLimiter(redis).limit(ip);
+    if (success) return null;
+
+    return new NextResponse(
+      '<!doctype html><meta charset="utf-8"><body style="font-family:sans-serif;text-align:center;padding:40px"><h1>Bạn thao tác quá nhanh</h1><p>Vui lòng thử lại sau vài giây.</p></body>',
+      { status: 429, headers: { 'content-type': 'text/html; charset=utf-8' } }
+    );
+  } catch {
+    // Upstash lỗi/hết quota → fail-open, không để 1 dịch vụ phụ làm sập cả site.
+    return null;
+  }
 }
 
 export const config = {
