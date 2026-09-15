@@ -1,5 +1,50 @@
 # NEXT_SESSION.md
 
+## Câu hỏi CHƯA TRẢ LỜI của user — hỏi lại NGAY đầu phiên sau
+User hỏi: **"có 3 truyện đã được duyệt xong bạn có biết là truyện nào không?"** — câu hỏi bị ngắt
+giữa chừng (user chuyển qua lệnh lưu context trước khi Claude kịp trả lời). Claude **KHÔNG có thông
+tin gì về việc này trong suốt phiên** (không thấy nhắc "duyệt truyện" ở đâu trong code/tài liệu dự
+án) — có thể user đang hỏi về 1 việc ở ngoài phạm vi phiên chat này (ví dụ tự duyệt nội dung dịch
+bên `D:\translate truyen`, hoặc 1 quy trình khác chưa từng nhắc ở dự án web này). **Phải hỏi lại rõ
+"duyệt" nghĩa là gì/ở đâu** trước khi trả lời, đừng đoán bừa.
+
+## Phiên 2026-09-15 (dài, nhiều sự cố production) — đọc trước khi làm tiếp
+
+Phiên này bắt đầu từ yêu cầu tối ưu tốc độ (danh sách chương dài, chuyển chương chậm), rồi rẽ sang
+rà soát bảo mật theo yêu cầu user, dẫn tới sửa lỗi bảo mật nghiêm trọng + 2 lần gây regression sản
+xuất thật phải sửa khẩn cấp ngay trong phiên. Tất cả đã sửa xong, đã deploy, đã kiểm chứng lại đầy
+đủ qua browser thật + curl trực tiếp Supabase. Xem đầy đủ tại `docs/handoff/hieu-nang-danh-sach-chuong-vercel-region.md`
+và `docs/handoff/bao-mat-rls-chan-noi-dung-vip.md`.
+
+**Tóm tắt theo thứ tự đã làm**:
+1. Tối ưu hiệu năng: phân trang danh sách chương theo nhóm 50 (trang truyện + dropdown trang đọc
+   chương), giảm query nặng khi chuyển chương, bỏ auth-check thừa trong middleware cho khách vãng
+   lai — giao Antigravity qua MCP, Claude tự duyệt + kiểm chứng.
+2. Vẫn còn chậm sau bước 1 → phát hiện region hàm server Vercel (`iad1`, Mỹ) lệch Supabase
+   (Singapore) → thêm `vercel.json` chỉ định `sin1`, TTFB giảm ~2 lần.
+3. User gửi 1 bài viết cảnh báo bảo mật, yêu cầu rà soát → tự phát hiện lỗ hổng nghiêm trọng: nội
+   dung mọi chương VIP đọc được miễn phí qua Supabase REST API (RLS cũ để hở). Vá bằng SQL 3 lần mới
+   đúng (RLS chỉ chặn theo hàng không theo cột — chi tiết đầy đủ trong file handoff).
+4. Bản vá bảo mật gây tác dụng phụ: trang chủ + trang thể loại mất trắng ("Không tìm thấy truyện
+   nào") vì PostgREST không tương thích quyền cấp-cột với tính năng đếm gộp `chuong(count)` — sửa
+   bằng cách tạo VIEW riêng chỉ chứa số đếm.
+5. Sau khi ổn định, user báo bị chặn "Bạn thao tác quá nhanh" dù thao tác bình thường → phát hiện
+   Next.js tự prefetch mọi `<Link>` hiển thị cộng dồn vào rate limit → sửa middleware bỏ qua request
+   prefetch (nhận diện qua header `next-router-prefetch`).
+
+**Trạng thái cuối phiên**: mọi thứ đã deploy production, đã kiểm chứng lại toàn diện (trang chủ,
+trang thể loại, trang truyện + danh sách chương chia nhóm, đọc chương free/VIP, lỗ hổng bảo mật đã
+đóng, rate limit không còn chặn nhầm). Build sạch, 87/87 test pass tại thời điểm kết thúc phiên.
+
+**Việc CHƯA làm, có thể cân nhắc phiên sau** (không gấp, không ai yêu cầu rõ trong phiên này):
+- Vụ giả lượt xem qua gọi thẳng RPC `ghi_luot_xem` (phát hiện cùng lúc rà soát bảo mật) — **user đã
+  yêu cầu bỏ qua, không cần làm**.
+- Rà soát bảo mật tổng thể vẫn còn các mục cũ chưa làm (xem mục "Việc bảo mật còn lại" phía dưới) —
+  lỗ hổng RLS vừa vá là phát hiện MỚI ngoài danh sách cũ đó, không phải cùng 1 việc.
+- Sau khi vá RLS bảng `chuong`, nên rà soát nhanh các bảng khác xem có bảng nào khác đang bị lộ dữ
+  liệu nhạy cảm qua policy `using (true)` quá rộng tương tự không (chưa làm trong phiên này, chỉ mới
+  xử lý đúng bảng `chuong` bị phát hiện).
+
 ## Giới hạn tốc độ request chống bot cào quá tải — XONG, đã deploy production (2026-09-15)
 
 Sự cố tối 2026-09-13: 1 bot cào ~60 chương/3 giây làm nghẽn Supabase, gây 404 giả + site chậm cho

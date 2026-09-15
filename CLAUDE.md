@@ -121,6 +121,20 @@ Rate limit 15 request/10 giây theo IP cho `/truyen/*` (Upstash Redis), bỏ qua
 Googlebot/Bing thật (xác minh IP), fail-open khi Upstash lỗi. Đã kiểm chứng thật qua curl dồn dập
 trên production. Chi tiết + bug môi trường gặp phải xem `NEXT_SESSION.md`.
 
+## Tối ưu hiệu năng + vá bảo mật nghiêm trọng — ĐÃ XONG, đã deploy production (2026-09-15)
+Phân trang danh sách chương theo nhóm 50 (trang truyện + dropdown trang đọc chương), đổi region hàm
+server Vercel sang Singapore khớp Supabase (giảm TTFB ~2 lần), bỏ prefetch tự động của Next.js khỏi
+bộ đếm rate limit (tránh chặn nhầm khách đọc bình thường) — chi tiết
+`docs/handoff/hieu-nang-danh-sach-chuong-vercel-region.md`.
+
+**Vá lỗ hổng bảo mật nghiêm trọng cùng phiên**: RLS cũ của bảng `chuong` để lộ toàn bộ nội dung
+chương VIP qua Supabase REST API bằng anon key (đọc free được nội dung phải mua gói mới đọc được).
+Đã vá bằng cách REVOKE quyền SELECT toàn bảng + GRANT lại đúng cột an toàn (không có `noi_dung`),
+bắt buộc đọc nội dung qua hàm `lay_noi_dung_chuong()` (SECURITY DEFINER, tự kiểm tra free/VIP). Mất
+3 lần sửa mới đúng (RLS chỉ chặn theo hàng không theo cột, PostgREST không tương thích quyền cấp-cột
+với `chuong(count)`) — chi tiết + bài học đầy đủ xem `docs/handoff/bao-mat-rls-chan-noi-dung-vip.md`.
+Đã xác minh khai thác thật bằng `curl` trước khi vá và xác nhận đã đóng sau khi vá.
+
 ## Hệ thống trả phí / Gói VIP (bản thủ công v1) — ĐÃ CODE XONG, chờ user tự test end-to-end
 Brainstorm → spec `docs/superpowers/specs/2026-09-13-goi-vip-tra-phi-design.md` → plan
 `docs/superpowers/plans/2026-09-13-goi-vip-tra-phi.md` (9 Task, giao Antigravity qua MCP) — build
