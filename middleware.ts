@@ -65,6 +65,16 @@ export async function middleware(request: NextRequest) {
 
 async function bViQuaNhanh(request: NextRequest): Promise<NextResponse | null> {
   try {
+    // Next.js tự động gửi request "prefetch" cho mọi <Link> hiện trong màn hình (vd trang danh sách
+    // 50 chương hiện 1 lúc hàng chục link) - không phải do người dùng chủ động bấm, nhưng vẫn tính
+    // cùng URL /truyen/* nên trước đây bị đếm chung vào giới hạn, khiến khách đọc bình thường (chỉ
+    // cần trang hiện nhiều link) cũng bị chặn nhầm dù thao tác chậm. Bỏ qua các request prefetch này
+    // khỏi giới hạn tốc độ - chỉ đếm điều hướng thật (bấm link/gõ URL).
+    const laPrefetch =
+      request.headers.has('next-router-prefetch') ||
+      request.headers.has('next-router-segment-prefetch');
+    if (laPrefetch) return null;
+
     const redis = Redis.fromEnv();
     const ip = layIpTuHeader(request.headers.get('x-forwarded-for'));
     if (!ip) return null;
