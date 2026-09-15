@@ -11,6 +11,7 @@ import {
   type CaiDatDoc,
 } from '@/lib/utils/cai-dat-doc';
 import PanelCaiDatDoc from './PanelCaiDatDoc';
+import PanelDocAudio from './PanelDocAudio';
 import DanhSachChuong, { type MucChuong } from './DanhSachChuong';
 
 const notoSerif = Noto_Serif({
@@ -116,6 +117,13 @@ export default function KhungDocChuong({
           tongSoChuong={tongSoChuong}
           soNhomBanDau={soNhomBanDau}
           dsChuongBanDau={dsChuongBanDau}
+        />
+        <PanelDocAudio
+          slugTruyen={slugTruyen}
+          soChuong={soChuong}
+          soChuongSau={soChuongSau}
+          tieuDe={tieuDe}
+          noiDung={noiDung}
         />
         <PanelCaiDatDoc caiDat={caiDat} onDoiCaiDat={capNhatCaiDat} />
       </div>
