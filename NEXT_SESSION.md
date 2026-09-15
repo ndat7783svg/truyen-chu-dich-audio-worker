@@ -1,12 +1,22 @@
 # NEXT_SESSION.md
 
-## Câu hỏi CHƯA TRẢ LỜI của user — hỏi lại NGAY đầu phiên sau
-User hỏi: **"có 3 truyện đã được duyệt xong bạn có biết là truyện nào không?"** — câu hỏi bị ngắt
-giữa chừng (user chuyển qua lệnh lưu context trước khi Claude kịp trả lời). Claude **KHÔNG có thông
-tin gì về việc này trong suốt phiên** (không thấy nhắc "duyệt truyện" ở đâu trong code/tài liệu dự
-án) — có thể user đang hỏi về 1 việc ở ngoài phạm vi phiên chat này (ví dụ tự duyệt nội dung dịch
-bên `D:\translate truyen`, hoặc 1 quy trình khác chưa từng nhắc ở dự án web này). **Phải hỏi lại rõ
-"duyệt" nghĩa là gì/ở đâu** trước khi trả lời, đừng đoán bừa.
+## Phiên 2026-09-15 (tiếp) — đăng truyện đã duyệt bên `D:\translate truyen` lên web
+
+Đã làm rõ nghĩa "duyệt" = trạng thái `da_duyet: true` trong `scripts/queue.json` bên
+`D:\translate truyen` (Antigravity đã duyệt xong nghĩa/văn phong 1 lô chương). Đã "check" và đăng
+lên Supabase (kiểm chứng thật qua Supabase + browser, không chỉ tin log):
+- Truyện mới: **Tạo Hóa Thôn Thiên Đỉnh** (709 chương), **Ta Đã Là Đại La Kim Tiên...** (637),
+  **Lai Lịch Vô Địch, Ta Vung Đao Chém Chư Thiên** (746), **Mỗi Năm Rút Một Điều Mục, Mô Phỏng Cũng
+  Được Sao** (615), **Quốc Thuật - Mỗi Ngày Kết Toán, Bắt Đầu Từ Phu Kéo Xe** (535).
+- Cập nhật thêm chương: **Sức Mạnh Mỗi Ngày Tăng 1%, Ta Vô Địch Rồi** 679 → 694 chương.
+- Đổi nhãn thẻ truyện "AI" → "Dịch" (`components/TheTruyen.tsx`), đã deploy production.
+
+**Lưu ý quan trọng khi gặp lại cảnh báo "thiếu chương" của `sync-truyen.mjs`/`kiem-tra-chuong.js`
+cho truyện "Sức Mạnh Mỗi Ngày Tăng 1%..."**: chương 680 CỐ Ý không tồn tại trong `chuong/` (không
+phải lỗi/thiếu thật) — đây là bản dịch dư trùng nội dung với chương 679 (cả 2 dịch cùng 1 chương
+gốc do nguồn web chưa ra chương mới lúc dịch), Antigravity đã cố ý loại bỏ để tránh trùng lặp, xem
+chi tiết mục "CẬP NHẬT PHIÊN 2026-09-15 (lần 21)" trong `NEXT_SESSION.md` bên `D:\translate truyen`.
+Web hiện đúng 694 chương (1-679, 681-695), **không cần dịch lại/fetch lại chương 680**.
 
 ## Phiên 2026-09-15 (dài, nhiều sự cố production) — đọc trước khi làm tiếp
 
