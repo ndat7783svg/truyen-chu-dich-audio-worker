@@ -40,7 +40,7 @@ export default function TheTruyen({ truyen }: { truyen: TruyenThe }) {
           {truyen.trangThai === 'hoan-thanh' ? 'Hoàn thành' : 'Đang ra'}
         </span>
         <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-purple-600 text-white">
-          AI
+          Dịch
         </span>
       </div>
       <div className="p-2">
