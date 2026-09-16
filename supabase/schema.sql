@@ -341,9 +341,12 @@ begin
     return; -- chương không tồn tại hoặc đã có audio rồi, không cần xếp hàng
   end if;
 
+  -- Dat lai so_lan_loi = 0 khi da co dong (do nothing se khien chuong tung loi 3 lan bi worker
+  -- dinh ky bo qua vinh vien - vd nguoi dung chu dong bam "Bat dau" muon thu lai) - moi lan xep
+  -- hang la 1 co hoi thu lai moi.
   insert into hang_doi_audio (chuong_id, truyen_id, so_chuong)
   values (p_chuong_id, v_truyen_id, v_so_chuong)
-  on conflict (chuong_id) do nothing;
+  on conflict (chuong_id) do update set so_lan_loi = 0;
 end;
 $$;
 

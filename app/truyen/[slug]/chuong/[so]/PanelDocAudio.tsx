@@ -11,10 +11,13 @@ import {
   taoDoanDoc,
   type CaiDatAudio,
 } from '@/lib/utils/cai-dat-audio';
+import ModalNgheAudioThat from './ModalNgheAudioThat';
 
 const KHOA_TU_DONG_DOC = 'chuongTuDongDocTiep';
+const KHOA_MO_MODAL_AUDIO_THAT = 'moModalAudioThat';
 
 export default function PanelDocAudio({
+  chuongId,
   slugTruyen,
   tenTruyen,
   soChuong,
@@ -24,6 +27,7 @@ export default function PanelDocAudio({
   noiDung,
   audioUrl,
 }: {
+  chuongId: string;
   slugTruyen: string;
   tenTruyen: string;
   soChuong: number;
@@ -38,24 +42,20 @@ export default function PanelDocAudio({
   const [caiDat, setCaiDat] = useState<CaiDatAudio>(CAI_DAT_AUDIO_MAC_DINH);
   const [moPanel, setMoPanel] = useState(false);
 
-  // State Web Speech API (giọng đọc trình duyệt cũ)
+  // State Modal Audio Thật
+  const [moModalThat, setMoModalThat] = useState(false);
+  const [tuDongPhatModal, setTuDongPhatModal] = useState(false);
+
+  // State Web Speech API (giọng máy trình duyệt)
   const [dangDoc, setDangDoc] = useState(false);
   const [dangTamDung, setDangTamDung] = useState(false);
 
-  // State Audio file thật
-  const [dangPhatFile, setDangPhatFile] = useState(false);
-  const [dangTamDungFile, setDangTamDungFile] = useState(false);
-
   const panelRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const tocDoRef = useRef(CAI_DAT_AUDIO_MAC_DINH.tocDo);
   const queueRef = useRef<string[]>([]);
   const indexRef = useRef(0);
 
-  // Đánh số "thế hệ" mỗi lần chủ động huỷ utterance đang đọc (tạm dừng/đổi tốc độ/đổi chương/đọc
-  // lại từ đầu). onend/onerror của utterance cũ so khớp lại số này - khác thì bỏ qua (utterance cũ,
-  // không phải utterance hiện tại). Không dùng cờ boolean vì cancel() không đảm bảo luôn bắn
-  // onend/onerror cho utterance bị huỷ ở mọi trình duyệt.
+  // Đánh số "thế hệ" mỗi lần huỷ utterance đang đọc
   const theHeRef = useRef(0);
 
   // Khởi tạo cài đặt và kiểm tra Web Speech
@@ -66,9 +66,6 @@ export default function PanelDocAudio({
     const daLuu = docCaiDatAudio();
     setCaiDat(daLuu);
     tocDoRef.current = daLuu.tocDo;
-    if (audioRef.current) {
-      audioRef.current.playbackRate = daLuu.tocDo;
-    }
   }, []);
 
   // Cleanup khi unmount component
@@ -78,88 +75,35 @@ export default function PanelDocAudio({
         theHeRef.current += 1;
         window.speechSynthesis.cancel();
       }
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
     };
   }, []);
 
-  // Cấu hình Media Session API khi phát file audio
-  function capNhatMediaSession() {
-    if (typeof window === 'undefined' || !('mediaSession' in navigator)) return;
-
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: `Chương ${soChuong}: ${tieuDe}`,
-      artist: tenTruyen,
-      album: tenTruyen,
-    });
-
-    navigator.mediaSession.setActionHandler('play', () => {
-      audioRef.current?.play();
-      setDangPhatFile(true);
-      setDangTamDungFile(false);
-    });
-
-    navigator.mediaSession.setActionHandler('pause', () => {
-      audioRef.current?.pause();
-      setDangTamDungFile(true);
-    });
-
-    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-      if (audioRef.current) {
-        audioRef.current.currentTime = Math.max(
-          audioRef.current.currentTime - (details.seekOffset || 10),
-          0
-        );
-      }
-    });
-
-    navigator.mediaSession.setActionHandler('seekforward', (details) => {
-      if (audioRef.current) {
-        audioRef.current.currentTime = Math.min(
-          audioRef.current.currentTime + (details.seekOffset || 10),
-          audioRef.current.duration || 0
-        );
-      }
-    });
-
-    if (soChuongSau) {
-      navigator.mediaSession.setActionHandler('nexttrack', () => {
-        try {
-          sessionStorage.setItem(KHOA_TU_DONG_DOC, String(soChuongSau));
-        } catch {
-          // Bỏ qua nếu sessionStorage bị chặn
-        }
-        router.push(`/truyen/${slugTruyen}/chuong/${soChuongSau}`);
-      });
-    } else {
-      navigator.mediaSession.setActionHandler('nexttrack', null);
-    }
-  }
-
-  // Chuyển chương: dừng audio cũ và kích hoạt tự động đọc tiếp nếu có cờ
-  useEffect(() => {
-    // Dừng Web Speech nếu đang chạy
-    if (hoTroWebSpeech && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  // Dừng Web Speech
+  function dungWebSpeech() {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       theHeRef.current += 1;
       window.speechSynthesis.cancel();
     }
     setDangDoc(false);
     setDangTamDung(false);
+  }
 
-    // Dừng Audio File nếu đang chạy
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-    setDangPhatFile(false);
-    setDangTamDungFile(false);
+  // Chuyển chương: dừng audio cũ và kích hoạt tự động đọc tiếp nếu có cờ trong sessionStorage
+  useEffect(() => {
+    // Dừng Web Speech nếu đang chạy
+    dungWebSpeech();
 
     try {
       const soTuDongDoc = sessionStorage.getItem(KHOA_TU_DONG_DOC);
+      const coMoModal = sessionStorage.getItem(KHOA_MO_MODAL_AUDIO_THAT);
+
       if (soTuDongDoc && Number(soTuDongDoc) === soChuong) {
         sessionStorage.removeItem(KHOA_TU_DONG_DOC);
-        if (audioUrl) {
-          batDauPhatFile();
+
+        if (coMoModal === '1') {
+          sessionStorage.removeItem(KHOA_MO_MODAL_AUDIO_THAT);
+          setMoModalThat(true);
+          setTuDongPhatModal(true);
         } else if (hoTroWebSpeech) {
           batDauDoc();
         }
@@ -170,7 +114,7 @@ export default function PanelDocAudio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hoTroWebSpeech, soChuong, audioUrl]);
 
-  // Click outside to close panel
+  // Click outside to close panel dropdown
   useEffect(() => {
     if (!moPanel) return;
     function xuLyClickNgoai(suKien: MouseEvent) {
@@ -182,76 +126,7 @@ export default function PanelDocAudio({
     return () => document.removeEventListener('mousedown', xuLyClickNgoai);
   }, [moPanel]);
 
-  // --- LOGIC PHÁT FILE AUDIO THẬT ---
-  function batDauPhatFile() {
-    if (chuongIdSau) {
-      taoSupabaseClient()
-        .rpc('xep_hang_tao_audio', { p_chuong_id: chuongIdSau })
-        .then(
-          () => {},
-          () => {}
-        );
-    }
-
-    if (hoTroWebSpeech && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      theHeRef.current += 1;
-      window.speechSynthesis.cancel();
-    }
-    setDangDoc(false);
-    setDangTamDung(false);
-
-    if (audioRef.current) {
-      audioRef.current.playbackRate = tocDoRef.current;
-      audioRef.current
-        .play()
-        .then(() => {
-          setDangPhatFile(true);
-          setDangTamDungFile(false);
-          capNhatMediaSession();
-        })
-        .catch((err) => {
-          console.error('Lỗi khi phát audio file:', err);
-          setDangPhatFile(false);
-          setDangTamDungFile(false);
-        });
-    }
-  }
-
-  function bamNutPhatFile() {
-    if (!dangPhatFile) {
-      batDauPhatFile();
-      return;
-    }
-
-    if (dangTamDungFile) {
-      if (audioRef.current) {
-        audioRef.current.playbackRate = tocDoRef.current;
-        audioRef.current.play().then(() => {
-          setDangTamDungFile(false);
-        });
-      }
-    } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        setDangTamDungFile(true);
-      }
-    }
-  }
-
-  function onAudioEnded() {
-    setDangPhatFile(false);
-    setDangTamDungFile(false);
-    if (soChuongSau) {
-      try {
-        sessionStorage.setItem(KHOA_TU_DONG_DOC, String(soChuongSau));
-      } catch {
-        // sessionStorage không khả dụng - bỏ qua tự động đọc tiếp
-      }
-      router.push(`/truyen/${slugTruyen}/chuong/${soChuongSau}`);
-    }
-  }
-
-  // --- LOGIC WEB SPEECH API (GIỮ NGUYÊN HOÀN TOÀN) ---
+  // --- LOGIC WEB SPEECH API (GIỮ NGUYÊN 100%) ---
   function docDoanTiep() {
     const idx = indexRef.current;
     const queue = queueRef.current;
@@ -263,7 +138,7 @@ export default function PanelDocAudio({
         try {
           sessionStorage.setItem(KHOA_TU_DONG_DOC, String(soChuongSau));
         } catch {
-          // sessionStorage không khả dụng - bỏ qua tự động đọc tiếp
+          // Bỏ qua nếu sessionStorage bị chặn
         }
         router.push(`/truyen/${slugTruyen}/chuong/${soChuongSau}`);
       }
@@ -275,12 +150,12 @@ export default function PanelDocAudio({
     utter.lang = 'vi-VN';
     utter.rate = tocDoRef.current;
     utter.onend = () => {
-      if (theHeKhiTao !== theHeRef.current) return; // utterance cũ đã bị huỷ, bỏ qua
+      if (theHeKhiTao !== theHeRef.current) return;
       indexRef.current += 1;
       docDoanTiep();
     };
     utter.onerror = () => {
-      if (theHeKhiTao !== theHeRef.current) return; // utterance cũ đã bị huỷ, bỏ qua
+      if (theHeKhiTao !== theHeRef.current) return;
       setDangDoc(false);
       setDangTamDung(false);
     };
@@ -297,13 +172,6 @@ export default function PanelDocAudio({
         );
     }
 
-    // Tạm dừng audio file nếu đang phát
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-    setDangPhatFile(false);
-    setDangTamDungFile(false);
-
     theHeRef.current += 1;
     window.speechSynthesis.cancel();
     queueRef.current = taoDoanDoc(`${tieuDe}. ${noiDung}`);
@@ -318,8 +186,6 @@ export default function PanelDocAudio({
       batDauDoc();
       return;
     }
-    // Không dùng speechSynthesis.pause()/resume() gốc - hành vi rất khác nhau giữa các trình duyệt.
-    // Tự huỷ đoạn đang đọc rồi tự đọc lại đúng đoạn đó khi bấm tiếp tục.
     if (dangTamDung) {
       setDangTamDung(false);
       docDoanTiep();
@@ -336,10 +202,6 @@ export default function PanelDocAudio({
     ghiCaiDatAudio(caiDatMoi);
     tocDoRef.current = tocDoMoi;
 
-    if (audioRef.current) {
-      audioRef.current.playbackRate = tocDoMoi;
-    }
-
     if (dangDoc && !dangTamDung) {
       theHeRef.current += 1;
       window.speechSynthesis.cancel();
@@ -347,39 +209,11 @@ export default function PanelDocAudio({
     }
   }
 
-  // Nếu không hỗ trợ Web Speech và cũng không có audioUrl thì ẩn nút
-  if (!hoTroWebSpeech && !audioUrl) return null;
-
   const nhanNutWebSpeech = !dangDoc ? 'Nghe' : dangTamDung ? 'Tiếp tục' : 'Tạm dừng';
-  const nhanNutPhatFile = !dangPhatFile
-    ? 'Nghe file'
-    : dangTamDungFile
-    ? 'Tiếp tục file'
-    : 'Tạm dừng file';
-
-  const dangPhatAmThanh = dangDoc || dangPhatFile;
+  const dangPhatAmThanh = dangDoc || moModalThat;
 
   return (
     <div ref={panelRef} className="absolute top-3 right-14 z-40">
-      {audioUrl && (
-        <audio
-          ref={audioRef}
-          src={audioUrl}
-          preload="metadata"
-          onEnded={onAudioEnded}
-          onPlay={() => {
-            setDangPhatFile(true);
-            setDangTamDungFile(false);
-          }}
-          onPause={() => {
-            if (dangPhatFile) {
-              setDangTamDungFile(true);
-            }
-          }}
-          className="hidden"
-        />
-      )}
-
       <button
         type="button"
         onClick={() => setMoPanel((truoc) => !truoc)}
@@ -399,52 +233,46 @@ export default function PanelDocAudio({
       </button>
 
       {moPanel && (
-        <div className="absolute right-0 mt-2 w-60 rounded-lg border bg-white text-gray-900 p-4 shadow-lg space-y-4 z-20">
-          {audioUrl ? (
-            <div className="space-y-3">
-              {/* Nút Nghe File thật (Ưu tiên) */}
-              <button
-                type="button"
-                onClick={bamNutPhatFile}
-                className="w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 text-sm shadow-sm transition-colors"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  {dangPhatFile && !dangTamDungFile ? (
-                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                  ) : (
-                    <path d="M8 5v14l11-7z" />
-                  )}
-                </svg>
-                {nhanNutPhatFile}
-              </button>
-
-              {/* Nút Nghe giọng máy cũ (Web Speech) */}
-              {hoTroWebSpeech && (
-                <div className="pt-2 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={bamNutChinh}
-                    className="w-full rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-1.5 text-xs transition-colors"
-                  >
-                    {nhanNutWebSpeech} (Giọng máy)
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            /* Chỉ có Web Speech API cũ khi chưa có audio file */
+        <div className="absolute right-0 mt-2 w-64 rounded-xl border bg-white text-gray-900 p-4 shadow-xl space-y-4 z-20">
+          <div className="space-y-2.5">
+            {/* Nút Mở Modal Audio Thật (luôn hiển thị) */}
             <button
               type="button"
-              onClick={bamNutChinh}
-              className="w-full rounded-lg border border-blue-500 text-blue-600 font-medium py-2 text-sm"
+              onClick={() => {
+                setMoModalThat(true);
+                setMoPanel(false);
+              }}
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-3 text-sm shadow-sm transition-colors"
             >
-              {nhanNutWebSpeech}
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+              </svg>
+              Nghe audio thật (AI)
             </button>
-          )}
+
+            {/* Nút Nghe Web Speech (Giọng máy trình duyệt) */}
+            {hoTroWebSpeech && (
+              <button
+                type="button"
+                onClick={bamNutChinh}
+                className="w-full flex items-center justify-center gap-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-3 text-xs transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"
+                  />
+                </svg>
+                {nhanNutWebSpeech} (Giọng máy)
+              </button>
+            )}
+          </div>
 
           <div>
             <p className="text-xs font-semibold uppercase mb-2">
-              Tốc độ đọc <span className="normal-case font-normal">{caiDat.tocDo.toFixed(2)}x</span>
+              Tốc độ đọc giọng máy <span className="normal-case font-normal">{caiDat.tocDo.toFixed(2)}x</span>
             </p>
             <input
               type="range"
@@ -453,7 +281,7 @@ export default function PanelDocAudio({
               step={0.25}
               value={caiDat.tocDo}
               onChange={(e) => doiTocDo(Number(e.target.value))}
-              className="w-full cursor-pointer"
+              className="w-full cursor-pointer accent-blue-600"
             />
           </div>
 
@@ -462,6 +290,25 @@ export default function PanelDocAudio({
           )}
         </div>
       )}
+
+      {/* Modal Trình Phát Audio Thật */}
+      <ModalNgheAudioThat
+        moModal={moModalThat}
+        onDong={() => {
+          setMoModalThat(false);
+          setTuDongPhatModal(false);
+        }}
+        chuongId={chuongId}
+        audioUrl={audioUrl}
+        slugTruyen={slugTruyen}
+        tenTruyen={tenTruyen}
+        soChuong={soChuong}
+        soChuongSau={soChuongSau}
+        chuongIdSau={chuongIdSau}
+        tieuDe={tieuDe}
+        onDungWebSpeech={dungWebSpeech}
+        tuDongPhatNgay={tuDongPhatModal}
+      />
     </div>
   );
 }

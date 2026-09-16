@@ -20,6 +20,7 @@ const notoSerif = Noto_Serif({
 });
 
 export default function KhungDocChuong({
+  chuongId,
   tenTruyen,
   slugTruyen,
   truyenId,
@@ -34,6 +35,7 @@ export default function KhungDocChuong({
   soNhomBanDau,
   dsChuongBanDau,
 }: {
+  chuongId: string;
   tenTruyen: string;
   slugTruyen: string;
   truyenId: string;
@@ -123,6 +125,7 @@ export default function KhungDocChuong({
           dsChuongBanDau={dsChuongBanDau}
         />
         <PanelDocAudio
+          chuongId={chuongId}
           slugTruyen={slugTruyen}
           tenTruyen={tenTruyen}
           soChuong={soChuong}

@@ -3,7 +3,13 @@ name: Worker audio chuong
 on:
   schedule:
     - cron: '*/5 * * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      chuong_id:
+        description: 'ID chương cần ưu tiên tạo ngay (để trống nếu chạy theo lịch bình thường)'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   chay-worker:
@@ -15,7 +21,14 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci
-      - run: node scripts/worker-audio-chuong.mjs
+      - name: Chay worker audio
+        run: |
+          CHUONG_ID="${{ inputs.chuong_id }}"
+          if [ -n "$CHUONG_ID" ]; then
+            node scripts/worker-audio-chuong.mjs --chuong-id "$CHUONG_ID"
+          else
+            node scripts/worker-audio-chuong.mjs
+          fi
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

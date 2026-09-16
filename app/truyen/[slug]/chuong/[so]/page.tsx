@@ -124,6 +124,7 @@ export default async function TrangDocChuong({
     <>
       <LuuTienDo truyenId={truyen.id} chuongId={chuong.id} />
       <KhungDocChuong
+        chuongId={chuong.id}
         tenTruyen={truyen.ten}
         slugTruyen={slug}
         truyenId={truyen.id}

@@ -38,9 +38,11 @@ website truyện chữ AI/
 │   │   └── chuong/[so]/
 │   │       ├── page.tsx             (trang đọc chương - SSR 1 nhóm 50 chương chứa chương đang đọc + tổng số chương + ghi RPC ghi_luot_xem, render KhungDocChuong)
 │   │       ├── loading.tsx          (fallback "Đang tải..." cho route trang đọc chương)
+│   │       ├── actions-audio.ts     (server action yeuCauTaoAudioNgay - gọi RPC xep_hang_tao_audio và kích hoạt GitHub Actions workflow dispatch)
 │   │       ├── KhungDocChuong.tsx   (client - khung đọc, chặn copy nội dung; icon nhà + Aa + Danh sách chương bọc trong 1 khung fixed tự ẩn khi cuộn xuống/hiện khi cuộn lên)
 │   │       ├── PanelCaiDatDoc.tsx   (client - nút "Aa" + dropdown 4 mục cài đặt đọc, `absolute` trong khung cha)
-│   │       ├── PanelDocAudio.tsx    (client - nút loa "Nghe chương" cạnh "Aa", phát file audio Edge TTS (nếu có audio_url) qua <audio> + Media Session API (nghe khi tắt màn hình) hoặc Web Speech API (giọng máy); tự chuyển + đọc tiếp chương sau)
+│   │       ├── PanelDocAudio.tsx    (client - nút loa "Nghe chương" cạnh "Aa", mở ModalNgheAudioThat hoặc chạy Web Speech API giọng máy)
+│   │       ├── ModalNgheAudioThat.tsx (client - modal trình phát audio thật Hoài My Neural, thanh tua 10s, tốc độ đọc, polling trạng thái tạo audio, auto-play, Media Session API)
 │   │       ├── DanhSachChuong.tsx   (client - nút "Danh sách" + dropdown chuyển nhóm chương tải on-demand + cache state, `absolute` trong khung cha)
 │   │       ├── ChanChuongVip.tsx    (chặn chương >50 khi chưa có gói VIP hiệu lực, hiện <ChonGoiVip/>)
 │   │       └── LuuTienDo.tsx        (client component ghi tien_do_doc khi mở trang)
@@ -153,7 +155,6 @@ Supabase. Chi tiết hành vi xem `docs/superpowers/specs/2026-09-09-dot-a-metad
 file mp3 Neural TTS (MsEdgeTTS) cho tất cả chương chưa có audio_url, upload Storage `audio-chuong` và
 cập nhật DB.
 
-## Lệnh worker tạo audio ngầm (chạy định kỳ Windows Task Scheduler trên máy cá nhân)
-`node --env-file=.env.local scripts/worker-audio-chuong.mjs` — quét tối đa 5 chương trong `hang_doi_audio`
-(so_lan_loi < 3), tạo audio mp3 và xoá khỏi hàng đợi khi thành công.
+## Lệnh worker tạo audio ngầm (chạy định kỳ Windows Task Scheduler trên máy cá nhân hoặc GitHub Actions)
+`node --env-file=.env.local scripts/worker-audio-chuong.mjs [--chuong-id <uuid>]` — ưu tiên tạo audio cho chuong_id (nếu có), sau đó quét tối đa 5 chương trong `hang_doi_audio` (so_lan_loi < 3), tạo audio mp3 và xoá khỏi hàng đợi khi thành công.
 
