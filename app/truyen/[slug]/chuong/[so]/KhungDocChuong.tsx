@@ -26,8 +26,10 @@ export default function KhungDocChuong({
   soChuong,
   tieuDe,
   noiDung,
+  audioUrl,
   soChuongTruoc,
   soChuongSau,
+  chuongIdSau,
   tongSoChuong,
   soNhomBanDau,
   dsChuongBanDau,
@@ -38,8 +40,10 @@ export default function KhungDocChuong({
   soChuong: number;
   tieuDe: string;
   noiDung: string;
+  audioUrl?: string | null;
   soChuongTruoc?: number;
   soChuongSau?: number;
+  chuongIdSau?: string;
   tongSoChuong: number;
   soNhomBanDau: number;
   dsChuongBanDau: MucChuong[];
@@ -120,10 +124,13 @@ export default function KhungDocChuong({
         />
         <PanelDocAudio
           slugTruyen={slugTruyen}
+          tenTruyen={tenTruyen}
           soChuong={soChuong}
           soChuongSau={soChuongSau}
+          chuongIdSau={chuongIdSau}
           tieuDe={tieuDe}
           noiDung={noiDung}
+          audioUrl={audioUrl}
         />
         <PanelCaiDatDoc caiDat={caiDat} onDoiCaiDat={capNhatCaiDat} />
       </div>

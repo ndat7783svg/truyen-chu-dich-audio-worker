@@ -298,3 +298,53 @@ from chuong
 group by truyen_id;
 
 grant select on public.truyen_so_chuong to anon, authenticated;
+
+-- Audio file thật (edge-tts) cho từng chương (2026-09-16) - bổ sung cho nút "Nghe" Web Speech API
+-- cũ, không thay thế. audio_url null nghĩa là chương đó CHƯA có file audio (batch tạo dần theo
+-- truyện). Bảng chuong đang áp dụng bảo mật cấp-cột (xem "Vá bảo mật" phía trên) nên cột mới PHẢI
+-- được grant tường minh, không tự động kế thừa từ lần grant trước.
+alter table chuong add column if not exists audio_url text;
+grant select (audio_url) on chuong to anon, authenticated;
+
+-- Hàng đợi tạo audio "trước 1 chương" (2026-09-16): thay vì tạo hàng loạt trước (tốn storage cho
+-- cả chương chưa ai nghe) hoặc tạo tức thời theo yêu cầu (85-127s/chương, quá chậm để chờ trực
+-- tiếp), khi người đọc bắt đầu bấm nghe 1 chương thì xếp hàng tạo trước chương KẾ TIẾP - worker
+-- chạy trên máy ngoài (không qua hàm server Vercel, tránh giới hạn thời gian chạy) quét bảng này
+-- định kỳ. Không cho anon/authenticated đọc/ghi trực tiếp, chỉ qua RPC xep_hang_tao_audio (khi xếp
+-- hàng) và service role key (worker xử lý, xoá dòng khi xong).
+create table if not exists hang_doi_audio (
+  chuong_id uuid primary key references chuong(id) on delete cascade,
+  truyen_id uuid not null references truyen(id) on delete cascade,
+  so_chuong int not null,
+  yeu_cau_luc timestamptz not null default now(),
+  so_lan_loi int not null default 0
+);
+
+alter table hang_doi_audio enable row level security;
+
+create or replace function public.xep_hang_tao_audio(p_chuong_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_truyen_id uuid;
+  v_so_chuong int;
+  v_audio_url text;
+begin
+  select truyen_id, so_chuong, audio_url into v_truyen_id, v_so_chuong, v_audio_url
+  from chuong
+  where id = p_chuong_id;
+
+  if v_truyen_id is null or v_audio_url is not null then
+    return; -- chương không tồn tại hoặc đã có audio rồi, không cần xếp hàng
+  end if;
+
+  insert into hang_doi_audio (chuong_id, truyen_id, so_chuong)
+  values (p_chuong_id, v_truyen_id, v_so_chuong)
+  on conflict (chuong_id) do nothing;
+end;
+$$;
+
+grant execute on function public.xep_hang_tao_audio(uuid) to anon, authenticated;

@@ -40,7 +40,7 @@ website truyện chữ AI/
 │   │       ├── loading.tsx          (fallback "Đang tải..." cho route trang đọc chương)
 │   │       ├── KhungDocChuong.tsx   (client - khung đọc, chặn copy nội dung; icon nhà + Aa + Danh sách chương bọc trong 1 khung fixed tự ẩn khi cuộn xuống/hiện khi cuộn lên)
 │   │       ├── PanelCaiDatDoc.tsx   (client - nút "Aa" + dropdown 4 mục cài đặt đọc, `absolute` trong khung cha)
-│   │       ├── PanelDocAudio.tsx    (client - nút loa "Nghe chương" cạnh "Aa", Play/Pause + tốc độ đọc qua Web Speech API; không dùng pause()/resume() gốc, tự huỷ+đọc lại đúng đoạn; đánh số thế hệ để lọc sự kiện utterance cũ; tự chuyển + đọc tiếp chương sau)
+│   │       ├── PanelDocAudio.tsx    (client - nút loa "Nghe chương" cạnh "Aa", phát file audio Edge TTS (nếu có audio_url) qua <audio> + Media Session API (nghe khi tắt màn hình) hoặc Web Speech API (giọng máy); tự chuyển + đọc tiếp chương sau)
 │   │       ├── DanhSachChuong.tsx   (client - nút "Danh sách" + dropdown chuyển nhóm chương tải on-demand + cache state, `absolute` trong khung cha)
 │   │       ├── ChanChuongVip.tsx    (chặn chương >50 khi chưa có gói VIP hiệu lực, hiện <ChonGoiVip/>)
 │   │       └── LuuTienDo.tsx        (client component ghi tien_do_doc khi mở trang)
@@ -80,11 +80,16 @@ website truyện chữ AI/
 │       ├── gia-han-vip.ts           (tinhHanMoi, conHieuLucGoi, sinhMaGiaoDich - hàm thuần cho gói VIP)
 │       └── xac-minh-bot.ts          (layIpTuHeader, ipTrongDaiCidr, ipTrongDanhSach - xác minh IP bot thật)
 ├── scripts/                         (chạy độc lập bằng node --env-file=.env.local)
+│   ├── lib/
+│   │   ├── tao-audio-logic.mjs      (hàm thuần/dùng chung cho audio: taoAudioBuffer, uploadVaCapNhat, damBaoBucketStorage, chuanHoaXml, chayPoolSongSong)
+│   │   └── tao-audio-logic.test.js  (unit test cho tao-audio-logic)
 │   ├── slug.js                      (taoSlug - sinh slug từ tên có dấu)
 │   ├── parse-chuong.js              (parseChuong - đọc 1 file chuong-XXX.md, chấp nhận tiêu đề có/không có "#")
 │   ├── parse-thong-tin.js           (parseThongTin - đọc file thong-tin.md: tác giả/thể loại/mô tả)
 │   ├── kiem-tra-chuong.js           (kiemTraTinhLienTuc/laySoChuongTuTieuDe - kiểm tra thiếu chương/lệch số trong nguồn cục bộ)
 │   ├── sync-truyen.mjs              (CLI "check [tên truyện]" - đồng bộ chương + metadata lên Supabase, in báo cáo tính liên tục sau khi đăng)
+│   ├── tao-audio-chuong.mjs         (CLI tạo audio file hàng loạt qua msedge-tts giọng vi-VN-HoaiMyNeural, upload bucket audio-chuong, cập nhật chuong.audio_url)
+│   ├── worker-audio-chuong.mjs      (Worker CLI quét bảng hang_doi_audio tạo audio ngầm trên máy cá nhân theo chiến lược "tạo trước 1 chương")
 │   ├── xac-nhan-thanh-toan-logic.js (tinhHanMoi/SO_NGAY_THEO_GOI/TEN_GOI - hàm thuần dùng cho script CLI dưới, tách riêng khỏi lib/ vì scripts/ là JS thuần không qua TypeScript)
 │   └── xac-nhan-thanh-toan.mjs      (CLI xác nhận thanh toán gói VIP thủ công: `node --env-file=.env.local scripts/xac-nhan-thanh-toan.mjs <MA_GIAO_DICH>`, dùng SUPABASE_SERVICE_ROLE_KEY, idempotent)
 ├── supabase/schema.sql              (schema tích luỹ - áp dụng thủ công qua SQL Editor)
@@ -95,7 +100,8 @@ website truyện chữ AI/
 
 ## Data model (Supabase Postgres)
 - `truyen` — ten, slug, mo_ta, anh_bia (URL Storage), trang_thai, tac_gia, luot_xem.
-- `chuong` — truyen_id, so_chuong, tieu_de, noi_dung, luot_xem.
+- `chuong` — truyen_id, so_chuong, tieu_de, noi_dung, luot_xem, **audio_url** (URL file audio Storage public hoặc null).
+- `hang_doi_audio` — chuong_id (PK), truyen_id, so_chuong, yeu_cau_luc, so_lan_loi (hàng đợi tạo audio on-demand "trước 1 chương").
 - `tien_do_doc` — user_id, truyen_id, chuong_id (tiến độ đọc, 1 dòng/user/truyện).
 - `the_loai` — id, ten, slug.
 - `truyen_the_loai` — bảng nối nhiều-nhiều giữa `truyen` và `the_loai`.
@@ -112,6 +118,7 @@ website truyện chữ AI/
   trang_thai (`cho_thanh_toan`/`da_thanh_toan`), tao_luc, thanh_toan_luc — lịch sử mua gói VIP, tạo
   qua server action `taoGiaoDich`, đánh dấu đã thanh toán qua script CLI `xac-nhan-thanh-toan.mjs`.
 - Storage bucket `anh-bia` (public) — ảnh bìa từng truyện, tên object = `[slug-truyen].jpg`.
+- Storage bucket `audio-chuong` (public) — file audio từng chương, tên object = `[truyen-id]/[so-chuong].mp3`.
 
 ## Auth (Supabase Auth)
 - Đăng ký: email/mật khẩu, bắt buộc xác nhận email thật (Supabase "Confirm email" đã bật) + đăng
@@ -140,3 +147,13 @@ website truyện chữ AI/
 `node --env-file=.env.local scripts/sync-truyen.mjs "<tên truyện>"` — đọc chương mới +
 metadata (tác giả/thể loại/ảnh bìa/mô tả, ghi đè mỗi lần chạy) từ `D:\translate truyen`, đăng lên
 Supabase. Chi tiết hành vi xem `docs/superpowers/specs/2026-09-09-dot-a-metadata-truyen-design.md`.
+
+## Lệnh tạo audio file hàng loạt
+`node --env-file=.env.local scripts/tao-audio-chuong.mjs "<tên truyện>" [--gioi-han-song-song 20]` — tạo
+file mp3 Neural TTS (MsEdgeTTS) cho tất cả chương chưa có audio_url, upload Storage `audio-chuong` và
+cập nhật DB.
+
+## Lệnh worker tạo audio ngầm (chạy định kỳ Windows Task Scheduler trên máy cá nhân)
+`node --env-file=.env.local scripts/worker-audio-chuong.mjs` — quét tối đa 5 chương trong `hang_doi_audio`
+(so_lan_loi < 3), tạo audio mp3 và xoá khỏi hàng đợi khi thành công.
+
