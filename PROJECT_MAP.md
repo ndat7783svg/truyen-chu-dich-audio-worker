@@ -84,7 +84,7 @@ website truyện chữ AI/
 │       └── xac-minh-bot.ts          (layIpTuHeader, ipTrongDaiCidr, ipTrongDanhSach - xác minh IP bot thật)
 ├── scripts/                         (chạy độc lập bằng node --env-file=.env.local)
 │   ├── lib/
-│   │   ├── tao-audio-logic.mjs      (hàm thuần/dùng chung cho audio: taoAudioBuffer, uploadVaCapNhat, damBaoBucketStorage, chuanHoaXml, chayPoolSongSong)
+│   │   ├── tao-audio-logic.mjs      (hàm thuần/dùng chung cho audio: taoAudioBuffer, uploadVaCapNhat, damBaoBucketStorage, chuanHoaXml, chayPoolSongSong, donDepAudioKhongHoatDong - tự xoá audio 1 bộ truyện không ai nghe >12h)
 │   │   └── tao-audio-logic.test.js  (unit test cho tao-audio-logic)
 │   ├── slug.js                      (taoSlug - sinh slug từ tên có dấu)
 │   ├── parse-chuong.js              (parseChuong - đọc 1 file chuong-XXX.md, chấp nhận tiêu đề có/không có "#")
@@ -92,7 +92,7 @@ website truyện chữ AI/
 │   ├── kiem-tra-chuong.js           (kiemTraTinhLienTuc/laySoChuongTuTieuDe - kiểm tra thiếu chương/lệch số trong nguồn cục bộ)
 │   ├── sync-truyen.mjs              (CLI "check [tên truyện]" - đồng bộ chương + metadata lên Supabase, in báo cáo tính liên tục sau khi đăng)
 │   ├── tao-audio-chuong.mjs         (CLI tạo audio file hàng loạt qua msedge-tts giọng vi-VN-HoaiMyNeural, upload bucket audio-chuong, cập nhật chuong.audio_url)
-│   ├── worker-audio-chuong.mjs      (Worker CLI quét bảng hang_doi_audio tạo audio ngầm trên máy cá nhân theo chiến lược "tạo trước 1 chương")
+│   ├── worker-audio-chuong.mjs      (Worker CLI chạy trên GitHub Actions - dọn audio bộ truyện không hoạt động >12h rồi quét bảng hang_doi_audio tạo audio theo chiến lược "tạo trước 1 chương", kích hoạt qua workflow_dispatch từ yeuCauTaoAudioNgay - KHÔNG phụ thuộc cron, xem docs/handoff/audio-that-ai-modal-va-storage.md)
 │   ├── xac-nhan-thanh-toan-logic.js (tinhHanMoi/SO_NGAY_THEO_GOI/TEN_GOI - hàm thuần dùng cho script CLI dưới, tách riêng khỏi lib/ vì scripts/ là JS thuần không qua TypeScript)
 │   └── xac-nhan-thanh-toan.mjs      (CLI xác nhận thanh toán gói VIP thủ công: `node --env-file=.env.local scripts/xac-nhan-thanh-toan.mjs <MA_GIAO_DICH>`, dùng SUPABASE_SERVICE_ROLE_KEY, idempotent)
 ├── supabase/schema.sql              (schema tích luỹ - áp dụng thủ công qua SQL Editor)

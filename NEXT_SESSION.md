@@ -1,5 +1,42 @@
 # NEXT_SESSION.md
 
+## Phiên 2026-09-16 — hoàn thiện Audio thật (AI): modal, chuyển chương liền mạch, dọn storage
+
+**Đã xong hoàn toàn, đã deploy production, kiểm chứng thật qua browser + GitHub API + Supabase.**
+Chi tiết kỹ thuật đầy đủ (bug, nguyên nhân, cách sửa, số liệu đo đạc thật) xem
+`docs/handoff/audio-that-ai-modal-va-storage.md` — **đọc file này trước** nếu tiếp tục đụng vào
+`ModalNgheAudioThat.tsx`, `KhungDocChuong.tsx`, hoặc `scripts/worker-audio-chuong.mjs`.
+
+Tóm tắt đã làm:
+1. Sửa modal bị "đè" (nền không phủ kín, thiếu header/nút X) — nguyên nhân do CSS `transform` của
+   ancestor làm `position: fixed` tính sai containing block. Sửa bằng `createPortal` ra
+   `document.body`.
+2. Sửa mất tiếng khi đóng modal (nút X) — `<audio>` giờ nằm trong portal cố định, không unmount
+   theo trạng thái đóng/mở modal.
+3. Audio nghe xong tự chuyển chương liền mạch, KHÔNG load lại trang (chữ + audio + URL đều đồng bộ)
+   — lấy dữ liệu chương sau qua Supabase client + RPC `lay_noi_dung_chuong` (tự gate VIP), cập nhật
+   qua `window.history.replaceState`. Chặn đúng khi chạm ranh giới VIP giữa lúc tự động chuyển.
+4. Phát hiện qua GitHub REST API thật: cron `*/5 * * * *` của worker **chưa từng chạy lần nào**
+   trong hơn 2 tiếng (hạn chế đã biết của GitHub Actions, không phải lỗi cấu hình) — sửa "mồi trước
+   chương sau" từ chỉ ghi hàng đợi sang gọi `yeuCauTaoAudioNgay` (kích hoạt `workflow_dispatch`
+   ngay, không phụ thuộc cron).
+5. Đo thật: 130 file audio ≈ 1085MB, gần chạm giới hạn Supabase Storage free tier (1GB). Theo yêu
+   cầu cụ thể của user: đã **reset sạch** toàn bộ audio cũ trên production + xây cơ chế tự xoá audio
+   của CẢ BỘ TRUYỆN nào không ai nghe quá **12 tiếng** (cột `truyen.audio_truy_cap_luc` + RPC
+   `ghi_nhan_nghe_audio`, chạy ở đầu mỗi lần worker được kích hoạt thật — không phụ thuộc cron).
+
+**Việc đang treo, CHƯA cần làm ngay**: nếu 1GB Storage vẫn không đủ dù đã dọn 12h (ví dụ traffic
+tăng, nhiều truyện cùng có audio), cân nhắc chuyển sang Cloudflare R2 (10GB free + egress miễn phí)
+— đã giải thích chi tiết ưu/nhược điểm cho user (thêm tài khoản/API key, sửa lại code
+upload/`tao-audio-logic.mjs`, di chuyển file cũ), **user chủ động chọn ở lại Supabase Storage +
+cơ chế 12h trước**, chưa chuyển. Không tự ý chuyển sang R2 nếu user không yêu cầu lại.
+
+**Lưu ý khi test/debug tiếp**: script Node dùng `SUPABASE_SERVICE_ROLE_KEY` để thao tác trực tiếp
+Storage/DB (list/xoá file, update cột) — chạy bằng `node --env-file=.env.local scripts/<tên>.mjs`
+từ thư mục gốc dự án (không phải từ thư mục temp, ESM resolution cần `node_modules` cùng cây thư
+mục). Không cố ghi đè `window.fetch` để giả lập response trong browser test — đã thử, supabase-js
+dường như giữ tham chiếu `fetch` riêng không bị ghi đè qua cách này, tốn thời gian không hiệu quả.
+
 ## Phiên 2026-09-15/16 (tiếp) — tính năng "Nghe chương" + nghiên cứu tạo file audio thật
 
 **Đã xong, đã deploy production**: tính năng "Nghe chương" trong trang đọc (Web Speech API — miễn

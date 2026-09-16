@@ -52,10 +52,26 @@ mắt thường.
 **Tính năng "Nghe chương" (Web Speech API) — ĐÃ XONG, đã deploy production (2026-09-16)**: nút nghe
 trong trang đọc chương, đọc bằng giọng trình duyệt, miễn phí, không cần tạo file audio. Đã sửa 3 bug
 phát sinh (chi tiết + benchmark nghiên cứu hướng file audio thật xem
-`docs/handoff/tinh-nang-nghe-chuong-va-nghien-cuu-tts.md`). Đang cân nhắc thêm hướng tạo file audio
-thật (dùng `edge-tts`, đã benchmark: an toàn ~20-30 chương song song, ~3-4 tiếng/truyện 1000
-chương) để giải quyết nhu cầu nghe nền khi tắt màn hình — **CHƯA code, còn vài quyết định treo**,
-xem `NEXT_SESSION.md`.
+`docs/handoff/tinh-nang-nghe-chuong-va-nghien-cuu-tts.md`). Nút "Nghe (Giọng máy)" giữ nguyên 100%,
+tách biệt hoàn toàn với tính năng audio thật bên dưới.
+
+**Tính năng "Audio thật" (AI, edge-tts) — ĐÃ XONG, đã deploy production (2026-09-16)**: modal trình
+phát riêng (`ModalNgheAudioThat.tsx`), giọng Neural `vi-VN-HoaiMyNeural`, sinh file audio thật nghe
+được khi tắt màn hình. Kiến trúc: chỉ tạo audio khi có người thực sự nghe (không tạo hàng loạt) +
+mồi trước đúng 1 chương kế tiếp lúc chương hiện tại bắt đầu phát, chạy trên GitHub Actions (worker
+riêng, kích hoạt tức thời qua `workflow_dispatch`, KHÔNG phụ thuộc cron 5 phút — đã xác nhận cron
+không chạy đáng tin cậy qua GitHub API, xem chi tiết). Nghe xong tự chuyển sang chương sau (chữ +
+audio + URL đều cập nhật) mà KHÔNG load lại trang (`window.history.replaceState`, không dùng
+`router.push`) — giữ audio chạy liên tục khi khoá màn hình. Tự động xoá audio của cả bộ truyện nào
+không ai nghe quá 12 tiếng để tiết kiệm File Storage (free tier chỉ 1GB, đã đo thật 150 chương 1
+truyện ≈ 1GB). Đã reset sạch dữ liệu audio cũ 1 lần trên production theo yêu cầu user trước khi bật
+cơ chế dọn dẹp mới. Nhiều bug thật đã sửa (modal bị đè do CSS `transform`, mất tiếng khi đóng modal,
+race condition khi chuyển chương) — chi tiết đầy đủ + số liệu đo đạc thật xem
+`docs/handoff/audio-that-ai-modal-va-storage.md`.
+
+**Việc CHƯA làm, cân nhắc sau nếu 1GB Storage vẫn không đủ dù đã dọn 12h**: chuyển sang Cloudflare R2
+(10GB free + egress miễn phí) — đã giải thích ưu/nhược điểm cho user, **user chủ động chọn chưa
+chuyển ngay**, xem `NEXT_SESSION.md`.
 
 **v1**: **xong hoàn toàn cả 11 Task**, kể cả Task 11 (deploy Vercel) — xem
 `docs/superpowers/plans/2026-09-08-website-truyen-v1.md`. (Task 9 đăng ký/đăng nhập đã nâng cấp vượt
