@@ -122,6 +122,78 @@ export async function uploadVaCapNhat(supabase, truyenId, chuong, buffer) {
   return publicUrl;
 }
 
+const NGUONG_KHONG_HOAT_DONG_GIO = 12;
+
+// Tu dong xoa toan bo audio cua 1 bo truyen neu qua NGUONG_KHONG_HOAT_DONG_GIO khong ai nghe -
+// tiet kiem File Storage (free tier 1GB, khong du cho nhieu truyen luu vinh vien). Chi xoa nhung
+// bo truyen dang CO audio_url (tranh truy van/xoa vo ich). audio_truy_cap_luc duoc ghi nhan moi
+// khi co nguoi thuc su bam phat (xem ham ghi_nhan_nghe_audio RPC + ModalNgheAudioThat.tsx).
+export async function donDepAudioKhongHoatDong(supabase) {
+  const nguongThoiGian = new Date(Date.now() - NGUONG_KHONG_HOAT_DONG_GIO * 60 * 60 * 1000).toISOString();
+
+  const { data: truyenCanDon, error: loiTruyVan } = await supabase
+    .from('truyen')
+    .select('id, ten, audio_truy_cap_luc')
+    .lt('audio_truy_cap_luc', nguongThoiGian);
+
+  if (loiTruyVan) {
+    console.error('Loi truy van truyen can don audio:', loiTruyVan.message);
+    return { soTruyenDaDon: 0, soFileDaXoa: 0 };
+  }
+
+  if (!truyenCanDon || truyenCanDon.length === 0) {
+    return { soTruyenDaDon: 0, soFileDaXoa: 0 };
+  }
+
+  let soFileDaXoa = 0;
+  let soTruyenDaDon = 0;
+
+  for (const truyen of truyenCanDon) {
+    // Chi don neu bo truyen nay thuc su con chuong co audio_url (tranh xoa lap lai vo ich)
+    const { count: soChuongConAudio } = await supabase
+      .from('chuong')
+      .select('id', { count: 'exact', head: true })
+      .eq('truyen_id', truyen.id)
+      .not('audio_url', 'is', null);
+
+    if (!soChuongConAudio || soChuongConAudio === 0) continue;
+
+    const { data: dsFile, error: loiList } = await supabase.storage
+      .from(TEN_BUCKET_AUDIO)
+      .list(truyen.id, { limit: 1000 });
+
+    if (loiList) {
+      console.error(`Loi list file audio cua truyen "${truyen.ten}":`, loiList.message);
+      continue;
+    }
+
+    if (dsFile && dsFile.length > 0) {
+      const duongDanXoa = dsFile.map((f) => `${truyen.id}/${f.name}`);
+      const { error: loiXoaFile } = await supabase.storage.from(TEN_BUCKET_AUDIO).remove(duongDanXoa);
+      if (loiXoaFile) {
+        console.error(`Loi xoa file audio cua truyen "${truyen.ten}":`, loiXoaFile.message);
+        continue;
+      }
+      soFileDaXoa += duongDanXoa.length;
+    }
+
+    const { error: loiUpdate } = await supabase
+      .from('chuong')
+      .update({ audio_url: null })
+      .eq('truyen_id', truyen.id);
+
+    if (loiUpdate) {
+      console.error(`Loi reset audio_url cua truyen "${truyen.ten}":`, loiUpdate.message);
+      continue;
+    }
+
+    soTruyenDaDon += 1;
+    console.log(`Da don audio bo truyen "${truyen.ten}" (khong hoat dong > ${NGUONG_KHONG_HOAT_DONG_GIO}h).`);
+  }
+
+  return { soTruyenDaDon, soFileDaXoa };
+}
+
 export async function chayPoolSongSong(danhSach, gioiHan, hamXuLy, onTienDo) {
   const ketQua = [];
   let index = 0;

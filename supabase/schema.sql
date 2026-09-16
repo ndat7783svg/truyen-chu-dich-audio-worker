@@ -351,3 +351,24 @@ end;
 $$;
 
 grant execute on function public.xep_hang_tao_audio(uuid) to anon, authenticated;
+
+-- Tu dong don dep audio de tiet kiem File Storage (2026-09-16): thay vi giu audio vinh vien
+-- (150 chuong 1 truyen da chiem ~1GB, dung het free tier), ghi lai lan nghe audio GAN NHAT theo
+-- TUNG BO TRUYEN (khong phai tung chuong - don gian hoa theo yeu cau chu du an). Worker
+-- (scripts/worker-audio-chuong.mjs) moi lan duoc kich hoat that (qua yeuCauTaoAudioNgay, khong
+-- phu thuoc cron 5 phut khong dang tin cay - da xac nhan 0 lan chay trong hon 2 tieng) se tu xoa
+-- toan bo file audio + audio_url cua bo truyen nao qua 12 tieng khong ai nghe.
+alter table truyen add column if not exists audio_truy_cap_luc timestamptz;
+
+create or replace function public.ghi_nhan_nghe_audio(p_truyen_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update truyen set audio_truy_cap_luc = now() where id = p_truyen_id;
+end;
+$$;
+
+grant execute on function public.ghi_nhan_nghe_audio(uuid) to anon, authenticated;

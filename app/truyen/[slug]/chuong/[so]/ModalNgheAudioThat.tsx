@@ -70,6 +70,19 @@ export default function ModalNgheAudioThat({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const daTuDongPhatRef = useRef(false);
   const dangChuyenChuongRef = useRef(false);
+  const lanGhiNhanNgheGanNhatRef = useRef(0);
+
+  // Ghi nhận "lần nghe gần nhất" của cả bộ truyện (không phải từng chương) - dùng để worker tự
+  // xoá audio nếu bộ truyện không ai nghe quá 12 tiếng. Throttle 2 phút/lần để không gọi dồn dập
+  // khi người dùng tua/pause/play liên tục.
+  function ghiNhanNgheAudio() {
+    const bayGio = Date.now();
+    if (bayGio - lanGhiNhanNgheGanNhatRef.current < 2 * 60 * 1000) return;
+    lanGhiNhanNgheGanNhatRef.current = bayGio;
+    taoSupabaseClient()
+      .rpc('ghi_nhan_nghe_audio', { p_truyen_id: truyenId })
+      .then(() => {}, () => {});
+  }
 
   // Khi chuyenChuongTiepClient() tự đổi chuongId (không qua điều hướng trang), effect đồng bộ
   // theo prop bên dưới KHÔNG được chạy - vì nó sẽ ghi đè state (đặc biệt dangChuanBi=true vừa
@@ -176,11 +189,10 @@ export default function ModalNgheAudioThat({
           .then(() => {
             setDangPhat(true);
             capNhatMediaSession();
-            // Mồi chương sau vào hàng đợi
+            // Mồi chương sau: kích hoạt tạo audio NGAY (không chỉ ghi hàng đợi chờ cron - cron
+            // 5 phút không đảm bảo chạy đúng giờ, có lúc trễ hàng giờ)
             if (chuongIdSau) {
-              taoSupabaseClient()
-                .rpc('xep_hang_tao_audio', { p_chuong_id: chuongIdSau })
-                .then(() => {}, () => {});
+              yeuCauTaoAudioNgay(chuongIdSau).then(() => {}, () => {});
             }
           })
           .catch((err) => {
@@ -229,9 +241,7 @@ export default function ModalNgheAudioThat({
                   setDangPhat(true);
                   capNhatMediaSession();
                   if (chuongIdSau) {
-                    taoSupabaseClient()
-                      .rpc('xep_hang_tao_audio', { p_chuong_id: chuongIdSau })
-                      .then(() => {}, () => {});
+                    yeuCauTaoAudioNgay(chuongIdSau).then(() => {}, () => {});
                   }
                 })
                 .catch((e) => console.error('Lỗi tự động play sau khi tạo xong:', e));
@@ -278,9 +288,7 @@ export default function ModalNgheAudioThat({
           setDangPhat(true);
           capNhatMediaSession();
           if (chuongIdSau) {
-            taoSupabaseClient()
-              .rpc('xep_hang_tao_audio', { p_chuong_id: chuongIdSau })
-              .then(() => {}, () => {});
+            yeuCauTaoAudioNgay(chuongIdSau).then(() => {}, () => {});
           }
         })
         .catch((err) => {
@@ -421,11 +429,9 @@ export default function ModalNgheAudioThat({
         setThoiGianHienTai(0);
         setTongThoiLuong(0);
 
-        // Mồi trước chương kế-kế-tiếp vào hàng đợi
+        // Mồi trước chương kế-kế-tiếp: kích hoạt tạo audio NGAY (không chỉ ghi hàng đợi)
         if (chuongSauMoi?.id) {
-          supabase
-            .rpc('xep_hang_tao_audio', { p_chuong_id: chuongSauMoi.id })
-            .then(() => {}, () => {});
+          yeuCauTaoAudioNgay(chuongSauMoi.id).then(() => {}, () => {});
         }
 
         setTimeout(() => {
@@ -486,7 +492,10 @@ export default function ModalNgheAudioThat({
               setTongThoiLuong(audioRef.current.duration || 0);
             }
           }}
-          onPlay={() => setDangPhat(true)}
+          onPlay={() => {
+            setDangPhat(true);
+            ghiNhanNgheAudio();
+          }}
           onPause={() => setDangPhat(false)}
           onEnded={onAudioEnded}
           className="hidden"

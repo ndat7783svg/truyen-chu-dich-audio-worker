@@ -5,6 +5,7 @@ import {
   taoAudioBuffer,
   uploadVaCapNhat,
   chayPoolSongSong,
+  donDepAudioKhongHoatDong,
 } from './lib/tao-audio-logic.mjs';
 
 const GIOI_HAN_QUEUE = 5;
@@ -23,6 +24,17 @@ async function main() {
 
   // Dam bao bucket audio-chuong ton tai
   await damBaoBucketStorage(supabase);
+
+  // Don dep audio cua bo truyen khong hoat dong qua 12h - chay dau moi lan worker duoc kich hoat
+  // that (khong phu thuoc cron 5 phut, da xac nhan khong chay dung gio) de giai phong storage
+  // truoc khi tao audio moi.
+  console.log('\n--- DON DEP AUDIO KHONG HOAT DONG ---');
+  const { soTruyenDaDon, soFileDaXoa } = await donDepAudioKhongHoatDong(supabase);
+  if (soTruyenDaDon > 0) {
+    console.log(`Da don ${soTruyenDaDon} bo truyen, xoa ${soFileDaXoa} file.`);
+  } else {
+    console.log('Khong co bo truyen nao can don.');
+  }
 
   // Doc tham so dong lenh --chuong-id (neu co)
   let chuongIdUuTien = null;
