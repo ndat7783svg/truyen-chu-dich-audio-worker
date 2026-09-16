@@ -12,6 +12,7 @@ import {
   type CaiDatAudio,
 } from '@/lib/utils/cai-dat-audio';
 import ModalNgheAudioThat from './ModalNgheAudioThat';
+import type { ThongTinChuongMoi } from './KhungDocChuong';
 
 const KHOA_TU_DONG_DOC = 'chuongTuDongDocTiep';
 const KHOA_MO_MODAL_AUDIO_THAT = 'moModalAudioThat';
@@ -20,23 +21,28 @@ export default function PanelDocAudio({
   chuongId,
   slugTruyen,
   tenTruyen,
+  truyenId,
   soChuong,
   soChuongSau,
   chuongIdSau,
   tieuDe,
   noiDung,
   audioUrl,
+  onChuyenChuongMoi,
 }: {
   chuongId: string;
   slugTruyen: string;
   tenTruyen: string;
+  truyenId: string;
   soChuong: number;
   soChuongSau?: number;
   chuongIdSau?: string;
   tieuDe: string;
   noiDung: string;
   audioUrl?: string | null;
+  onChuyenChuongMoi?: (thongTinMoi: ThongTinChuongMoi) => void;
 }) {
+
   const router = useRouter();
   const [hoTroWebSpeech, setHoTroWebSpeech] = useState(true);
   const [caiDat, setCaiDat] = useState<CaiDatAudio>(CAI_DAT_AUDIO_MAC_DINH);
@@ -302,12 +308,14 @@ export default function PanelDocAudio({
         audioUrl={audioUrl}
         slugTruyen={slugTruyen}
         tenTruyen={tenTruyen}
+        truyenId={truyenId}
         soChuong={soChuong}
         soChuongSau={soChuongSau}
         chuongIdSau={chuongIdSau}
         tieuDe={tieuDe}
         onDungWebSpeech={dungWebSpeech}
         tuDongPhatNgay={tuDongPhatModal}
+        onChuyenChuongMoi={onChuyenChuongMoi}
       />
     </div>
   );

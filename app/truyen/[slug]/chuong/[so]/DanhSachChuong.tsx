@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { layNhomChuong, type MucChuong } from '@/lib/actions/lay-nhom-chuong';
-import { taoDanhSachNhom } from '@/lib/utils/chuong';
+import { taoDanhSachNhom, tinhNhomCuaChuong } from '@/lib/utils/chuong';
 
 export type { MucChuong };
 
@@ -39,6 +39,24 @@ export default function DanhSachChuong({
       [soNhomBanDau]: dsChuongBanDau,
     }));
   }
+
+  // Tự động chuyển nhóm khi số chương hiện tại thay đổi (ví dụ khi audio tự động chuyển chương vượt ranh giới 50 chương)
+  useEffect(() => {
+    const nhomMoi = tinhNhomCuaChuong(soChuongHienTai);
+    if (nhomMoi !== soNhomDangChon) {
+      setSoNhomDangChon(nhomMoi);
+      if (!cacheNhom[nhomMoi]) {
+        layNhomChuong(truyenId, nhomMoi)
+          .then((duLieu) => {
+            setCacheNhom((prev) => ({ ...prev, [nhomMoi]: duLieu }));
+          })
+          .catch((err) => {
+            console.error('Lỗi khi tự động tải nhóm chương mới:', err);
+          });
+      }
+    }
+  }, [soChuongHienTai, soNhomDangChon, cacheNhom, truyenId]);
+
 
   useEffect(() => {
     if (!moDanhSach) return;

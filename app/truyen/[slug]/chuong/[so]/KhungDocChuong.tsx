@@ -10,6 +10,7 @@ import {
   mauSacTheo,
   type CaiDatDoc,
 } from '@/lib/utils/cai-dat-doc';
+import { luuTienDoDoc, ghiLuotXemChuong } from './actions';
 import PanelCaiDatDoc from './PanelCaiDatDoc';
 import PanelDocAudio from './PanelDocAudio';
 import DanhSachChuong, { type MucChuong } from './DanhSachChuong';
@@ -18,6 +19,17 @@ const notoSerif = Noto_Serif({
   subsets: ['vietnamese', 'latin'],
   weight: ['400', '700'],
 });
+
+export type ThongTinChuongMoi = {
+  chuongId: string;
+  soChuong: number;
+  tieuDe: string;
+  noiDung: string;
+  audioUrl?: string | null;
+  soChuongTruoc?: number;
+  soChuongSau?: number;
+  chuongIdSau?: string;
+};
 
 export default function KhungDocChuong({
   chuongId,
@@ -54,6 +66,32 @@ export default function KhungDocChuong({
   const [hienThanhTop, setHienThanhTop] = useState(true);
   const scrollYTruocRef = useRef(0);
 
+  // State quản lý chương đang hiển thị (cho phép chuyển chương liền mạch không reload trang)
+  const [chuongHienTai, setChuongHienTai] = useState<ThongTinChuongMoi>({
+    chuongId,
+    soChuong,
+    tieuDe,
+    noiDung,
+    audioUrl,
+    soChuongTruoc,
+    soChuongSau,
+    chuongIdSau,
+  });
+
+  // Đồng bộ state khi props từ server thay đổi (ví dụ người dùng bấm link hoặc load trang mới)
+  useEffect(() => {
+    setChuongHienTai({
+      chuongId,
+      soChuong,
+      tieuDe,
+      noiDung,
+      audioUrl,
+      soChuongTruoc,
+      soChuongSau,
+      chuongIdSau,
+    });
+  }, [chuongId, soChuong, tieuDe, noiDung, audioUrl, soChuongTruoc, soChuongSau, chuongIdSau]);
+
   useEffect(() => {
     setCaiDat(docCaiDatDoc());
   }, []);
@@ -76,6 +114,21 @@ export default function KhungDocChuong({
   function capNhatCaiDat(caiDatMoi: CaiDatDoc) {
     setCaiDat(caiDatMoi);
     ghiCaiDatDoc(caiDatMoi);
+  }
+
+  // Callback chuyển chương tại chỗ phía client
+  function xuLyChuyenChuongMoi(thongTinMoi: ThongTinChuongMoi) {
+    setChuongHienTai(thongTinMoi);
+
+    // Cập nhật URL trình duyệt mà không trigger Next.js router/RSC remount
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', `/truyen/${slugTruyen}/chuong/${thongTinMoi.soChuong}`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Chạy các side-effect ngầm
+    luuTienDoDoc(truyenId, thongTinMoi.chuongId);
+    ghiLuotXemChuong(truyenId, thongTinMoi.chuongId);
   }
 
   const mauSac = mauSacTheo(caiDat.mauNen);
@@ -113,27 +166,29 @@ export default function KhungDocChuong({
               strokeLinejoin="round"
               strokeWidth={2}
               d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
+            />
           </svg>
         </Link>
         <DanhSachChuong
           slugTruyen={slugTruyen}
           truyenId={truyenId}
-          soChuongHienTai={soChuong}
+          soChuongHienTai={chuongHienTai.soChuong}
           tongSoChuong={tongSoChuong}
           soNhomBanDau={soNhomBanDau}
           dsChuongBanDau={dsChuongBanDau}
         />
         <PanelDocAudio
-          chuongId={chuongId}
+          chuongId={chuongHienTai.chuongId}
           slugTruyen={slugTruyen}
           tenTruyen={tenTruyen}
-          soChuong={soChuong}
-          soChuongSau={soChuongSau}
-          chuongIdSau={chuongIdSau}
-          tieuDe={tieuDe}
-          noiDung={noiDung}
-          audioUrl={audioUrl}
+          truyenId={truyenId}
+          soChuong={chuongHienTai.soChuong}
+          soChuongSau={chuongHienTai.soChuongSau}
+          chuongIdSau={chuongHienTai.chuongIdSau}
+          tieuDe={chuongHienTai.tieuDe}
+          noiDung={chuongHienTai.noiDung}
+          audioUrl={chuongHienTai.audioUrl}
+          onChuyenChuongMoi={xuLyChuyenChuongMoi}
         />
         <PanelCaiDatDoc caiDat={caiDat} onDoiCaiDat={capNhatCaiDat} />
       </div>
@@ -143,7 +198,7 @@ export default function KhungDocChuong({
         </Link>
       </p>
       <h1 className="text-xl font-bold mt-1">
-        Chương {soChuong}: {tieuDe}
+        Chương {chuongHienTai.soChuong}: {chuongHienTai.tieuDe}
       </h1>
       <article
         className="mt-4 whitespace-pre-line select-none"
@@ -152,12 +207,12 @@ export default function KhungDocChuong({
         onCopy={chanSaoChep}
         onCut={chanSaoChep}
       >
-        {noiDung}
+        {chuongHienTai.noiDung}
       </article>
       <nav className="mt-6 flex justify-between gap-3">
-        {soChuongTruoc ? (
+        {chuongHienTai.soChuongTruoc ? (
           <Link
-            href={`/truyen/${slugTruyen}/chuong/${soChuongTruoc}`}
+            href={`/truyen/${slugTruyen}/chuong/${chuongHienTai.soChuongTruoc}`}
             className="flex-1 min-h-11 flex items-center justify-center rounded-lg border border-border font-medium hover:bg-black/5"
           >
             ← Chương trước
@@ -165,9 +220,9 @@ export default function KhungDocChuong({
         ) : (
           <span className="flex-1" />
         )}
-        {soChuongSau ? (
+        {chuongHienTai.soChuongSau ? (
           <Link
-            href={`/truyen/${slugTruyen}/chuong/${soChuongSau}`}
+            href={`/truyen/${slugTruyen}/chuong/${chuongHienTai.soChuongSau}`}
             className="flex-1 min-h-11 flex items-center justify-center rounded-lg border border-border font-medium hover:bg-black/5"
           >
             Chương sau →
@@ -179,3 +234,4 @@ export default function KhungDocChuong({
     </main>
   );
 }
+
