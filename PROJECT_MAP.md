@@ -40,6 +40,7 @@ website truyện chữ AI/
 │   │       ├── loading.tsx          (fallback "Đang tải..." cho route trang đọc chương)
 │   │       ├── KhungDocChuong.tsx   (client - khung đọc, chặn copy nội dung; icon nhà + Aa + Danh sách chương bọc trong 1 khung fixed tự ẩn khi cuộn xuống/hiện khi cuộn lên)
 │   │       ├── PanelCaiDatDoc.tsx   (client - nút "Aa" + dropdown 4 mục cài đặt đọc, `absolute` trong khung cha)
+│   │       ├── PanelDocAudio.tsx    (client - nút loa "Nghe chương" cạnh "Aa", Play/Pause + tốc độ đọc qua Web Speech API; không dùng pause()/resume() gốc, tự huỷ+đọc lại đúng đoạn; đánh số thế hệ để lọc sự kiện utterance cũ; tự chuyển + đọc tiếp chương sau)
 │   │       ├── DanhSachChuong.tsx   (client - nút "Danh sách" + dropdown chuyển nhóm chương tải on-demand + cache state, `absolute` trong khung cha)
 │   │       ├── ChanChuongVip.tsx    (chặn chương >50 khi chưa có gói VIP hiệu lực, hiện <ChonGoiVip/>)
 │   │       └── LuuTienDo.tsx        (client component ghi tien_do_doc khi mở trang)
@@ -57,7 +58,7 @@ website truyện chữ AI/
 │   ├── DropdownTheLoai.tsx          (client component - menu thể loại trong Header)
 │   ├── NutDangXuat.tsx              (client component - nút đăng xuất, dùng trong trang Tài khoản)
 │   ├── SearchBox.tsx                (ô tìm kiếm, nằm trong Header, submit điều hướng về `/?q=...`)
-│   ├── TheTruyen.tsx                (thẻ truyện dùng chung - trang chủ + trang thể loại, hiện lượt xem, số chương, nhãn "AI")
+│   ├── TheTruyen.tsx                (thẻ truyện dùng chung - trang chủ + trang thể loại, hiện lượt xem, số chương, nhãn "Dịch")
 │   └── ChonGoiVip.tsx               (client - modal chọn 1 trong 3 gói VIP + hướng dẫn chuyển khoản MoMo (QR + tên/ngân hàng/STK có nút copy), dùng chung ở trang Tài khoản và ChanChuongVip)
 ├── lib/
 │   ├── actions/
@@ -75,6 +76,7 @@ website truyện chữ AI/
 │       ├── chuong.ts                (tinhSoNhom, tinhNhomCuaChuong, taoDanhSachNhom, catChuongTheoNhom - phân nhóm chương 50)
 │       ├── dich-loi-supabase.ts     (dichLoiSupabase - dịch lỗi Supabase Auth sang tiếng Việt)
 │       ├── cai-dat-doc.ts           (đọc/ghi cài đặt đọc chương qua localStorage, chuẩn hóa dữ liệu, màu theo theme)
+│       ├── cai-dat-audio.ts         (đọc/ghi tốc độ đọc audio qua localStorage; taoDoanDoc - chia nội dung chương thành đoạn ngắn để đọc, né bug Chrome treo utterance dài)
 │       ├── gia-han-vip.ts           (tinhHanMoi, conHieuLucGoi, sinhMaGiaoDich - hàm thuần cho gói VIP)
 │       └── xac-minh-bot.ts          (layIpTuHeader, ipTrongDaiCidr, ipTrongDanhSach - xác minh IP bot thật)
 ├── scripts/                         (chạy độc lập bằng node --env-file=.env.local)

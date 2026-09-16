@@ -1,5 +1,33 @@
 # NEXT_SESSION.md
 
+## Phiên 2026-09-15/16 (tiếp) — tính năng "Nghe chương" + nghiên cứu tạo file audio thật
+
+**Đã xong, đã deploy production**: tính năng "Nghe chương" trong trang đọc (Web Speech API — miễn
+phí, đọc trực tiếp bằng giọng trình duyệt, không cần tạo file). Đã sửa 3 bug phát sinh (tự review +
+kiểm chứng thật qua browser): chia đoạn tránh Chrome treo, bỏ `pause()/resume()` gốc không đáng tin
+cậy, đổi cờ boolean lọc sự kiện cũ sang đánh số thế hệ (generation counter) vì `cancel()` không đảm
+bảo luôn bắn sự kiện. Chi tiết đầy đủ + code pattern xem
+`docs/handoff/tinh-nang-nghe-chuong-va-nghien-cuu-tts.md`.
+
+**Đã nghiên cứu (CHƯA code) hướng tạo file audio thật** để giải quyết yêu cầu "tắt màn hình vẫn nghe
+được" (Web Speech API không làm được, đây là giới hạn nền tảng). Đã benchmark thật `edge-tts` (thư
+viện free gọi Neural TTS của Microsoft) với dữ liệu thật:
+- Song song 30 chương: 0 lỗi, ~5-8 phút.
+- Song song 70 chương: **~53% lỗi**, có chương treo tới 61 phút mới báo lỗi.
+- Khuyến nghị mức song song ~20-30 cho batch job thật — truyện 1000 chương ước tính ~3-4 tiếng chạy
+  nền. Không có lựa chọn free nào nhanh hơn (model AI mạnh hơn cần GPU riêng, tốn tiền).
+
+**Việc cần làm đầu phiên sau nếu tiếp tục hướng này** — user đã nói "qua chat mới rồi làm tiếp",
+CHƯA chốt các quyết định sau, phải hỏi lại trước khi code:
+1. File audio thật **thay thế hay bổ sung** nút "Nghe" (Web Speech API) hiện tại?
+2. Test thật trên **truyện nào trước** (chọn 1 truyện cụ thể)?
+3. Tạo audio **ngay khi "check" chương mới**, hay chạy **hàng loạt cho kho cũ** trước?
+4. Lưu ở Supabase Storage (giống ảnh bìa)? Cần kiểm tra giới hạn dung lượng free tier trước khi làm
+   hàng loạt (ước tính 1000 chương ≈ 2.5-6GB audio).
+- **Lưu ý kỹ thuật khi code thật**: package `msedge-tts` — dùng `toStream()` tự ghi file bằng
+  `fs.createWriteStream()`, KHÔNG dùng `toFile()` (không đặt tên file được, luôn ghi đè
+  `audio.mp3` cố định — đã gặp bug này lúc test).
+
 ## Phiên 2026-09-15 (tiếp) — đăng truyện đã duyệt bên `D:\translate truyen` lên web
 
 Đã làm rõ nghĩa "duyệt" = trạng thái `da_duyet: true` trong `scripts/queue.json` bên

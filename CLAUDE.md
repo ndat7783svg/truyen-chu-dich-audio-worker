@@ -39,14 +39,24 @@ mắt thường.
 ## Tính năng v1 (đã chốt phạm vi, ưu tiên đơn giản trước)
 - Trang chủ: danh sách truyện.
 - Trang truyện: thông tin + danh sách chương.
-- Trang đọc chương: chỉ hiển thị chữ (chưa làm audio — tạo audio 1 chương rất lâu, chưa cân nhắc).
+- Trang đọc chương: hiển thị chữ + nút "Nghe" đọc bằng giọng trình duyệt (Web Speech API, xem mục
+  trạng thái bên dưới) — file audio thật lưu sẵn (như các trang audio truyện khác) vẫn đang cân nhắc.
 - Đăng ký / đăng nhập.
 - Lưu tiến độ đọc (đọc tiếp từ chương đang dở, cần đăng nhập).
 - Tìm kiếm truyện theo tên.
 - Dark mode.
-- **Hoãn lại, bàn sau:** mục trả phí mua chương; audio trong trang đọc.
+- **Hoãn lại, bàn sau:** mục trả phí mua chương.
 
 ## Trạng thái hiện tại
+
+**Tính năng "Nghe chương" (Web Speech API) — ĐÃ XONG, đã deploy production (2026-09-16)**: nút nghe
+trong trang đọc chương, đọc bằng giọng trình duyệt, miễn phí, không cần tạo file audio. Đã sửa 3 bug
+phát sinh (chi tiết + benchmark nghiên cứu hướng file audio thật xem
+`docs/handoff/tinh-nang-nghe-chuong-va-nghien-cuu-tts.md`). Đang cân nhắc thêm hướng tạo file audio
+thật (dùng `edge-tts`, đã benchmark: an toàn ~20-30 chương song song, ~3-4 tiếng/truyện 1000
+chương) để giải quyết nhu cầu nghe nền khi tắt màn hình — **CHƯA code, còn vài quyết định treo**,
+xem `NEXT_SESSION.md`.
+
 **v1**: **xong hoàn toàn cả 11 Task**, kể cả Task 11 (deploy Vercel) — xem
 `docs/superpowers/plans/2026-09-08-website-truyen-v1.md`. (Task 9 đăng ký/đăng nhập đã nâng cấp vượt
 phạm vi gốc, Task 10 dark mode gộp vào Đợt C bên dưới — xem 2 mục riêng).
