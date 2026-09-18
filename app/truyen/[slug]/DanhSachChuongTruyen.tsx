@@ -64,6 +64,7 @@ export default function DanhSachChuongTruyen({
             <li key={chuong.id}>
               <Link
                 href={`/truyen/${slugTruyen}/chuong/${chuong.so_chuong}`}
+                prefetch={false}
                 className="flex items-center gap-1.5 hover:underline py-0.5 text-sm"
               >
                 {biKhoa && (

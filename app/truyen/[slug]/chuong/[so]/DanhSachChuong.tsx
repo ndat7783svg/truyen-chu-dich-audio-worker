@@ -137,6 +137,7 @@ export default function DanhSachChuong({
                 <Link
                   key={muc.soChuong}
                   href={`/truyen/${slugTruyen}/chuong/${muc.soChuong}`}
+                  prefetch={false}
                   onClick={() => setMoDanhSach(false)}
                   className={`block px-3 py-2 text-sm hover:bg-gray-100 ${
                     muc.soChuong === soChuongHienTai ? 'font-bold text-blue-600' : ''
