@@ -8,6 +8,8 @@ import type HlsType from 'hls.js';
 import { taoSupabaseClient } from '@/lib/supabase/client';
 import { GIOI_HAN_TOC_DO, docCaiDatAudio, ghiCaiDatAudio } from '@/lib/utils/cai-dat-audio';
 import { nenDungHlsGoc } from '@/lib/audio/nhan-dien-trinh-duyet';
+import { urlDoan } from '@/lib/audio/danh-sach-phat';
+import type { VeAudio } from '@/lib/audio/ve-audio';
 import type { ThongTinChuongMoi } from './KhungDocChuong';
 
 type MucChuong = {
@@ -27,7 +29,14 @@ type Manifest = {
   chuongs: MucChuong[];
   dungLai: { soChuong: number; lyDo: 'chua_dang_nhap' | 'can_vip' } | null;
   chuongSauCuoi: { chuongId: string; soChuong: number } | null;
+  ve: VeAudio | null;
 };
+
+// Nạp trước (song song) vài đoạn phía sau đoạn đang phát vào bộ nhớ đệm trình duyệt. hls.js chỉ tải TUẦN TỰ từng
+// đoạn nên không tích được bộ đệm; đo thật ở 1.5x: đứng hình 4-15 giây mỗi khi 1 đoạn tạo chậm. Nạp song song
+// biến các đoạn sau thành "đã có sẵn" khi hls.js hỏi tới.
+const SO_DOAN_NAP_TRUOC = 4;
+const TOI_DA_NAP_DONG_THOI = 3;
 
 type TrangThai =
   | { loai: 'nghi' }
@@ -96,6 +105,9 @@ export default function ModalNgheAudioHls({
   // "Phiên phát": tăng mỗi khi dừng/bắt đầu lại. Các bước bất đồng bộ (import hls.js, tải manifest) đối chiếu
   // với phiên lúc khởi tạo để không tác động lên phiên mới hơn (bấm Bắt đầu/Thử lại liên tiếp, đóng trang giữa chừng).
   const phienRef = useRef(0);
+  const daNapTruocRef = useRef<Set<number>>(new Set());
+  const soDangNapTruocRef = useRef(0);
+  const snHienTaiRef = useRef(0);
   // Chương mà CHỮ trên trang đã khớp / đang chờ tải chữ; lần tải chữ thất bại gần nhất (để thử lại sau ~5 giây).
   const chiSoDaDongBoRef = useRef(0);
   const dangDongBoRef = useRef(-1);
@@ -112,6 +124,8 @@ export default function ModalNgheAudioHls({
 
   function dungNguon() {
     phienRef.current += 1;
+    daNapTruocRef.current.clear();
+    soDangNapTruocRef.current = 0;
     hlsRef.current?.destroy();
     hlsRef.current = null;
     const el = audioRef.current;
@@ -220,6 +234,46 @@ export default function ModalNgheAudioHls({
     el.currentTime = man.chuongs[chiSo].batDauGiay;
   }
 
+  // URL đoạn theo chỉ số đoạn TOÀN CỤC của playlist (khớp `sn` của hls.js), null nếu vượt quá playlist.
+  function urlTheoChiSoToanCuc(man: Manifest, sn: number): string | null {
+    for (let i = man.chuongs.length - 1; i >= 0; i -= 1) {
+      const c = man.chuongs[i];
+      if (sn >= c.doanBatDau) {
+        const chiSoTrongChuong = sn - c.doanBatDau;
+        return chiSoTrongChuong < c.soDoan ? urlDoan(truyenId, c.soChuong, chiSoTrongChuong, man.ve) : null;
+      }
+    }
+    return null;
+  }
+
+  function napTruocDoan(snHienTai: number) {
+    const man = manifestRef.current;
+    if (!man) return;
+    snHienTaiRef.current = snHienTai;
+    const phien = phienRef.current;
+    for (let sn = snHienTai + 1; sn <= snHienTai + SO_DOAN_NAP_TRUOC; sn += 1) {
+      if (daNapTruocRef.current.has(sn)) continue;
+      if (soDangNapTruocRef.current >= TOI_DA_NAP_DONG_THOI) return;
+      const url = urlTheoChiSoToanCuc(man, sn);
+      if (!url) return;
+      daNapTruocRef.current.add(sn);
+      soDangNapTruocRef.current += 1;
+      fetch(url)
+        .then((res) => {
+          if (!res.ok) throw new Error(String(res.status));
+          return res.blob(); // đọc hết thân phản hồi để trình duyệt lưu vào bộ nhớ đệm
+        })
+        .catch(() => {
+          if (phien === phienRef.current) daNapTruocRef.current.delete(sn); // lỗi: cho phép nạp lại sau
+        })
+        .finally(() => {
+          if (phien !== phienRef.current) return; // phiên cũ: bộ đếm đã được đặt lại
+          soDangNapTruocRef.current -= 1;
+          napTruocDoan(snHienTaiRef.current);
+        });
+    }
+  }
+
   async function taiManifest(soChuongBatDau: number, phien: number): Promise<Manifest | null> {
     try {
       const res = await fetch(`/api/audio/manifest?t=${truyenId}&c=${soChuongBatDau}`);
@@ -276,11 +330,17 @@ export default function ModalNgheAudioHls({
           el.play().catch(() => {});
           return;
         }
-        const hls = new Hls();
+        const hls = new Hls({
+          // Mặc định chỉ đệm ~30s phía trước; nghe nhanh (1.5x-2x) hết đệm rất nhanh -> tăng để bù đoạn tạo chậm.
+          maxBufferLength: 120,
+          maxMaxBufferLength: 240,
+          backBufferLength: 30,
+        });
         hlsRef.current = hls;
         hls.on(Hls.Events.FRAG_CHANGED, (_e, d) => {
           const sn = typeof d.frag.sn === 'number' ? d.frag.sn : 0;
           hienThiChuong(chiSoTheoDoan(sn));
+          napTruocDoan(sn);
         });
         // Có đoạn tải thành công = mạng đã ổn lại: tính lại số lần thử lỗi mạng, để các lỗi thoáng qua rải rác
         // trong phiên nghe dài hàng giờ không cộng dồn tới mức dừng hẳn.
@@ -318,6 +378,7 @@ export default function ModalNgheAudioHls({
       if (!man || phien !== phienRef.current) return;
       manifestRef.current = man;
       setManifest(man);
+      napTruocDoan(0);
       chiSoRef.current = 0;
       chiSoDaDongBoRef.current = laTiepNoi ? -1 : 0; // nạp tiếp: chữ đang là chương cuối của playlist cũ
       dangDongBoRef.current = -1;
@@ -394,7 +455,16 @@ export default function ModalNgheAudioHls({
             if (!el) return;
             setThoiGian(el.currentTime);
             // Safari (HLS gốc) không có sự kiện đổi đoạn -> suy ra chương từ mốc thời gian ước lượng.
-            if (dungHlsGocRef.current) hienThiChuong(chiSoTheoThoiGian(el.currentTime));
+            if (dungHlsGocRef.current) {
+              const chi = chiSoTheoThoiGian(el.currentTime);
+              hienThiChuong(chi);
+              const man = manifestRef.current;
+              if (man) {
+                const c = man.chuongs[chi];
+                const tyLe = c.thoiLuongGiay > 0 ? (el.currentTime - c.batDauGiay) / c.thoiLuongGiay : 0;
+                napTruocDoan(c.doanBatDau + Math.max(0, Math.min(c.soDoan - 1, Math.floor(tyLe * c.soDoan))));
+              }
+            }
           }}
           className="hidden"
         />,
@@ -499,11 +569,11 @@ export default function ModalNgheAudioHls({
                     max={muc?.thoiLuongGiay ?? 100}
                     step={0.5}
                     value={thoiGianTrongChuong}
-                    disabled={!muc}
-                    onChange={(e) => {
-                      if (muc && audioRef.current) audioRef.current.currentTime = muc.batDauGiay + Number(e.target.value);
-                    }}
-                    className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    // Chỉ hiển thị tiến độ, KHÔNG cho kéo tua: audio tạo theo từng đoạn nên tua tới chỗ chưa tạo sẽ đứng.
+                    onChange={() => {}}
+                    tabIndex={-1}
+                    aria-label="Tiến độ chương (không tua được)"
+                    className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none pointer-events-none accent-blue-600"
                   />
                   <div className="flex justify-between text-xs text-gray-500 font-mono">
                     <span>{dinhDangThoiGian(thoiGianTrongChuong)}</span>

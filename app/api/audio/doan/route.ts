@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         headers: {
           'Content-Type': 'audio/mpeg',
           'Cache-Control': laChuongVip
-            ? 'private, no-store'
+            ? 'private, max-age=3600' // cho trình duyệt giữ (nạp trước/nghe lại), CDN dùng chung KHÔNG được lưu
             : 'public, max-age=3600, s-maxage=86400',
         },
       });

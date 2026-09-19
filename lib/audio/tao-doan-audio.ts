@@ -1,7 +1,11 @@
 import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
+import { chayCoDuPhong } from './chay-co-du-phong';
 
 const GIONG_DOC = 'vi-VN-HoaiMyNeural';
-const TIMEOUT_MOT_LAN_MS = 18_000;
+const TIMEOUT_MOT_LAN_MS = 15_000;
+// Sau ngần này mà lần chạy đầu chưa xong thì chạy thêm 1 lần song song (đo thật: đoạn bình thường 0.5-6s,
+// đoạn bị treo thì đứng cả chục giây -> không đợi hết timeout mới thử lại).
+const HEDGE_SAU_MS = 6_000;
 const SO_LAN_THU_TOI_DA = 3;
 // Route doan có maxDuration = 60s: tổng thời gian các lần thử phải nhỏ hơn để hàm không bị kill giữa chừng
 // (kill = không chạy finally, rò rỉ slot đồng thời, client nhận 504 mờ mịt thay vì 502 rõ ràng).
@@ -51,19 +55,12 @@ async function taoMotLan(vanBan: string, timeoutMs: number): Promise<Buffer> {
   }
 }
 
-export async function taoDoanAudio(vanBan: string): Promise<Buffer> {
-  let loiCuoi: unknown;
-  const batDau = Date.now();
-  for (let lan = 1; lan <= SO_LAN_THU_TOI_DA; lan += 1) {
-    const conLaiMs = NGAN_SACH_TONG_MS - (Date.now() - batDau);
-    if (conLaiMs < THOI_GIAN_TOI_THIEU_MOT_LAN_MS) break;
-    try {
-      return await taoMotLan(vanBan, Math.min(TIMEOUT_MOT_LAN_MS, conLaiMs));
-    } catch (err) {
-      loiCuoi = err;
-      if (lan < SO_LAN_THU_TOI_DA) await new Promise((r) => setTimeout(r, 300));
-    }
-  }
-  if (loiCuoi === undefined) throw new Error('Hết ngân sách thời gian tạo đoạn audio');
-  throw loiCuoi instanceof Error ? loiCuoi : new Error(String(loiCuoi));
+export function taoDoanAudio(vanBan: string): Promise<Buffer> {
+  return chayCoDuPhong((timeoutMs) => taoMotLan(vanBan, timeoutMs), {
+    soLanToiDa: SO_LAN_THU_TOI_DA,
+    hedgeSauMs: HEDGE_SAU_MS,
+    timeoutMotLanMs: TIMEOUT_MOT_LAN_MS,
+    nganSachTongMs: NGAN_SACH_TONG_MS,
+    toiThieuMotLanMs: THOI_GIAN_TOI_THIEU_MOT_LAN_MS,
+  });
 }

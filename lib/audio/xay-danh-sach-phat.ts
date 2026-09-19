@@ -7,7 +7,7 @@ import {
   type MucManifest,
 } from './danh-sach-phat';
 import { layChuongTuSo, layQuyenNghe, taoSupabaseDichVu } from './du-lieu-chuong';
-import { taoVe } from './ve-audio';
+import { taoVe, type VeAudio } from './ve-audio';
 
 const HAN_VE_GIAY = 6 * 60 * 60;
 
@@ -22,6 +22,7 @@ export type KetQuaXay =
         chuongs: MucManifest[];
         dungLai: DungLai | null;
         chuongSauCuoi: { chuongId: string; soChuong: number } | null;
+        ve: VeAudio | null; // để trình phát tự dựng URL đoạn nạp trước (chương VIP cần vé)
       };
     };
 
@@ -64,6 +65,7 @@ export async function xayDanhSachPhat(truyenId: string, soChuong: number): Promi
       chuongs,
       dungLai,
       chuongSauCuoi,
+      ve,
     },
   };
 }

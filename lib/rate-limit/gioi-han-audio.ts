@@ -1,8 +1,8 @@
 import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
 
-// Benchmark cũ: 30 cuộc gọi TTS song song = 0 lỗi, 70 song song = ~53% lỗi -> chốt trần 20 toàn site.
-export const GIOI_HAN_DOAN_DONG_THOI = 20;
+// Benchmark cũ: 30 cuộc gọi TTS song song = 0 lỗi, 70 song song = ~53% lỗi -> chốt trần 30 toàn site (mỗi người nghe nạp trước vài đoạn song song nên cần dư).
+export const GIOI_HAN_DOAN_DONG_THOI = 30;
 const KHOA_DEM_DONG_THOI = 'audio_dang_tao_doan';
 const TTL_DEM_GIAY = 90; // phòng trường hợp hàm chết giữa chừng làm bộ đếm kẹt
 
