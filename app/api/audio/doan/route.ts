@@ -44,19 +44,29 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const t0 = Date.now();
     const chuong = await layMotChuong(taoSupabaseDichVu(), tham.truyenId, tham.soChuong);
+    const msDb = Date.now() - t0;
     if (!chuong) return NextResponse.json({ loi: 'khong_co_chuong' }, { status: 404 });
     const cacDoan = chiaDoan(chuong.tieuDe, chuong.noiDung);
     if (chiSo >= cacDoan.length) return NextResponse.json({ loi: 'khong_co_doan' }, { status: 404 });
 
-    if (redis && !(await xinSlotTaoDoan(redis))) {
+    const t1 = Date.now();
+    const coSlot = !redis || (await xinSlotTaoDoan(redis));
+    const msSlot = Date.now() - t1;
+    if (!coSlot) {
       return NextResponse.json({ loi: 'qua_tai' }, { status: 503, headers: { 'Retry-After': '5' } });
     }
     try {
-      const mp3 = await taoDoanAudio(cacDoan[chiSo]);
+      const thongKe = { soLanPhat: 0, lanThang: 0 };
+      const t2 = Date.now();
+      const mp3 = await taoDoanAudio(cacDoan[chiSo], thongKe);
+      const msTts = Date.now() - t2;
       return new Response(new Uint8Array(mp3), {
         headers: {
           'Content-Type': 'audio/mpeg',
+          // Chẩn đoán: thời gian từng bước + số lần thử TTS / lần thắng (xem trong tab Network hoặc curl -D).
+          'Server-Timing': `db;dur=${msDb}, slot;dur=${msSlot}, tts;dur=${msTts};desc="phat=${thongKe.soLanPhat} thang=${thongKe.lanThang}"`,
           'Cache-Control': laChuongVip
             ? 'private, max-age=3600' // cho trình duyệt giữ (nạp trước/nghe lại), CDN dùng chung KHÔNG được lưu
             : 'public, max-age=3600, s-maxage=86400',

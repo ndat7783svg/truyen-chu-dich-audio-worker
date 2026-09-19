@@ -10,9 +10,13 @@ export type CauHinhDuPhong = {
   toiThieuMotLanMs: number;
 };
 
+// Số liệu chẩn đoán (tuỳ chọn): cho biết đã phát mấy lần chạy và lần thứ mấy thắng, để phát hiện "lần đầu hay treo".
+export type ThongKeDuPhong = { soLanPhat: number; lanThang: number };
+
 export function chayCoDuPhong<T>(
   thuMot: (timeoutMs: number) => Promise<T>,
-  cauHinh: CauHinhDuPhong
+  cauHinh: CauHinhDuPhong,
+  thongKe?: ThongKeDuPhong
 ): Promise<T> {
   const batDau = Date.now();
   return new Promise<T>((xong, loi) => {
@@ -34,9 +38,12 @@ export function chayCoDuPhong<T>(
       if (conLaiMs < cauHinh.toiThieuMotLanMs) return false;
 
       daPhat += 1;
+      const lanSo = daPhat;
+      if (thongKe) thongKe.soLanPhat = daPhat;
       thuMot(Math.min(cauHinh.timeoutMotLanMs, conLaiMs)).then(
         (ketQua) => {
           if (daKetThuc) return;
+          if (thongKe) thongKe.lanThang = lanSo;
           ketThuc();
           xong(ketQua);
         },

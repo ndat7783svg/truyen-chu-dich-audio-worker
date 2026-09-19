@@ -1,5 +1,5 @@
 import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
-import { chayCoDuPhong } from './chay-co-du-phong';
+import { chayCoDuPhong, type ThongKeDuPhong } from './chay-co-du-phong';
 
 const GIONG_DOC = 'vi-VN-HoaiMyNeural';
 const TIMEOUT_MOT_LAN_MS = 15_000;
@@ -55,12 +55,12 @@ async function taoMotLan(vanBan: string, timeoutMs: number): Promise<Buffer> {
   }
 }
 
-export function taoDoanAudio(vanBan: string): Promise<Buffer> {
+export function taoDoanAudio(vanBan: string, thongKe?: ThongKeDuPhong): Promise<Buffer> {
   return chayCoDuPhong((timeoutMs) => taoMotLan(vanBan, timeoutMs), {
     soLanToiDa: SO_LAN_THU_TOI_DA,
     hedgeSauMs: HEDGE_SAU_MS,
     timeoutMotLanMs: TIMEOUT_MOT_LAN_MS,
     nganSachTongMs: NGAN_SACH_TONG_MS,
     toiThieuMotLanMs: THOI_GIAN_TOI_THIEU_MOT_LAN_MS,
-  });
+  }, thongKe);
 }
