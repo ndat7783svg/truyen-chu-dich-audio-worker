@@ -73,6 +73,24 @@ race condition khi chuyển chương) — chi tiết đầy đủ + số liệu 
 (10GB free + egress miễn phí) — đã giải thích ưu/nhược điểm cho user, **user chủ động chọn chưa
 chuyển ngay**, xem `NEXT_SESSION.md`.
 
+**Phát hiện 2026-09-17, CHƯA sửa**: cơ chế "mồi trước 1 chương kế tiếp" không đáng tin cậy như báo
+cáo ban đầu — `msedge-tts` (thư viện free, không phải API chính thức) thỉnh thoảng treo/lỗi vô thời
+hạn, 1 chương lỗi đủ 3 lần bị worker bỏ cuộc vĩnh viễn mà modal không hề báo lỗi (spinner vô hạn).
+Hướng trả phí TTS chính thức (Azure/Google) bị user từ chối vì đắt so với traffic thật. Đã bàn hướng
+thay thế (tạo trước ~5 chương/lượt bấm "Bắt đầu" + thêm giới hạn đồng thời toàn site) nhưng **CHƯA
+code** — xem đầy đủ ở mục "Phiên 2026-09-16/17/18" trong `NEXT_SESSION.md` trước khi làm tiếp.
+
+**Cập nhật 2026-09-19 (đã deploy, commit 5ffbf39 + 77866b0)**: sửa lỗi 429 "thao tác quá nhanh" (tắt
+auto-prefetch 50 link chương); audit bảo mật VIP + vá SQL 2 lỗ hổng (audio VIP nghe chùa — đã xác
+minh vá; giá giao dịch tự điền — chưa kiểm chứng); giờ hạn gói theo giờ VN; thêm lưu ý thanh toán MoMo
+xử lý chậm; audio thật tự chuyển chương khi tắt màn hình (chưa test trên điện thoại thật). Google
+OAuth đã Publish "In production". **Hướng audio tiếp theo**: user đã loại hướng TTS WASM trên trình
+duyệt, lo hướng "tạo cả chương" (kẹt/tốn GB); phát hiện truyendich.space phát HLS theo đoạn nhỏ
+(~5s là phát) → cần soạn phương án tương tự (cần máy chủ chạy liên tục); APK Android là ý định dài
+hạn. Trang Chính sách bảo mật/Điều khoản dịch vụ thật còn treo. Chi tiết `NEXT_SESSION.md` +
+`docs/handoff/audio-tat-man-hinh-va-nghien-cuu-doi-thu.md`. Deploy: `npx vercel@latest --prod --yes
+--scope asuo-team`.
+
 **v1**: **xong hoàn toàn cả 11 Task**, kể cả Task 11 (deploy Vercel) — xem
 `docs/superpowers/plans/2026-09-08-website-truyen-v1.md`. (Task 9 đăng ký/đăng nhập đã nâng cấp vượt
 phạm vi gốc, Task 10 dark mode gộp vào Đợt C bên dưới — xem 2 mục riêng).
@@ -141,6 +159,12 @@ gọn/xem thêm ở trang truyện; và 3 fix UX phát sinh sau khi user tự te
 điều hướng dưới đáy che nội dung cuối trang, thêm thanh loading chạy ngang trên cùng khi chuyển
 trang + `loading.tsx` cho các route động — xem `docs/handoff/thanh-loading-chuyen-trang.md`). Chi
 tiết đầy đủ xem `NEXT_SESSION.md`.
+
+**Đăng truyện mới + sửa 2 bug script sync (2026-09-17)**: đăng đủ "Đô Thị Chí Tôn" (1626 chương —
+sửa bug regex `\d{3}` từng loại bỏ âm thầm chương ≥1000), cập nhật ảnh bìa 4 bộ, đăng mới "Cẩu Tại
+Sơ Thánh Ma Môn Làm Nhân Tài" (499/500 chương — sửa bug `timMoTa` chỉ nhận 1 tên heading mô tả).
+Chương 259 của bộ mới còn thiếu tiêu đề ở nguồn dịch, chờ `D:\translate truyen` bổ sung. Chi tiết
+`docs/handoff/du-lieu-va-parse-chuong.md`.
 
 ## Giới hạn tốc độ request chống bot cào quá tải — ĐÃ XONG, đã deploy production (2026-09-15)
 Rate limit 15 request/10 giây theo IP cho `/truyen/*` (Upstash Redis), bỏ qua hoàn toàn cho

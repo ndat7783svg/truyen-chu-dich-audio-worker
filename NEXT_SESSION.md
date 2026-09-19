@@ -2,16 +2,54 @@
 
 ## Phiên 2026-09-19 — sửa lỗi 429 "thao tác quá nhanh" + Google OAuth publish + việc treo
 
+- **Ý ĐỊNH DÀI HẠN (user chốt hướng, làm SAU vì tốn nhiều thời gian): đóng gói website thành app
+  APK Android** (chỉ phát hành file .apk tải trực tiếp từ web, KHÔNG đưa lên CH Play) để giải quyết
+  triệt để nghe audio khi tắt màn hình (Web Speech API/`<audio>` trên web đều bị điện thoại đóng
+  băng). Kế hoạch user nêu: trên web thêm 1 câu "muốn nghe audio hãy tải app APK này", **gỡ hẳn
+  audio khỏi web**, giữ user ở lại app để không phụ thuộc nền tảng, dễ kiếm tiền. Lý do user bỏ
+  hướng audio thật server (C): render chậm/kẹt khi nhiều người gọi cùng lúc (đã tự test 2 thiết bị),
+  phụ thuộc hạn mức GB Supabase, `msedge-tts` hay lỗi. Bỏ hẳn hướng B (TTS WASM trên trình duyệt)
+  vì render chậm. **Việc cần bàn kỹ trước khi làm**: iPhone (nhiều user dùng) KHÔNG cài được APK →
+  gỡ audio khỏi web thì iPhone mất audio hoàn toàn; cần Apple Developer $99/năm mới có app iOS.
+  Ý tưởng cần đánh giá: trong app native, mỗi điện thoại tự gọi dịch vụ TTS (giọng máy hệ thống, hoặc
+  edge-tts trực tiếp từ máy user) nên không tốn server/Storage.
+
+- **PHÁT HIỆN QUAN TRỌNG — cách truyendich.space làm audio (2026-09-19, đọc JS công khai, KHÔNG vượt
+  chốt chặn bot; chi tiết `docs/handoff/audio-tat-man-hinh-va-nghien-cuu-doi-thu.md`)**: họ phát dạng
+  **luồng HLS** (`POST /api/tts/v2/sessions` → `playlist.m3u8`), chương chia thành nhiều đoạn nhỏ,
+  đoạn đầu xong ~5s là phát ngay, các đoạn sau tạo dần trong lúc nghe; dùng hls.js (Chrome) +
+  HLS gốc (Safari/iPhone); giọng `namminh`/`hoaimy` (= edge-tts, cùng loại mình); có giới hạn số
+  người nghe đồng thời + Turnstile chống bot. Mình đang đợi tạo XONG CẢ CHƯƠNG (85-127s) qua GitHub
+  Actions rồi mới phát → chậm. **Việc tiếp theo user đã đồng ý bàn: soạn phương án "tạo audio theo
+  đoạn nhỏ + phát dần"**, cần máy chủ chạy liên tục (GitHub Actions khởi động chậm không hợp) — cần
+  hỏi user về chi phí/hạ tầng (VPS nhỏ vài $/tháng hoặc gói free giới hạn) trước khi làm. Đây cũng
+  là hướng đáp ứng nỗi lo của user về hướng C (kẹt khi nhiều người gọi, tốn GB Supabase).
+- **Audio tự chuyển chương khi TẮT MÀN HÌNH — đã sửa + deploy (commit 77866b0), CHƯA test trên
+  điện thoại thật (user sẽ tự test)**: nguyên nhân gốc là chỉ đến lúc audio kết thúc mới tải chương
+  sau qua mạng, lúc đó điện thoại đã đóng băng trang. Sửa trong `ModalNgheAudioThat.tsx`: tải sẵn
+  chương kế tiếp (chữ + audio_url, thử lại mỗi 15s) trong lúc đang phát, khi `ended` đổi nguồn
+  audio đồng bộ bằng `flushSync` + `play()`. Giới hạn còn lại: nếu chương sau CHƯA có audio_url
+  lúc hết chương thì vẫn phải bật màn hình. Nếu user báo vẫn lỗi → xem lại nhánh `chuyenNgayTuBoNho`.
+  Nút "Nghe (Giọng máy)" (Web Speech API) KHÔNG sửa được khi tắt màn hình (giới hạn OS/trình
+  duyệt); hướng A (phát âm thanh im lặng giữ trang sống) chỉ có cơ hội trên Android Chrome, gần như
+  không dùng được trên iPhone — user chưa quyết làm.
+- **Đã sửa + deploy (commit 77866b0)**: trang Tài khoản hiện hạn gói VIP theo giờ VN
+  (`timeZone: 'Asia/Ho_Chi_Minh'`, trước đó hiện UTC); màn hình chuyển khoản (`ChonGoiVip.tsx`) thêm
+  câu "xử lý chậm 5-20 phút, không xử lý từ 23h đến 6h sáng" (đã xoá câu cũ "kích hoạt trong ít
+  phút" theo yêu cầu user); `xac-nhan-thanh-toan.mjs` in số tiền cần nhận để đối chiếu MoMo.
 - **AUDIT BẢO MẬT VIP (2026-09-19)** — kiểm chứng bằng anon key trên DB thật. AN TOÀN: đọc thẳng
   `noi_dung` bị chặn (42501), RPC `lay_noi_dung_chuong` trả null cho chương VIP, anon không đọc/ghi
-  được giao_dich/nguoi_dung/storage. **2 LỖ HỔNG THẬT, đã viết SQL vá cuối `supabase/schema.sql`
-  (mục "Vá bảo mật 2026-09-19") — USER PHẢI DÁN vào Supabase SQL Editor để có hiệu lực, chưa chạy
-  thì lỗ hổng còn nguyên**: (1) `xep_hang_tao_audio` cho khách nghe chùa chương VIP qua audio;
-  (2) `giao_dich.so_tien/goi_loai` tự điền được → mua gói tháng giá gói ngày. Rủi ro còn lại chưa
-  sửa: file audio VIP (khi có VIP user nghe) nằm bucket public URL đoán được
-  `audio-chuong/<truyen_id>/<so_chuong>.mp3` tồn tại tới 12h — muốn triệt để phải chuyển bucket
-  private + signed URL sau khi check VIP. Nhẹ: `ghi_luot_xem`/`ghi_nhan_nghe_audio` gọi tự do →
-  có thể bơm lượt xem giả.
+  được giao_dich/nguoi_dung/storage. 2 lỗ hổng thật đã tìm ra: (1) `xep_hang_tao_audio` cho khách
+  nghe chùa chương VIP qua audio — **ĐÃ VÁ + xác minh trên DB thật** (user chạy SQL lần 2, khách gọi
+  cho chương VIP không còn vào hàng đợi); (2) `giao_dich.so_tien/goi_loai` tự điền được → mua gói
+  tháng giá gói ngày — SQL (trigger `chuan_hoa_giao_dich`) đã chạy nhưng **CHƯA kiểm chứng được**
+  (cần tài khoản đăng nhập): user tự tạo 1 giao dịch rồi xem cột `so_tien` trong bảng `giao_dich`
+  phải đúng giá gói. Rủi ro còn lại chưa sửa: file audio VIP (khi có VIP user nghe) nằm bucket public
+  URL đoán được `audio-chuong/<truyen_id>/<so_chuong>.mp3` tồn tại tới 12h — muốn triệt để phải
+  chuyển bucket private + signed URL sau khi check VIP. Nhẹ: `ghi_luot_xem`/`ghi_nhan_nghe_audio`
+  gọi tự do → có thể bơm lượt xem giả. "Chống F12" không làm được thật (chữ đã gửi về trình duyệt
+  người được phép đọc thì F12 nào cũng thấy); bảo vệ đúng là server không gửi nội dung VIP cho người
+  chưa mua — đang hoạt động.
 
 - **Đã sửa + deploy production**: nút "Bắt đầu đọc" bị 429 vì 50 link chương auto-prefetch đốt hết
   hạn mức rate limit 15 req/10s ngay lúc load trang. Fix: `prefetch={false}` ở
