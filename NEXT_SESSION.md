@@ -26,9 +26,11 @@ hình vẫn nghe được.** Chưa xác nhận: tự sang chương sau khi tắt
 1. Hỏi user: **hết chương có tự sang chương sau khi tắt màn hình không** và **iPhone (Safari)** có tự phát sau chờ đệm không
    (Android: tắt màn hình nghe được, hết lỗi thông báo — đã xong). Chữ trên iPhone có thể lệch chương vài chục giây (mốc
    ước lượng) — không phải lỗi âm thanh.
-2. **User tự làm**: (a) chạy phần SQL cuối `supabase/schema.sql` ("GỠ HỆ THỐNG AUDIO CŨ") trong Supabase SQL Editor (bản web mới
-   đã deploy nên chạy được); (b) xoá biến `GITHUB_DISPATCH_TOKEN` trên Vercel + thu hồi PAT trên GitHub; (c) repo GitHub
-   `truyen-chu-dich-audio-worker` (origin) còn workflow cũ cho tới khi push commit gỡ — push/tắt/archive tuỳ user (Claude chưa push).
+2. ~~Dọn hệ audio cũ~~ **XONG 2026-09-19**: user đã chạy SQL gỡ (Claude xác minh qua REST: cột `audio_url`/`audio_truy_cap_luc`,
+   bảng `hang_doi_audio`, RPC cũ đều báo không tồn tại; 8008 chương còn nguyên; production: trang chủ/chương 200, playlist HLS + đoạn
+   audio 200), xoá `GITHUB_DISPATCH_TOKEN` trên Vercel, thu hồi PAT, tắt Actions repo `truyen-chu-dich-audio-worker`. Claude cũng gỡ
+   lời gọi `xep_hang_tao_audio` còn sót trong `PanelDocAudio.tsx` (commit cbaece0). Local đang trước origin ~25 commit — CHƯA push
+   (repo origin chỉ là chỗ worker cũ; push hay không tuỳ user).
 3. Theo dõi Microsoft TTS: nếu nhiều người nghe mà chậm/502 nhiều -> `vercel logs` + header `Server-Timing`/`X-Audio-Nhat-Ky`;
    cân nhắc TTS trả phí (Azure/Google) chỉ khi user chấp nhận chi phí.
 4. Theo dõi Vercel Usage (Function Duration/Invocations) và có ai bị 429 oan (rate limit theo IP: playlist 30/10 phút, đoạn 60/phút).

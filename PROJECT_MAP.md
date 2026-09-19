@@ -100,7 +100,7 @@ website truyện chữ AI/
 
 ## Data model (Supabase Postgres)
 - `truyen` — ten, slug, mo_ta, anh_bia (URL Storage), trang_thai, tac_gia, luot_xem.
-- `chuong` — truyen_id, so_chuong, tieu_de, noi_dung, luot_xem. (Cột `audio_url` của hệ audio cũ: chạy SQL gỡ trong `supabase/schema.sql` để xoá.)
+- `chuong` — truyen_id, so_chuong, tieu_de, noi_dung, luot_xem. (Hệ audio cũ — cột `audio_url`, bảng `hang_doi_audio`, 2 RPC — đã xoá khỏi DB ngày 2026-09-19.)
 - `tien_do_doc` — user_id, truyen_id, chuong_id (tiến độ đọc, 1 dòng/user/truyện).
 - `the_loai` — id, ten, slug.
 - `truyen_the_loai` — bảng nối nhiều-nhiều giữa `truyen` và `the_loai`.
