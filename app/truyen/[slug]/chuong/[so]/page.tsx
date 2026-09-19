@@ -27,7 +27,7 @@ export default async function TrangDocChuong({
 
   const { data: chuong, error: loiChuong } = await supabase
     .from('chuong')
-    .select('id, truyen_id, so_chuong, tieu_de, audio_url')
+    .select('id, truyen_id, so_chuong, tieu_de')
     .eq('truyen_id', truyen.id)
     .eq('so_chuong', soChuong)
     .maybeSingle();
@@ -131,7 +131,6 @@ export default async function TrangDocChuong({
         soChuong={chuong.so_chuong}
         tieuDe={chuong.tieu_de}
         noiDung={noiDung}
-        audioUrl={chuong.audio_url ?? null}
         soChuongTruoc={chuongTruoc?.so_chuong}
         soChuongSau={chuongSau?.so_chuong}
         chuongIdSau={chuongSau?.id}

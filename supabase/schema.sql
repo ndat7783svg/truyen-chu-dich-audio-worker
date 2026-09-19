@@ -445,3 +445,14 @@ drop trigger if exists truoc_khi_them_giao_dich on public.giao_dich;
 create trigger truoc_khi_them_giao_dich
   before insert on public.giao_dich
   for each row execute function public.chuan_hoa_giao_dich();
+
+
+-- GỠ HỆ THỐNG AUDIO CŨ (2026-09-19) - CHẠY TRONG SUPABASE SQL EDITOR SAU KHI đã deploy bản web không còn
+-- đọc chuong.audio_url (nếu chạy trước, bản web cũ đang chạy sẽ lỗi vì thiếu cột). Audio thật giờ là HLS tạo
+-- theo đoạn trên Vercel (app/api/audio/*), không dùng hàng đợi/bảng/cột dưới đây nữa. Chỉ xoá dữ liệu cache
+-- audio có thể tạo lại (không đụng nội dung chương).
+drop function if exists public.xep_hang_tao_audio(uuid);
+drop function if exists public.ghi_nhan_nghe_audio(uuid);
+drop table if exists public.hang_doi_audio;
+alter table public.truyen drop column if exists audio_truy_cap_luc;
+alter table public.chuong drop column if exists audio_url;

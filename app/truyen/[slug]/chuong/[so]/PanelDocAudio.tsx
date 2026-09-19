@@ -28,7 +28,6 @@ export default function PanelDocAudio({
   chuongIdSau,
   tieuDe,
   noiDung,
-  audioUrl,
   onChuyenChuongMoi,
 }: {
   chuongId: string;
@@ -41,7 +40,6 @@ export default function PanelDocAudio({
   chuongIdSau?: string;
   tieuDe: string;
   noiDung: string;
-  audioUrl?: string | null;
   onChuyenChuongMoi?: (thongTinMoi: ThongTinChuongMoi) => void;
 }) {
 
@@ -120,7 +118,7 @@ export default function PanelDocAudio({
       // sessionStorage không khả dụng - bỏ qua tự động đọc tiếp
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hoTroWebSpeech, soChuong, audioUrl]);
+  }, [hoTroWebSpeech, soChuong]);
 
   // Click outside to close panel dropdown
   useEffect(() => {

@@ -25,7 +25,6 @@ export type ThongTinChuongMoi = {
   soChuong: number;
   tieuDe: string;
   noiDung: string;
-  audioUrl?: string | null;
   soChuongTruoc?: number;
   soChuongSau?: number;
   chuongIdSau?: string;
@@ -39,7 +38,6 @@ export default function KhungDocChuong({
   soChuong,
   tieuDe,
   noiDung,
-  audioUrl,
   soChuongTruoc,
   soChuongSau,
   chuongIdSau,
@@ -54,7 +52,6 @@ export default function KhungDocChuong({
   soChuong: number;
   tieuDe: string;
   noiDung: string;
-  audioUrl?: string | null;
   soChuongTruoc?: number;
   soChuongSau?: number;
   chuongIdSau?: string;
@@ -72,7 +69,6 @@ export default function KhungDocChuong({
     soChuong,
     tieuDe,
     noiDung,
-    audioUrl,
     soChuongTruoc,
     soChuongSau,
     chuongIdSau,
@@ -85,12 +81,11 @@ export default function KhungDocChuong({
       soChuong,
       tieuDe,
       noiDung,
-      audioUrl,
       soChuongTruoc,
       soChuongSau,
       chuongIdSau,
     });
-  }, [chuongId, soChuong, tieuDe, noiDung, audioUrl, soChuongTruoc, soChuongSau, chuongIdSau]);
+  }, [chuongId, soChuong, tieuDe, noiDung, soChuongTruoc, soChuongSau, chuongIdSau]);
 
   useEffect(() => {
     setCaiDat(docCaiDatDoc());
@@ -188,7 +183,6 @@ export default function KhungDocChuong({
           chuongIdSau={chuongHienTai.chuongIdSau}
           tieuDe={chuongHienTai.tieuDe}
           noiDung={chuongHienTai.noiDung}
-          audioUrl={chuongHienTai.audioUrl}
           onChuyenChuongMoi={xuLyChuyenChuongMoi}
         />
         <PanelCaiDatDoc caiDat={caiDat} onDoiCaiDat={capNhatCaiDat} />
