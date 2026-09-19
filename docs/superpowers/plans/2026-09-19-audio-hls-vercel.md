@@ -577,7 +577,8 @@ describe('taoDanhSachPhat', () => {
 ```ts
 import { chiaDoan, uocThoiLuongGiay } from './chia-doan';
 import type { VeAudio } from './ve-audio';
-import { SO_CHUONG_FREE } from '@/lib/config/goi-vip';
+// Import tương đối (không dùng '@/'): vitest.config.ts của dự án không có alias '@/'.
+import { SO_CHUONG_FREE } from '../config/goi-vip';
 
 export const SO_CHUONG_TOI_DA_TRONG_DANH_SACH = 11; // chương hiện tại + 10 chương kế tiếp
 
