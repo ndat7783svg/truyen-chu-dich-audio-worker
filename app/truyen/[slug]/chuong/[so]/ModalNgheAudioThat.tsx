@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { taoSupabaseClient } from '@/lib/supabase/client';
@@ -15,6 +15,10 @@ import type { ThongTinChuongMoi } from './KhungDocChuong';
 
 const KHOA_TU_DONG_DOC = 'chuongTuDongDocTiep';
 const KHOA_MO_MODAL_AUDIO_THAT = 'moModalAudioThat';
+
+type ThongTinKeTiep =
+  | { khoaVip: true; soChuong: number }
+  | { khoaVip: false; thongTin: ThongTinChuongMoi };
 
 function dinhDangThoiGian(giay: number): string {
   if (isNaN(giay) || giay < 0) return '00:00';
@@ -71,6 +75,10 @@ export default function ModalNgheAudioThat({
   const daTuDongPhatRef = useRef(false);
   const dangChuyenChuongRef = useRef(false);
   const lanGhiNhanNgheGanNhatRef = useRef(0);
+  // Chương kế tiếp được tải sẵn (chữ + audio_url) trong lúc chương hiện tại đang phát. Khi tắt màn
+  // hình, trình duyệt điện thoại đóng băng trang ngay khi audio kết thúc nên không thể đợi tới lúc
+  // hết chương mới tải qua mạng - phải có sẵn để đổi nguồn phát đồng bộ ngay trong sự kiện "ended".
+  const chuongKeTiepTaiTruocRef = useRef<{ idChuong: string; ketQua: ThongTinKeTiep } | null>(null);
 
   // Ghi nhận "lần nghe gần nhất" của cả bộ truyện (không phải từng chương) - dùng để worker tự
   // xoá audio nếu bộ truyện không ai nghe quá 12 tiếng. Throttle 2 phút/lần để không gọi dồn dập
@@ -329,8 +337,144 @@ export default function ModalNgheAudioThat({
     }
   }
 
+  async function taiThongTinChuongKeTiep(idChuong: string): Promise<ThongTinKeTiep | null> {
+    try {
+      const supabase = taoSupabaseClient();
+      const { data: chuongMoi, error: errChuong } = await supabase
+        .from('chuong')
+        .select('id, so_chuong, tieu_de, audio_url')
+        .eq('id', idChuong)
+        .maybeSingle();
+      if (errChuong || !chuongMoi) return null;
+
+      const { data: noiDungMoi, error: errNoiDung } = await supabase.rpc('lay_noi_dung_chuong', {
+        p_chuong_id: chuongMoi.id,
+      });
+      if (errNoiDung) return null;
+      if (noiDungMoi == null) return { khoaVip: true, soChuong: chuongMoi.so_chuong };
+
+      const [{ data: chuongTruocMoi }, { data: chuongSauMoi }] = await Promise.all([
+        supabase
+          .from('chuong')
+          .select('so_chuong')
+          .eq('truyen_id', truyenId)
+          .lt('so_chuong', chuongMoi.so_chuong)
+          .order('so_chuong', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('chuong')
+          .select('id, so_chuong')
+          .eq('truyen_id', truyenId)
+          .gt('so_chuong', chuongMoi.so_chuong)
+          .order('so_chuong', { ascending: true })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      return {
+        khoaVip: false,
+        thongTin: {
+          chuongId: chuongMoi.id,
+          soChuong: chuongMoi.so_chuong,
+          tieuDe: chuongMoi.tieu_de,
+          noiDung: noiDungMoi,
+          audioUrl: chuongMoi.audio_url ?? null,
+          soChuongTruoc: chuongTruocMoi?.so_chuong,
+          soChuongSau: chuongSauMoi?.so_chuong,
+          chuongIdSau: chuongSauMoi?.id,
+        },
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  // Trong lúc chương hiện tại đang phát (trang còn được trình duyệt cho chạy vì có audio), tải sẵn
+  // chương kế tiếp, và thử lại mỗi 15 giây cho tới khi chương đó có audio_url.
+  useEffect(() => {
+    if (!dangPhat || !chuongIdSau || !onChuyenChuongMoi) return;
+    const idMucTieu = chuongIdSau;
+    let daHuy = false;
+
+    async function taiTruoc() {
+      const hienCo = chuongKeTiepTaiTruocRef.current;
+      if (hienCo && hienCo.idChuong === idMucTieu) {
+        if (hienCo.ketQua.khoaVip || hienCo.ketQua.thongTin.audioUrl) return;
+        const { data } = await taoSupabaseClient()
+          .from('chuong')
+          .select('audio_url')
+          .eq('id', idMucTieu)
+          .maybeSingle();
+        const url = data?.audio_url?.trim();
+        if (!daHuy && url && chuongKeTiepTaiTruocRef.current === hienCo) {
+          chuongKeTiepTaiTruocRef.current = {
+            idChuong: idMucTieu,
+            ketQua: { khoaVip: false, thongTin: { ...hienCo.ketQua.thongTin, audioUrl: url } },
+          };
+        }
+        return;
+      }
+      const ketQua = await taiThongTinChuongKeTiep(idMucTieu);
+      if (!daHuy && ketQua) {
+        chuongKeTiepTaiTruocRef.current = { idChuong: idMucTieu, ketQua };
+      }
+    }
+
+    taiTruoc().catch(() => {});
+    const timer = setInterval(() => {
+      taiTruoc().catch(() => {});
+    }, 15000);
+    return () => {
+      daHuy = true;
+      clearInterval(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dangPhat, chuongIdSau]);
+
+  // Đổi sang chương kế tiếp hoàn toàn ĐỒNG BỘ (không await mạng) khi đã tải sẵn và chương đó có
+  // audio - phải chạy trọn trong sự kiện "ended" để còn kịp trước khi trình duyệt đóng băng trang
+  // lúc tắt màn hình. flushSync để nguồn <audio> mới được gắn vào DOM ngay rồi mới gọi play().
+  function chuyenNgayTuBoNho(): boolean {
+    const boNho = chuongKeTiepTaiTruocRef.current;
+    if (!onChuyenChuongMoi || !chuongIdSau || dangChuyenChuongRef.current) return false;
+    if (!boNho || boNho.idChuong !== chuongIdSau || boNho.ketQua.khoaVip) return false;
+    const tt = boNho.ketQua.thongTin;
+    const urlMoi = tt.audioUrl?.trim();
+    if (!urlMoi) return false;
+
+    chuongKeTiepTaiTruocRef.current = null;
+    boQuaDongBoRef.current = true;
+    flushSync(() => {
+      onChuyenChuongMoi(tt);
+      setKhoaVip(null);
+      setLoiYeuCau(null);
+      setLocalAudioUrl(urlMoi);
+      setDangChuanBi(false);
+      setSoGiayCho(0);
+      setThoiGianHienTai(0);
+      setTongThoiLuong(0);
+    });
+    capNhatMediaSession(tt.soChuong, tt.tieuDe, Boolean(tt.soChuongSau));
+    onDungWebSpeech?.();
+
+    const el = audioRef.current;
+    if (el) {
+      el.defaultPlaybackRate = tocDo;
+      el.playbackRate = tocDo;
+      el.play()
+        .then(() => setDangPhat(true))
+        .catch((e) => console.error('Lỗi khi tự động play chương mới:', e));
+    }
+    if (tt.chuongIdSau) {
+      yeuCauTaoAudioNgay(tt.chuongIdSau).then(() => {}, () => {});
+    }
+    return true;
+  }
+
   // Chuyển chương âm thầm phía client (không reload trang)
   async function chuyenChuongTiepClient() {
+    if (chuyenNgayTuBoNho()) return;
     if (!chuongIdSau || !soChuongSau || dangChuyenChuongRef.current) {
       // Nếu không có hàm callback client và có soChuongSau -> fallback sang router.push cũ
       if (!onChuyenChuongMoi && soChuongSau) {

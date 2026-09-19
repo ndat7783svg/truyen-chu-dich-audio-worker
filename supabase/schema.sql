@@ -372,3 +372,76 @@ end;
 $$;
 
 grant execute on function public.ghi_nhan_nghe_audio(uuid) to anon, authenticated;
+
+-- Vá bảo mật (2026-09-19) - audit hệ thống VIP, 2 lỗ hổng thật đã tái hiện bằng anon key:
+-- (1) xep_hang_tao_audio() cho phép BẤT KỲ ai (kể cả khách chưa đăng nhập) xếp hàng tạo audio cho
+--     chương VIP -> worker tạo file mp3 công khai -> nghe chùa chương VIP miễn phí. Nay chỉ xếp hàng
+--     nếu chương <= 50 (free) hoặc người gọi có gói VIP còn hiệu lực (service_role vẫn được).
+-- (2) giao_dich.so_tien/goi_loai do client tự điền được qua REST API (vd goi_loai='cao_cap',
+--     so_tien=6000) mà script xác nhận thanh toán chỉ đọc goi_loai -> mua gói tháng giá gói ngày.
+--     Nay trigger ép so_tien theo bảng giá server, từ chối gói lạ, ép trạng thái ban đầu.
+--     LƯU Ý: bảng giá dưới đây phải khớp lib/config/goi-vip.ts (DANH_SACH_GOI).
+create or replace function public.xep_hang_tao_audio(p_chuong_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_truyen_id uuid;
+  v_so_chuong int;
+  v_audio_url text;
+begin
+  select truyen_id, so_chuong, audio_url into v_truyen_id, v_so_chuong, v_audio_url
+  from chuong
+  where id = p_chuong_id;
+
+  if v_truyen_id is null or v_audio_url is not null then
+    return;
+  end if;
+
+  if v_so_chuong > 50 and auth.role() <> 'service_role' then
+    if not exists (
+      select 1 from nguoi_dung
+      where id = auth.uid()
+        and goi_het_han is not null
+        and goi_het_han > now()
+    ) then
+      return;
+    end if;
+  end if;
+
+  insert into hang_doi_audio (chuong_id, truyen_id, so_chuong)
+  values (p_chuong_id, v_truyen_id, v_so_chuong)
+  on conflict (chuong_id) do update set so_lan_loi = 0;
+end;
+$$;
+
+create or replace function public.chuan_hoa_giao_dich()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.role() <> 'service_role' then
+    new.so_tien := case new.goi_loai
+      when 'so_cap' then 6000
+      when 'trung_cap' then 39000
+      when 'cao_cap' then 162000
+      else null
+    end;
+    if new.so_tien is null then
+      raise exception 'goi_loai khong hop le';
+    end if;
+    new.trang_thai := 'cho_thanh_toan';
+    new.thanh_toan_luc := null;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists truoc_khi_them_giao_dich on public.giao_dich;
+create trigger truoc_khi_them_giao_dich
+  before insert on public.giao_dich
+  for each row execute function public.chuan_hoa_giao_dich();

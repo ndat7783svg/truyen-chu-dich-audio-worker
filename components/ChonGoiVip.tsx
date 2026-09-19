@@ -131,9 +131,10 @@ export default function ChonGoiVip() {
                     {truongDaCopy === 'maGiaoDich' ? 'Đã copy' : 'Copy'}
                   </button>
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Sau khi chuyển khoản, gói sẽ được kích hoạt trong ít phút. Bạn có thể đóng cửa sổ
-                  này và quay lại sau.
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                  Thanh toán của bạn đang được xử lý. Việc xử lý có thể bị chậm khoảng 5 - 20 phút,
+                  vui lòng chờ đợi. Ngoài ra, thanh toán sẽ không được xử lý trong khung giờ từ 23h
+                  đến 6h sáng hôm sau.
                 </p>
               </>
             )}

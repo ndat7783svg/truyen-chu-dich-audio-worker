@@ -66,6 +66,7 @@ export default async function TrangTaiKhoan() {
               Đang có gói VIP, hiệu lực đến{' '}
               <strong>
                 {new Date(goiHetHan as string).toLocaleString('vi-VN', {
+                  timeZone: 'Asia/Ho_Chi_Minh',
                   hour: '2-digit',
                   minute: '2-digit',
                   day: '2-digit',

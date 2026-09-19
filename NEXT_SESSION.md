@@ -1,5 +1,131 @@
 # NEXT_SESSION.md
 
+## Phiên 2026-09-19 — sửa lỗi 429 "thao tác quá nhanh" + Google OAuth publish + việc treo
+
+- **AUDIT BẢO MẬT VIP (2026-09-19)** — kiểm chứng bằng anon key trên DB thật. AN TOÀN: đọc thẳng
+  `noi_dung` bị chặn (42501), RPC `lay_noi_dung_chuong` trả null cho chương VIP, anon không đọc/ghi
+  được giao_dich/nguoi_dung/storage. **2 LỖ HỔNG THẬT, đã viết SQL vá cuối `supabase/schema.sql`
+  (mục "Vá bảo mật 2026-09-19") — USER PHẢI DÁN vào Supabase SQL Editor để có hiệu lực, chưa chạy
+  thì lỗ hổng còn nguyên**: (1) `xep_hang_tao_audio` cho khách nghe chùa chương VIP qua audio;
+  (2) `giao_dich.so_tien/goi_loai` tự điền được → mua gói tháng giá gói ngày. Rủi ro còn lại chưa
+  sửa: file audio VIP (khi có VIP user nghe) nằm bucket public URL đoán được
+  `audio-chuong/<truyen_id>/<so_chuong>.mp3` tồn tại tới 12h — muốn triệt để phải chuyển bucket
+  private + signed URL sau khi check VIP. Nhẹ: `ghi_luot_xem`/`ghi_nhan_nghe_audio` gọi tự do →
+  có thể bơm lượt xem giả.
+
+- **Đã sửa + deploy production**: nút "Bắt đầu đọc" bị 429 vì 50 link chương auto-prefetch đốt hết
+  hạn mức rate limit 15 req/10s ngay lúc load trang. Fix: `prefetch={false}` ở
+  `DanhSachChuongTruyen.tsx` và `chuong/[so]/DanhSachChuong.tsx` (commit 5ffbf39). Deploy bằng
+  `npx vercel@latest --prod --yes --scope asuo-team` (bắt buộc `--scope asuo-team`, thiếu sẽ báo
+  "Not authorized"). Lưu ý: TheTruyen (thẻ truyện trang chủ) chưa tắt prefetch — nếu 1 trang có
+  ≥15 truyện thì cần tắt tương tự.
+- **Google OAuth**: consent screen từng kẹt ở "Testing" (chỉ 100 test user đăng nhập được Google).
+  User đã tự điền Branding + Publish sang "In production" ngày 2026-09-18.
+- **VIỆC TREO (user chọn làm sau)**: viết trang **Chính sách bảo mật** + **Điều khoản dịch vụ** thật.
+  Hiện link 2 trang này trong Google Cloud > Branding đang tạm trỏ về trang chủ
+  (`https://truyenchudich.site/`). Làm xong phải cập nhật lại 2 link đó trên Google Cloud.
+
+## Phiên 2026-09-16/17/18 (tiếp) — bàn hướng sửa audio thật (CHƯA code) + đăng truyện mới + sửa 2
+## bug parse thật
+
+**Việc audio thật — CHƯA làm gì, chỉ mới bàn hướng, đọc mục "Phiên 2026-09-16 (tiếp...)" ngay dưới
+đây trước khi tiếp tục**: User từ chối hướng trả phí TTS chính thức (Azure/Google, ~$16/1 triệu ký
+tự, ước tính vượt ngân sách $1/tháng thật nếu tính đủ traffic) vì đắt. User đề xuất 2 hướng thay
+thế, đã bàn xong nhưng **CHƯA code**:
+1. Kích hoạt mồi trước đúng lúc còn 2 phút là hết chương hiện tại (thay vì lúc bắt đầu phát) — đã
+   giải thích cho user: **không cần thiết**, vì cơ chế hiện tại đã kích hoạt mồi trước ngay lúc
+   chương hiện tại BẮT ĐẦU phát (sớm hơn hẳn), và đo thật độ dài chương trung bình (11.617 ký tự) ước
+   tính audio dài ~14 phút/chương so với ~3,5 phút thời gian tạo — đã dư thời gian đệm, không phải
+   nguyên nhân gốc của lỗi user gặp.
+2. Giới hạn tạo trước tối đa N chương liên tiếp khi bấm "Bắt đầu" (user đề xuất 20, Claude đề xuất
+   hạ xuống **~5** để tránh tải dư thừa không cần thiết) — phát hiện quan trọng: **rủi ro thật về
+   giới hạn đồng thời (concurrency) trên toàn site**, không phải trong 1 lượt chạy. Bằng chứng từ
+   benchmark cũ (30 song song = 0 lỗi, 70 song song = 53% lỗi) + xác nhận kiến trúc hiện tại **không
+   có giới hạn tổng số cuộc gọi TTS đồng thời trên toàn site** (mỗi user bấm nghe/mồi trước ở bất kỳ
+   truyện nào đều tự kích hoạt 1 lượt GitHub Actions riêng, chạy song song độc lập với các lượt
+   khác) — nếu nhiều người online cùng lúc, tổng số cuộc gọi TTS đồng thời cộng dồn dễ rơi vào vùng
+   hay lỗi. Nếu làm tính năng tạo hàng loạt N chương mà KHÔNG thêm giới hạn đồng thời toàn site trước,
+   sẽ làm NẶNG THÊM đúng vấn đề đang gặp, không phải nhẹ đi.
+
+**Việc CẦN làm khi quay lại hướng này** (đã thống nhất với user, chưa code):
+1. Bỏ hẳn ý tưởng "mồi trước lúc còn 2 phút" (không giải quyết đúng gốc vấn đề).
+2. Làm tính năng tạo trước tối đa ~5 chương (không phải 20) khi bấm "Bắt đầu", phát ngay chương đầu
+   khi xong, các chương còn lại tiếp tục chạy nền tuần tự.
+3. **Bắt buộc làm cùng lúc với việc 2**: thêm giới hạn số lượng tạo audio đồng thời trên toàn site —
+   gợi ý dùng `concurrency:` group trong `.github/workflows/worker-audio-chuong.yml` để gộp mọi lượt
+   kích hoạt vào 1 hàng đợi thay vì cho chạy song song vô tội vạ.
+4. Sửa lỗi UX đã phát hiện (xem mục dưới): modal `ModalNgheAudioThat.tsx` hiện spinner vô hạn không
+   báo lỗi khi 1 chương đã bị worker bỏ cuộc (`so_lan_loi >= 3`) — cần thêm hiển thị lỗi + nút "Thử
+   lại" (gọi lại `yeuCauTaoAudioNgay`, RPC `xep_hang_tao_audio` đã tự reset `so_lan_loi = 0`).
+
+**Đã làm xong trong lúc chờ quyết định hướng trên** (đăng truyện — việc vận hành định kỳ, xem chi
+tiết kỹ thuật đầy đủ ở `docs/handoff/du-lieu-va-parse-chuong.md`):
+- **"Đô Thị Chí Tôn"**: phát hiện + sửa bug thật — regex `\d{3}` (đúng 3 chữ số) trong
+  `scripts/parse-chuong.js` + `scripts/sync-truyen.mjs` khiến 627 chương từ 1000-1626 bị âm thầm
+  loại bỏ (bộ này có 1626 chương, vượt mốc 999 lần đầu tiên). Đã sửa thành `\d{3,}`, kiểm tra các bộ
+  khác đều dưới 999 nên không bị ảnh hưởng. Đã đăng đủ **1626/1626 chương** + ảnh bìa mới.
+- Cập nhật ảnh bìa mới cho 4 bộ: **Lai Lịch Vô Địch, Ta Vung Đao Chém Chư Thiên** (746 chương, đủ),
+  **Ta Đã Là Đại La Kim Tiên, Sao Các Ngươi Mới Chỉ Võ Thánh** (637, đủ), **Tạo Hóa Thôn Thiên Đỉnh**
+  (709, đủ), **Mỗi Năm Rút Một Điều Mục, Mô Phỏng Cũng Được Sao** (615, đủ).
+- **Đăng truyện mới "Cẩu Tại Sơ Thánh Ma Môn Làm Nhân Tài"** (500 chương đầu đã duyệt): phát hiện +
+  sửa thêm 1 bug — `timMoTa` trong `scripts/parse-thong-tin.js` chỉ nhận heading `## Giới thiệu`,
+  bộ này dùng `## Tóm tắt` → gây thông báo lỗi sai chỗ ("không tìm thấy thong-tin.md" dù file tồn
+  tại thật). Đã sửa regex nhận cả 2 heading. Kết quả: **đã đăng 499/500 chương**.
+  - **Còn treo, cần làm đầu phiên sau**: chương 259 thiếu dòng tiêu đề trong file nguồn (chỉ ghi
+    "Chương 259" không có `: tên chương`) — cần nhờ bên `D:\translate truyen` bổ sung tên chương rồi
+    chạy lại `node --env-file=.env.local scripts/sync-truyen.mjs "Cẩu Tại Sơ Thánh Ma Môn Làm Nhân
+    Tài"` để đăng nốt (không tự sửa nội dung dịch từ dự án này, đúng ranh giới 2 dự án).
+
+## Phiên 2026-09-16 (tiếp, ngay sau phiên trên) — phát hiện "mồi trước chương sau" CHƯA đáng tin
+## cậy như báo cáo trước — CHƯA sửa, cần làm đầu phiên sau
+
+User báo trực tiếp: mở modal audio 1 chương, đợi audio "Đang chuẩn bị..." **443 giây (7+ phút) vẫn
+chưa xong**, và nghi ngờ đúng: tính năng "mồi trước audio chương kế tiếp lúc chương hiện tại bắt đầu
+phát" (báo cáo phiên trước là ĐÃ XONG) **thực tế không đáng tin cậy như tưởng** — nghe xong 1
+chương, chương sau vẫn phải đợi tạo.
+
+**Đã tra thẳng dữ liệu thật (không đoán) — 2 phát hiện độc lập:**
+
+1. **Chương cụ thể user đang chờ (Chương 2 "Quốc Thuật - Mỗi Ngày Kết Toán...") đã bị worker bỏ
+   cuộc VĨNH VIỄN**: tra bảng `hang_doi_audio` bằng service role key thấy `so_lan_loi: 3` cho đúng
+   chương này. `scripts/worker-audio-chuong.mjs` lọc `.lt('so_lan_loi', 3)` khi quét hàng đợi định kỳ
+   — tức chương này sẽ KHÔNG BAO GIỜ được thử lại tự động nữa. Nguyên nhân gốc: thư viện free
+   `msedge-tts` (gọi ké Neural TTS của Microsoft, không phải API chính thức) **thỉnh thoảng treo vô
+   thời hạn không báo lỗi** — đã ghi nhận trong chính comment code
+   (`scripts/lib/tao-audio-logic.mjs:37-40`, benchmark thật từng gặp treo >12 phút). Có timeout cứng
+   180s/lần thử để tránh treo cả worker, nhưng xui 3 lần liên tiếp = bị loại vĩnh viễn.
+   - **Lỗi UX nghiêm trọng phát sinh từ đây**: `ModalNgheAudioThat.tsx` chỉ poll cột `audio_url` mỗi
+     5 giây, KHÔNG hề biết chương đã bị worker bỏ cuộc — nên cứ hiện "Đang chuẩn bị audio..." vô thời
+     hạn mãi mãi, không báo lỗi, không có nút thử lại. Khách sẽ đứng nhìn spinner vô hạn.
+
+2. **Xác nhận qua GitHub REST API thật** (`api.github.com/repos/ndat7783svg/truyen-chu-dich-audio-worker/actions/runs`):
+   cơ chế dispatch tức thời (`yeuCauTaoAudioNgay` gọi `workflow_dispatch`) **THẬT SỰ có hoạt động**
+   (không phải do thiếu `GITHUB_DISPATCH_TOKEN` trên Vercel như nghi ngờ ban đầu — có 15+ run
+   `event: workflow_dispatch` thật trong ngày, conclusion phần lớn `success`). NHƯNG mỗi lần dispatch
+   tốn thật sự **~3.5 phút** từ lúc trigger tới lúc xong (đo qua step "Chạy worker audio" của 1 run
+   sạch: `checkout+setup-node+npm ci` ~16s, bản thân việc tạo audio ~3 phút). Đây là **rủi ro kiến
+   trúc chưa được kiểm chứng thật ở phiên trước**: phiên trước chỉ xác nhận dispatch CÓ chạy (qua
+   GitHub API) và RPC ghi giờ nghe đúng — **CHƯA từng đo thời gian tạo audio thật so với thời lượng
+   nghe 1 chương thật** để chắc chắn ~3.5 phút này luôn ngắn hơn thời gian khách nghe hết chương hiện
+   tại. Với chương ngắn, hoàn toàn có thể mồi trước không kịp.
+
+**Việc CẦN làm đầu phiên sau (chưa làm gì trong phiên này, chỉ mới điều tra + chốt nguyên nhân)**:
+1. Sửa `ModalNgheAudioThat.tsx`: phát hiện khi hàng đợi đã bỏ cuộc (poll thêm `so_lan_loi` từ
+   `hang_doi_audio`, hoặc đặt ngưỡng thời gian chờ tối đa ở client) → hiện lỗi rõ ràng + nút "Thử
+   lại" (gọi lại `yeuCauTaoAudioNgay` — RPC `xep_hang_tao_audio` đã tự reset `so_lan_loi = 0`, xác
+   nhận qua đọc `supabase/schema.sql`), thay vì spinner vô hạn.
+2. Bàn với user: có chấp nhận rủi ro "mồi trước không kịp với chương ngắn" (do giới hạn thật của
+   GitHub Actions overhead + msedge-tts, không có cách nào loại bỏ hoàn toàn nếu tiếp tục dùng kiến
+   trúc free này), hay cần đổi hướng (tăng số chương mồi trước, đổi dịch vụ TTS khác, v.v.)?
+3. Cân nhắc thêm cơ chế retry tự động phía server (không chỉ dựa vào user bấm lại) cho chương đã bị
+   bỏ cuộc, ví dụ 1 workflow riêng quét định kỳ chương `so_lan_loi >= 3` và thử lại sau X giờ (network/
+   dịch vụ TTS có thể chỉ tạm thời lỗi, không phải lỗi vĩnh viễn của riêng nội dung chương đó).
+4. **Bài học cần rút cho cách báo cáo "đã xong" ở các phiên sau**: báo cáo phiên trước "đã sửa mồi
+   trước chương sau" chỉ kiểm chứng dispatch CÓ chạy, chưa đo thời gian thật so với thời lượng nghe —
+   đây là kiểu overclaim cần tránh, đặc biệt với tính năng phụ thuộc dịch vụ ngoài không ổn định
+   (`msedge-tts`). Lần sau kiểm chứng loại tính năng "phải nhanh hơn X" cần đo thời gian thật, không
+   chỉ xác nhận "có chạy".
+
 ## Phiên 2026-09-16 — hoàn thiện Audio thật (AI): modal, chuyển chương liền mạch, dọn storage
 
 **Đã xong hoàn toàn, đã deploy production, kiểm chứng thật qua browser + GitHub API + Supabase.**

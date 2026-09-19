@@ -44,6 +44,9 @@ async function main() {
     process.exit(1);
   }
 
+  console.log(`Giao dich: goi ${TEN_GOI[giaoDich.goi_loai]}, so tien can nhan: ${giaoDich.so_tien} VND.`);
+  console.log('Doi chieu so tien thuc nhan tren MoMo truoc khi tin ket qua nay.');
+
   const hanMoi = tinhHanMoi(soNgay);
 
   const { error: loiUpdateGiaoDich } = await supabase
