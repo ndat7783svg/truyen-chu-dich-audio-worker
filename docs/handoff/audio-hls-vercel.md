@@ -55,6 +55,16 @@ liệu thật (`taoGioiHanPlaylist` 30/10 phút, mỗi lần Start tốn 2 lư�
 
 **Gỡ hệ audio cũ (2026-09-19, theo đồng ý của user)**: `git rm` ModalNgheAudioThat.tsx, actions-audio(+test), scripts/worker-audio-chuong.mjs, tao-audio-chuong.mjs, lib/tao-audio-logic(+test), .github/workflows/worker-audio-chuong.yml; bỏ `audioUrl`/`audio_url` khỏi page.tsx/KhungDocChuong/PanelDocAudio; xoá 2 file audio + bucket `audio-chuong` trên Supabase (14MB). Khôi phục code từ lịch sử git (commit 88350f6 là commit gỡ) nếu cần. **ĐÃ HOÀN TẤT 2026-09-19 (a)(b)(c bên dưới đều xong, đã xác minh DB bằng REST)** — mô tả gốc: (a) chạy SQL cuối `supabase/schema.sql` ("GỠ HỆ THỐNG AUDIO CŨ": drop 2 hàm RPC, bảng `hang_doi_audio`, cột `truyen.audio_truy_cap_luc`, `chuong.audio_url`) — CHỈ sau khi bản web mới đã deploy (đã deploy); (b) xoá biến `GITHUB_DISPATCH_TOKEN` trên Vercel và thu hồi token PAT trên GitHub; (c) repo GitHub `truyen-chu-dich-audio-worker` (remote origin của repo này) còn workflow cũ trên GitHub cho tới khi push commit gỡ — tắt/archive tuỳ user.
 
+## Đứng audio ở nửa sau chương ở 1.5x — sửa bằng nạp trước sâu hơn (2026-09-19 tối)
+
+**Triệu chứng user báo**: nghe 1.5x chương 59 "Quốc Thuật...", từ ~phút thứ 5 cứ 30s-1 phút đứng 1 lần ("Đang tạo audio..."). Đầu chương thì mượt.
+
+**Số đo thật (mô phỏng người nghe trên chương free chưa cache, 4 kết nối, 2 lượt x 30-40 đoạn)**: mỗi kết nối chỉ tạo ~1x thời gian thực (đoạn ~9s audio mất trung vị 11.5s, p90 15-18s, có đoạn 35s); ~50% lần thử đầu bị Microsoft đóng "Stream closed" sau ~2.4s rồi thử lại (lần thứ 2 hay lỗi tiếp sau ~5.3s, thành công ở lần 3 ~10-15s); 10-15% đoạn ra 502 cuối cùng. Nghe 1.5x tiêu thụ 1 đoạn/~6s nên tốc độ tạo trung bình (2.3-2.8x với 4 kết nối) vẫn đủ nhưng bộ đệm chỉ ~4 đoạn (~25s) thì 1 đoạn chậm/502 là hết đệm. Log Vercel cho thấy 502 thật rất ít (mỗi sự kiện bị lặp 20 lần trong `vercel logs --json`, đừng đếm thô); nguyên nhân là ĐỘ TRỄ chứ không phải lỗi liên tục. Chương VIP còn tệ hơn vì không có CDN giữ.
+
+**Mô phỏng theo số đo** (script scratchpad, lấy mẫu độ trễ thật): nạp trước 4 đoạn/3 song song -> đứng ~0.6 lần/phút (khớp báo cáo); từ 8 đoạn trở lên -> gần như 0. **Đã sửa** `ModalNgheAudioHls.tsx`: `SO_DOAN_NAP_TRUOC` 4 -> 10, `TOI_DA_NAP_DONG_THOI` 3 -> 4 (commit 6d7f157). **Kiểm chứng thật production 1.5x**: audio đã phát 6:15 (qua mốc phút 5) liên tục, 0 lần đứng, 0 sự kiện waiting/stalled, bộ đệm 56-124s (trước đó 20-50s). Chưa A/B cùng điều kiện với bản cũ (chỉ có mô phỏng + báo cáo user).
+- Đánh đổi: 4 kết nối nạp trước + 1 của hls.js/người nghe; trần đồng thời toàn site là 30 -> khoảng 6 người nghe cùng lúc là chạm trần (503 cho người kế). Nếu nhiều người dùng cùng lúc: cân nhắc TTS trả phí hoặc hạ lại.
+- Quan sát chưa giải thích: trong lần thử desktop, audio tự `paused` 1 lần ở giây 161 mà không có lệnh dừng từ code mình (bấm play lại chạy bình thường, lần sau không lặp lại); nghi khung trình duyệt nhúng của công cụ thử. Nếu user báo audio tự dừng (không phải quay "Đang tạo") trên điện thoại thì điều tra tiếp.
+
 ## Vận hành
 - Biến môi trường Vercel Production: `SUPABASE_SERVICE_ROLE_KEY` (đã có), `AUDIO_TICKET_SECRET` (mới, thêm
   2026-09-19 bằng `vercel env add ... --sensitive`). Thiếu `AUDIO_TICKET_SECRET` → chương VIP trả 500 (fail đóng).

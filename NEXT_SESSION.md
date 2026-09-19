@@ -22,6 +22,8 @@ nút ▶ (audio phát được rồi mà dòng vẫn quay). Đo trên production
 tự phát (trước đó `play()` lỗi bị nuốt); nới dò đệm 0.5s -> 1.5s. **User xác nhận trên Android: hết lỗi lệch thông báo, tắt màn
 hình vẫn nghe được.** Chưa xác nhận: tự sang chương sau khi tắt màn hình, iPhone.
 
+**Cập nhật cuối cùng 2026-09-19 (tối muộn)**: (1) đã xoá dự án Vercel `tts-thu-nghiem` (user cho phép) — asuo-team còn `truyen-chu-dich` + `ai-news-aggregator`; (2) user xác nhận Android: TỰ CHUYỂN CHƯƠNG khi tắt màn hình đã chạy được; (3) user báo đứng audio ở nửa sau chương ở 1.5x (từ phút ~5, cứ 30s-1 phút) -> đã điều tra bằng số đo thật + mô phỏng, sửa nạp trước 4->10 đoạn, 3->4 song song (commit 6d7f157, đã deploy), kiểm chứng 6:15 liên tục 0 lần đứng — chi tiết `docs/handoff/audio-hls-vercel.md` mục "Đứng audio ở nửa sau chương". **Chờ user thử lại trên điện thoại** (đặc biệt chương VIP >50 ở 1.5x nửa sau); nếu vẫn đứng: thử thêm nạp trước sâu hơn/giảm hedge hoặc TTS trả phí.
+
 **VIỆC CẦN LÀM ĐẦU PHIÊN SAU**:
 1. Hỏi user: **hết chương có tự sang chương sau khi tắt màn hình không** và **iPhone (Safari)** có tự phát sau chờ đệm không
    (Android: tắt màn hình nghe được, hết lỗi thông báo — đã xong). Chữ trên iPhone có thể lệch chương vài chục giây (mốc
