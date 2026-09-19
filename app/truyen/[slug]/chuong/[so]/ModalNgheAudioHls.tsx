@@ -39,8 +39,12 @@ type Manifest = {
 // giây vì chưa có sẵn đoạn nào). Tối đa chờ CHO_DEM_TOI_DA_MS rồi phát bất kể, để không kẹt vô hạn.
 const NGUONG_DEM_GIAY = 10;
 const CHO_DEM_TOI_DA_MS = 30_000;
-const SO_DOAN_NAP_TRUOC = 4;
-const TOI_DA_NAP_DONG_THOI = 3;
+// Đo thật 2026-09-19 (Microsoft ở chế độ chậm): mỗi kết nối chỉ tạo ~1x thời gian thực, ~50% lần thử đầu lỗi rồi
+// thử lại, độ trễ mỗi đoạn trung vị ~11s, có đoạn tới 35s. Nghe 1.5x tiêu thụ 1 đoạn mỗi ~6s nên nạp trước 4 đoạn
+// (~25s) không đủ hấp thụ 1 đoạn chậm -> đứng cứ 30-60s. Mô phỏng theo số đo: 4 đoạn/3 song song đứng ~0.6 lần/phút,
+// từ 8 đoạn trở lên gần như hết đứng. Chọn 10 đoạn/4 song song (không cao hơn để không dồn kết nối lên Microsoft).
+const SO_DOAN_NAP_TRUOC = 10;
+const TOI_DA_NAP_DONG_THOI = 4;
 
 type TrangThai =
   | { loai: 'nghi' }
