@@ -61,3 +61,18 @@ describe('choPhepTheoGioiHan', () => {
     ).toBe(true);
   });
 });
+
+describe('hạn của bộ đếm đồng thời', () => {
+  it('chỉ đặt hạn khi khoá chưa có hạn (NX) - không gia hạn mỗi lần để slot rò rỉ tự hết', async () => {
+    const goiExpire: Array<string | undefined> = [];
+    const redis = taoRedisGia();
+    const goc = redis.expire.bind(redis);
+    redis.expire = async (k, s, option) => {
+      goiExpire.push(option);
+      return goc(k, s);
+    };
+    await xinSlotTaoDoan(redis, 5);
+    await xinSlotTaoDoan(redis, 5);
+    expect(goiExpire).toEqual(['NX', 'NX']);
+  });
+});

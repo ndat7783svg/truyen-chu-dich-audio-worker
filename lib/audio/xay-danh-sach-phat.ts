@@ -47,7 +47,12 @@ export async function xayDanhSachPhat(truyenId: string, soChuong: number): Promi
   if (chuongCaoNhat > SO_CHUONG_FREE) {
     const boMat = process.env.AUDIO_TICKET_SECRET;
     if (!boMat) throw new Error('Thiếu AUDIO_TICKET_SECRET - từ chối tạo playlist chương VIP');
-    ve = taoVe(boMat, truyenId, chuongCaoNhat, Math.floor(Date.now() / 1000) + HAN_VE_GIAY);
+    // Vé không sống lâu hơn gói VIP: gói ngày sắp hết hạn thì vé cũng hết hạn cùng lúc.
+    const hetHan = Math.min(
+      Math.floor(Date.now() / 1000) + HAN_VE_GIAY,
+      quyen.hetHanVipGiay ?? Number.MAX_SAFE_INTEGER
+    );
+    ve = taoVe(boMat, truyenId, chuongCaoNhat, hetHan);
   }
 
   const { m3u8, chuongs } = taoDanhSachPhat(truyenId, duocNghe, ve, chuongSauCuoi);

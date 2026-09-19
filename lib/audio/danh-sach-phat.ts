@@ -5,7 +5,8 @@ import { SO_CHUONG_FREE } from '../config/goi-vip';
 export const SO_CHUONG_TOI_DA_TRONG_DANH_SACH = 11; // chương hiện tại + 10 chương kế tiếp
 
 export type ChuongNguon = { chuongId: string; soChuong: number; tieuDe: string; noiDung: string };
-export type QuyenNghe = { daDangNhap: boolean; coVip: boolean };
+// hetHanVipGiay: thời điểm gói VIP hết hạn (giây epoch) - dùng giới hạn hạn của vé để vé không sống lâu hơn gói.
+export type QuyenNghe = { daDangNhap: boolean; coVip: boolean; hetHanVipGiay?: number };
 export type LyDoDungLai = 'chua_dang_nhap' | 'can_vip';
 export type DungLai = { soChuong: number; lyDo: LyDoDungLai };
 

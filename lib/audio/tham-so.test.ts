@@ -41,3 +41,12 @@ describe('docVe', () => {
     expect(docVe(new URLSearchParams('h=1&m=60&k=zzzz'))).toBeNull();
   });
 });
+
+describe('giới hạn giá trị phi lý', () => {
+  it('số chương/đoạn quá lớn (tràn integer Postgres) bị từ chối sớm thay vì gây lỗi 500', () => {
+    expect(docTruyenVaChuong(new URLSearchParams(`t=${UUID}&c=99999999999`))).toBeNull();
+    expect(docTruyenVaChuong(new URLSearchParams(`t=${UUID}&c=1000000`))).toEqual({ truyenId: UUID, soChuong: 1000000 });
+    expect(docChiSoDoan(new URLSearchParams('i=99999999999'))).toBeNull();
+    expect(docChiSoDoan(new URLSearchParams('i=100000'))).toBe(100000);
+  });
+});

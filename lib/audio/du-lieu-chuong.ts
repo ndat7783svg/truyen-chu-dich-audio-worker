@@ -58,5 +58,10 @@ export async function layQuyenNghe(): Promise<QuyenNghe> {
   } = await sb.auth.getUser();
   if (!user) return { daDangNhap: false, coVip: false };
   const { data } = await sb.from('nguoi_dung').select('goi_het_han').eq('id', user.id).maybeSingle();
-  return { daDangNhap: true, coVip: conHieuLucGoi(data?.goi_het_han ?? null) };
+  const hetHanMs = data?.goi_het_han ? new Date(data.goi_het_han).getTime() : NaN;
+  return {
+    daDangNhap: true,
+    coVip: conHieuLucGoi(data?.goi_het_han ?? null),
+    hetHanVipGiay: Number.isFinite(hetHanMs) ? Math.floor(hetHanMs / 1000) : undefined,
+  };
 }

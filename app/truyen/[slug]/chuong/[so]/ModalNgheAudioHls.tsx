@@ -93,6 +93,13 @@ export default function ModalNgheAudioHls({
   // "modal tự đổi chương" (bỏ qua) với "người dùng bấm sang chương khác" (dừng audio).
   const chuongDangHienThiRef = useRef(chuongId);
   const soChuongTruocGocRef = useRef<number | undefined>(soChuongTruoc);
+  // "Phiên phát": tăng mỗi khi dừng/bắt đầu lại. Các bước bất đồng bộ (import hls.js, tải manifest) đối chiếu
+  // với phiên lúc khởi tạo để không tác động lên phiên mới hơn (bấm Bắt đầu/Thử lại liên tiếp, đóng trang giữa chừng).
+  const phienRef = useRef(0);
+  // Chương mà CHỮ trên trang đã khớp / đang chờ tải chữ; lần tải chữ thất bại gần nhất (để thử lại sau ~5 giây).
+  const chiSoDaDongBoRef = useRef(0);
+  const dangDongBoRef = useRef(-1);
+  const thoiDiemThatBaiRef = useRef(0);
 
   useEffect(() => {
     setDaMount(true);
@@ -104,6 +111,7 @@ export default function ModalNgheAudioHls({
   }, []);
 
   function dungNguon() {
+    phienRef.current += 1;
     hlsRef.current?.destroy();
     hlsRef.current = null;
     const el = audioRef.current;
@@ -146,10 +154,13 @@ export default function ModalNgheAudioHls({
   }
 
   // Đổi chữ hiển thị sang chương `chiSo` của playlist (audio vẫn chạy liên tục, chỉ đồng bộ giao diện).
+  // Nếu tải chữ thất bại thì lần gọi sau (mỗi ~5 giây) thử lại, không kẹt chữ chương cũ tới hết chương.
   async function hienThiChuong(chiSo: number, ep = false) {
     const man = manifestRef.current;
     if (!man || chiSo < 0 || chiSo >= man.chuongs.length) return;
-    if (chiSo === chiSoRef.current && !ep) return;
+    if (!ep && (chiSo === chiSoDaDongBoRef.current || chiSo === dangDongBoRef.current)) return;
+    if (!ep && Date.now() - thoiDiemThatBaiRef.current < 5000) return;
+    dangDongBoRef.current = chiSo;
     chiSoRef.current = chiSo;
     setChiSoChuong(chiSo);
     const muc = man.chuongs[chiSo];
@@ -159,8 +170,14 @@ export default function ModalNgheAudioHls({
     const { data: noiDung, error } = await taoSupabaseClient().rpc('lay_noi_dung_chuong', {
       p_chuong_id: muc.chuongId,
     });
-    if (chiSoRef.current !== chiSo) return; // trong lúc chờ đã sang chương khác
-    if (error || noiDung == null) return; // audio vẫn phát; chữ sẽ đồng bộ ở lần đổi chương sau
+    if (chiSoRef.current !== chiSo || manifestRef.current !== man) return; // trong lúc chờ đã sang chương/phiên khác
+    dangDongBoRef.current = -1;
+    if (error || noiDung == null) {
+      thoiDiemThatBaiRef.current = Date.now(); // audio vẫn phát; chữ sẽ được thử đồng bộ lại sau ~5 giây
+      return;
+    }
+    thoiDiemThatBaiRef.current = 0;
+    chiSoDaDongBoRef.current = chiSo;
     onChuyenChuongMoi?.({
       chuongId: muc.chuongId,
       soChuong: muc.soChuong,
@@ -203,9 +220,10 @@ export default function ModalNgheAudioHls({
     el.currentTime = man.chuongs[chiSo].batDauGiay;
   }
 
-  async function taiManifest(soChuongBatDau: number): Promise<Manifest | null> {
+  async function taiManifest(soChuongBatDau: number, phien: number): Promise<Manifest | null> {
     try {
       const res = await fetch(`/api/audio/manifest?t=${truyenId}&c=${soChuongBatDau}`);
+      if (phien !== phienRef.current) return null; // đã có phiên phát mới hơn: bỏ kết quả cũ
       if (res.status === 403) {
         const j = await res.json();
         dungNguon();
@@ -220,6 +238,7 @@ export default function ModalNgheAudioHls({
       if (!res.ok) throw new Error(String(res.status));
       return (await res.json()) as Manifest;
     } catch {
+      if (phien !== phienRef.current) return null;
       dungNguon();
       setTrangThai({ loai: 'loi', thongBao: 'Không tải được danh sách phát. Kiểm tra mạng rồi bấm Thử lại.' });
       return null;
@@ -232,6 +251,7 @@ export default function ModalNgheAudioHls({
     if (!el) return;
     onDungWebSpeech?.();
     dungNguon();
+    const phien = phienRef.current; // phiên của lần bắt đầu này (dungNguon vừa tăng số phiên)
     // Bỏ manifest cũ NGAY: nếu không, sự kiện FRAG_CHANGED của playlist mới (sn=0) sẽ bị map theo manifest
     // cũ và kéo giao diện về chương đầu của danh sách cũ (lỗi khi nạp tiếp playlist sau 11 chương).
     manifestRef.current = null;
@@ -250,6 +270,7 @@ export default function ModalNgheAudioHls({
       el.play().catch(() => {});
     } else {
       import('hls.js').then(({ default: Hls }) => {
+        if (phien !== phienRef.current) return; // đã bấm lại/đóng trang trong lúc tải hls.js
         if (!Hls.isSupported()) {
           el.src = playlistUrl;
           el.play().catch(() => {});
@@ -260,6 +281,11 @@ export default function ModalNgheAudioHls({
         hls.on(Hls.Events.FRAG_CHANGED, (_e, d) => {
           const sn = typeof d.frag.sn === 'number' ? d.frag.sn : 0;
           hienThiChuong(chiSoTheoDoan(sn));
+        });
+        // Có đoạn tải thành công = mạng đã ổn lại: tính lại số lần thử lỗi mạng, để các lỗi thoáng qua rải rác
+        // trong phiên nghe dài hàng giờ không cộng dồn tới mức dừng hẳn.
+        hls.on(Hls.Events.FRAG_LOADED, () => {
+          soLanThuLaiMangRef.current = 0;
         });
         hls.on(Hls.Events.ERROR, (_e, data) => {
           if (!data.fatal) return;
@@ -288,11 +314,14 @@ export default function ModalNgheAudioHls({
     }
 
     // Manifest chỉ để dựng giao diện/mốc chương; tải song song, không chặn việc phát.
-    taiManifest(soChuongBatDau).then((man) => {
-      if (!man) return;
+    taiManifest(soChuongBatDau, phien).then((man) => {
+      if (!man || phien !== phienRef.current) return;
       manifestRef.current = man;
       setManifest(man);
       chiSoRef.current = 0;
+      chiSoDaDongBoRef.current = laTiepNoi ? -1 : 0; // nạp tiếp: chữ đang là chương cuối của playlist cũ
+      dangDongBoRef.current = -1;
+      thoiDiemThatBaiRef.current = 0;
       setChiSoChuong(0);
       setTrangThai({ loai: 'phat' });
       if (laTiepNoi) hienThiChuong(0, true);
@@ -308,6 +337,16 @@ export default function ModalNgheAudioHls({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tuDongPhatNgay, daMount]);
+
+  // Đường HLS gốc (Safari/iPhone) không có sự kiện lỗi của hls.js: lỗi tải playlist/đoạn chỉ hiện qua sự kiện
+  // "error" của thẻ <audio>. Không xử lý thì trình phát báo "đang phát" nhưng im lặng và không có nút Thử lại.
+  function khiAudioLoi() {
+    if (hlsRef.current) return; // hls.js tự xử lý qua Events.ERROR
+    const el = audioRef.current;
+    if (!el || !el.getAttribute('src')) return;
+    dungNguon();
+    setTrangThai({ loai: 'loi', thongBao: 'Không phát được audio. Kiểm tra mạng rồi bấm Thử lại.' });
+  }
 
   function khiKetThuc() {
     setDangPhat(false);
@@ -349,6 +388,7 @@ export default function ModalNgheAudioHls({
           onPlay={() => setDangPhat(true)}
           onPause={() => setDangPhat(false)}
           onEnded={khiKetThuc}
+          onError={khiAudioLoi}
           onTimeUpdate={() => {
             const el = audioRef.current;
             if (!el) return;

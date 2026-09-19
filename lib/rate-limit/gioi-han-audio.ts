@@ -9,7 +9,7 @@ const TTL_DEM_GIAY = 90; // phòng trường hợp hàm chết giữa chừng l�
 export type BoDem = {
   incr(key: string): Promise<number>;
   decr(key: string): Promise<number>;
-  expire(key: string, seconds: number): Promise<unknown>;
+  expire(key: string, seconds: number, option?: 'NX'): Promise<unknown>;
   set(key: string, value: number, opts?: { ex: number }): Promise<unknown>;
 };
 
@@ -17,7 +17,9 @@ export type BoDem = {
 export async function xinSlotTaoDoan(redis: BoDem, toiDa: number = GIOI_HAN_DOAN_DONG_THOI): Promise<boolean> {
   try {
     const soDangTao = await redis.incr(KHOA_DEM_DONG_THOI);
-    await redis.expire(KHOA_DEM_DONG_THOI, TTL_DEM_GIAY);
+    // NX: chỉ đặt hạn khi khoá chưa có hạn. Nếu gia hạn mỗi lần, 1 slot bị rò rỉ (hàm bị kill giữa chừng)
+    // sẽ không bao giờ hết hạn khi vẫn còn người nghe -> bộ đếm kẹt và cả site trả 503.
+    await redis.expire(KHOA_DEM_DONG_THOI, TTL_DEM_GIAY, 'NX');
     if (soDangTao > toiDa) {
       await redis.decr(KHOA_DEM_DONG_THOI);
       return false;
