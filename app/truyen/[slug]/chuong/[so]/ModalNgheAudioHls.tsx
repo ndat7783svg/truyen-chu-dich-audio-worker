@@ -94,6 +94,8 @@ export default function ModalNgheAudioHls({
   const [dangDem, setDangDem] = useState(false); // đang chờ đệm ~10s trước khi phát
   const [dangCho, setDangCho] = useState(false); // đang phát mà bị đứng chờ đoạn kế được tạo
   const [soGiayDem, setSoGiayDem] = useState(0);
+  const [sanSang, setSanSang] = useState(false); // đang chờ đệm nhưng audio đã phát được (bấm ▶ là nghe ngay)
+  const [canBamPhat, setCanBamPhat] = useState(false); // trình duyệt chặn tự phát -> người dùng phải bấm ▶
   const [thoiGian, setThoiGian] = useState(0); // currentTime toàn playlist
   const [tocDo, setTocDo] = useState(1);
 
@@ -138,6 +140,7 @@ export default function ModalNgheAudioHls({
     }
     dangDemRef.current = false;
     setDangDem(false);
+    setSanSang(false);
   }
 
   // Chờ tới khi đã đệm đủ NGUONG_DEM_GIAY phía trước (hoặc quá CHO_DEM_TOI_DA_MS) rồi mới phát. Trong lúc chờ,
@@ -146,6 +149,7 @@ export default function ModalNgheAudioHls({
     huyDoiDem();
     dangDemRef.current = true;
     setDangDem(true);
+    setCanBamPhat(false);
     setSoGiayDem(0);
     const t0 = Date.now();
     timerDemRef.current = setInterval(() => {
@@ -159,13 +163,16 @@ export default function ModalNgheAudioHls({
       let dem = 0;
       const b = el.buffered;
       for (let i = 0; i < b.length; i += 1) {
-        if (b.start(i) <= el.currentTime + 0.5 && b.end(i) > el.currentTime) dem = b.end(i) - el.currentTime;
+        if (b.start(i) <= el.currentTime + 1.5 && b.end(i) > el.currentTime) dem = b.end(i) - el.currentTime;
       }
       const conLai = Number.isFinite(el.duration) ? el.duration - el.currentTime : Infinity;
       const daDu = dem >= NGUONG_DEM_GIAY || (dem > 0 && dem >= conLai - 0.5); // chương ngắn: có hết là phát
       if (daDu || troiQuaMs >= CHO_DEM_TOI_DA_MS) {
         huyDoiDem();
-        el.play().catch(() => {});
+        // Trình duyệt (đặc biệt điện thoại) có thể chặn tự phát: báo người dùng bấm ▶ thay vì im lặng.
+        el.play().catch(() => setCanBamPhat(true));
+      } else {
+        setSanSang(el.readyState >= 3 && dem > 0);
       }
     }, 300);
   }
@@ -480,6 +487,7 @@ export default function ModalNgheAudioHls({
     const el = audioRef.current;
     if (!el) return;
     huyDoiDem(); // bấm Phát/Tạm dừng thủ công = bỏ qua chờ đệm
+    setCanBamPhat(false);
     if (el.paused) el.play().catch(() => {});
     else el.pause();
   }
@@ -514,6 +522,7 @@ export default function ModalNgheAudioHls({
               return;
             }
             setDangCho(false);
+            setCanBamPhat(false);
           }}
           onWaiting={() => {
             const el = audioRef.current;
@@ -630,14 +639,22 @@ export default function ModalNgheAudioHls({
 
             {dangChay && (
               <div className="space-y-5 py-2">
-                {(dangDem || dangCho || (trangThai.loai === 'dangTai' && !muc)) && (
+                {canBamPhat && !dangPhat ? (
                   <div className="flex items-center justify-center gap-2 rounded-xl bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">
-                    <span className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600" />
-                    <span>
-                      Đang tạo audio... vui lòng đợi vài giây để nghe
-                      {dangDem && soGiayDem >= 3 ? ' (' + soGiayDem + 's)' : ''}
-                    </span>
+                    <span>Audio đã sẵn sàng — bấm nút ▶ để nghe.</span>
                   </div>
+                ) : (
+                  (dangDem || dangCho || (trangThai.loai === 'dangTai' && !muc)) && (
+                    <div className="flex items-center justify-center gap-2 rounded-xl bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">
+                      <span className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600" />
+                      <span>
+                        {dangDem && sanSang
+                          ? 'Audio đã sẵn sàng, sắp tự phát — hoặc bấm ▶ để nghe ngay'
+                          : 'Đang tạo audio... vui lòng đợi vài giây để nghe'}
+                        {dangDem && soGiayDem >= 3 ? ' (' + soGiayDem + 's)' : ''}
+                      </span>
+                    </div>
+                  )
                 )}
                 <div className="space-y-1.5">
                   <input
