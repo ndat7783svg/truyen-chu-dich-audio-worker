@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { taoSupabaseClient } from '@/lib/supabase/client';
 import {
   CAI_DAT_AUDIO_MAC_DINH,
   GIOI_HAN_TOC_DO,
@@ -169,15 +168,6 @@ export default function PanelDocAudio({
   }
 
   function batDauDoc() {
-    if (chuongIdSau) {
-      taoSupabaseClient()
-        .rpc('xep_hang_tao_audio', { p_chuong_id: chuongIdSau })
-        .then(
-          () => {},
-          () => {}
-        );
-    }
-
     theHeRef.current += 1;
     window.speechSynthesis.cancel();
     queueRef.current = taoDoanDoc(`${tieuDe}. ${noiDung}`);
