@@ -183,6 +183,7 @@ export default function KhungDocChuong({
           tenTruyen={tenTruyen}
           truyenId={truyenId}
           soChuong={chuongHienTai.soChuong}
+          soChuongTruoc={chuongHienTai.soChuongTruoc}
           soChuongSau={chuongHienTai.soChuongSau}
           chuongIdSau={chuongHienTai.chuongIdSau}
           tieuDe={chuongHienTai.tieuDe}

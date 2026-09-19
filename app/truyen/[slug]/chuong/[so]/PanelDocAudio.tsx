@@ -11,7 +11,7 @@ import {
   taoDoanDoc,
   type CaiDatAudio,
 } from '@/lib/utils/cai-dat-audio';
-import ModalNgheAudioThat from './ModalNgheAudioThat';
+import ModalNgheAudioHls from './ModalNgheAudioHls';
 import type { ThongTinChuongMoi } from './KhungDocChuong';
 
 const KHOA_TU_DONG_DOC = 'chuongTuDongDocTiep';
@@ -23,6 +23,7 @@ export default function PanelDocAudio({
   tenTruyen,
   truyenId,
   soChuong,
+  soChuongTruoc,
   soChuongSau,
   chuongIdSau,
   tieuDe,
@@ -35,6 +36,7 @@ export default function PanelDocAudio({
   tenTruyen: string;
   truyenId: string;
   soChuong: number;
+  soChuongTruoc?: number;
   soChuongSau?: number;
   chuongIdSau?: string;
   tieuDe: string;
@@ -298,18 +300,18 @@ export default function PanelDocAudio({
       )}
 
       {/* Modal Trình Phát Audio Thật */}
-      <ModalNgheAudioThat
+      <ModalNgheAudioHls
         moModal={moModalThat}
         onDong={() => {
           setMoModalThat(false);
           setTuDongPhatModal(false);
         }}
         chuongId={chuongId}
-        audioUrl={audioUrl}
         slugTruyen={slugTruyen}
         tenTruyen={tenTruyen}
         truyenId={truyenId}
         soChuong={soChuong}
+        soChuongTruoc={soChuongTruoc}
         soChuongSau={soChuongSau}
         chuongIdSau={chuongIdSau}
         tieuDe={tieuDe}
