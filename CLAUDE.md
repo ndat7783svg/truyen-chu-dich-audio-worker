@@ -91,6 +91,8 @@ hạn. Trang Chính sách bảo mật/Điều khoản dịch vụ thật còn tr
 `docs/handoff/audio-tat-man-hinh-va-nghien-cuu-doi-thu.md`. Deploy: `npx vercel@latest --prod --yes
 --scope asuo-team`.
 
+**Audio thật chuyển sang HLS tạo theo đoạn nhỏ trên Vercel — ĐÃ deploy production (2026-09-19), CHỜ user thử trên điện thoại thật**: nút "Nghe audio thật" giờ phát HLS (chương hiện tại + 10 chương kế trong 1 playlist), Vercel tạo từng đoạn ~100-200 ký tự khi trình phát xin (đoạn đầu ~1.6s), không lưu file audio Supabase, chương VIP dùng vé HMAC. Đã kiểm chứng qua browser + curl production; self code-review 10 phát hiện đã sửa 8. Code/dữ liệu audio cũ (GitHub Actions, `hang_doi_audio`, bucket `audio-chuong`) CÒN NGUYÊN chưa gỡ. Chi tiết `docs/handoff/audio-hls-vercel.md`, spec/plan trong `docs/superpowers/`.
+
 **v1**: **xong hoàn toàn cả 11 Task**, kể cả Task 11 (deploy Vercel) — xem
 `docs/superpowers/plans/2026-09-08-website-truyen-v1.md`. (Task 9 đăng ký/đăng nhập đã nâng cấp vượt
 phạm vi gốc, Task 10 dark mode gộp vào Đợt C bên dưới — xem 2 mục riêng).

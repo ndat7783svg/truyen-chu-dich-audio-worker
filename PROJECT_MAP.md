@@ -43,6 +43,7 @@ website truyện chữ AI/
 │   │       ├── KhungDocChuong.tsx   (client - khung đọc quản lý client state chương đang hiển thị, hỗ trợ chuyển chương tại chỗ không reload trang qua replaceState, cuộn mượt, chặn copy)
 │   │       ├── PanelCaiDatDoc.tsx   (client - nút "Aa" + dropdown 4 mục cài đặt đọc, `absolute` trong khung cha)
 │   │       ├── PanelDocAudio.tsx    (client - nút loa "Nghe chương" cạnh "Aa", mở ModalNgheAudioThat hoặc chạy Web Speech API giọng máy)
+│   │       ├── ModalNgheAudioHls.tsx (client - trình phát audio HLS MỚI đang dùng: hls.js/HLS gốc, tự chuyển chương qua mốc manifest, lỗi có nút Thử lại; thay ModalNgheAudioThat)
 │   │       ├── ModalNgheAudioThat.tsx (client - modal trình phát audio thật Neural; tự chuyển chương âm thầm qua RPC lay_noi_dung_chuong không reload trang; gate VIP tại chỗ; polling & auto-play; Media Session API; giao diện bottom-sheet trên mobile <640px)
 │   │       ├── DanhSachChuong.tsx   (client - nút "Danh sách" + dropdown chuyển nhóm chương tải on-demand + cache state, tự động theo dõi và chuyển nhóm khi số chương đổi client-side)
 │   │       ├── ChanChuongVip.tsx    (chặn chương >50 khi chưa có gói VIP hiệu lực, hiện <ChonGoiVip/>)
@@ -52,6 +53,7 @@ website truyện chữ AI/
 │   │   └── loading.tsx              (fallback "Đang tải..." cho route trang thể loại)
 │   ├── dang-ky/page.tsx             (đăng ký: tên/email/mật khẩu/xác nhận + nút Google)
 │   └── dang-nhap/page.tsx           (đăng nhập: email/mật khẩu + nút Google)
+│   ├── api/audio/                   (Audio HLS mới: `manifest/route.ts` JSON danh sách chương+mốc, `playlist.m3u8/route.ts` playlist HLS (chương hiện tại + 10 chương kế), `doan/route.ts` tạo 1 đoạn MP3 bằng msedge-tts, cache CDN chương free, vé HMAC cho chương VIP)
 ├── components/
 │   ├── ChromeToanSite.tsx           (client component - ẩn Header/ThanhDieuHuong theo route, dùng usePathname; ẩn ở trang đọc chương; bọc children trong `pb-16 md:pb-0` để chừa chỗ thanh điều hướng mobile)
 │   ├── ThanhTienTrinh.tsx           (client component - thanh progress bar chạy ngang trên cùng khi điều hướng qua `<Link>`, tự viết không dùng thư viện ngoài; chỉ bắt được click `<a>`, không bắt được `router.push()`)
@@ -64,6 +66,7 @@ website truyện chữ AI/
 │   ├── TheTruyen.tsx                (thẻ truyện dùng chung - trang chủ + trang thể loại, hiện lượt xem, số chương, nhãn "Dịch")
 │   └── ChonGoiVip.tsx               (client - modal chọn 1 trong 3 gói VIP + hướng dẫn chuyển khoản MoMo (QR + tên/ngân hàng/STK có nút copy), dùng chung ở trang Tài khoản và ChanChuongVip)
 ├── lib/
+│   ├── audio/                       (Audio HLS: chia-doan (chia đoạn + ước lượng thời lượng), danh-sach-phat (dựng m3u8/manifest + lọc chương theo quyền), ve-audio (vé HMAC), tham-so, tao-doan-audio (msedge-tts, thử lại trong ngân sách 52s), du-lieu-chuong (service role + quyền người gọi), xay-danh-sach-phat, nhan-dien-trinh-duyet (Safari→HLS gốc, còn lại→hls.js))
 │   ├── actions/
 │   │   └── lay-nhom-chuong.ts       (server action layNhomChuong - tải 50 chương theo nhóm on-demand)
 │   ├── config/
