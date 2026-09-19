@@ -3,10 +3,12 @@ import { chayCoDuPhong, type ThongKeDuPhong } from './chay-co-du-phong';
 
 const GIONG_DOC = 'vi-VN-HoaiMyNeural';
 const TIMEOUT_MOT_LAN_MS = 15_000;
-// Sau ngần này mà lần chạy đầu chưa xong thì chạy thêm 1 lần song song (đo thật: đoạn bình thường 0.5-6s,
-// đoạn bị treo thì đứng cả chục giây -> không đợi hết timeout mới thử lại).
-const HEDGE_SAU_MS = 6_000;
-const SO_LAN_THU_TOI_DA = 3;
+// Chỉ chạy thêm 1 lần song song khi lần đầu THẬT SỰ treo. Đo thật: Microsoft có 2 chế độ - nhanh (~0.5s) và
+// chậm (~7-12s cho đoạn 200 ký tự, xấp xỉ tốc độ đọc thật); ngưỡng thấp hơn (đã thử 6s) làm gần như đoạn nào
+// ở chế độ chậm cũng bị nhân đôi -> dồn kết nối -> Microsoft đóng kết nối ("Stream closed") nhiều hơn.
+const HEDGE_SAU_MS = 11_000;
+const SO_LAN_THU_TOI_DA = 4;
+const THU_LAI_SAU_MS = 400;
 // Route doan có maxDuration = 60s: tổng thời gian các lần thử phải nhỏ hơn để hàm không bị kill giữa chừng
 // (kill = không chạy finally, rò rỉ slot đồng thời, client nhận 504 mờ mịt thay vì 502 rõ ràng).
 const NGAN_SACH_TONG_MS = 52_000;
@@ -62,5 +64,6 @@ export function taoDoanAudio(vanBan: string, thongKe?: ThongKeDuPhong): Promise<
     timeoutMotLanMs: TIMEOUT_MOT_LAN_MS,
     nganSachTongMs: NGAN_SACH_TONG_MS,
     toiThieuMotLanMs: THOI_GIAN_TOI_THIEU_MOT_LAN_MS,
+    thuLaiSauMs: THU_LAI_SAU_MS,
   }, thongKe);
 }

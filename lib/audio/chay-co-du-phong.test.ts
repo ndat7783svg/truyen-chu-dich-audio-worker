@@ -7,6 +7,7 @@ const CAU_HINH: CauHinhDuPhong = {
   timeoutMotLanMs: 15000,
   nganSachTongMs: 52000,
   toiThieuMotLanMs: 5000,
+  thuLaiSauMs: 0,
 };
 
 beforeEach(() => vi.useFakeTimers());
@@ -77,5 +78,22 @@ describe('chayCoDuPhong', () => {
     await vi.advanceTimersByTimeAsync(60000);
     await bat;
     expect(thuMot.mock.calls.length).toBeLessThanOrEqual(3);
+  });
+});
+
+describe('nghỉ giữa các lần thử lại sau lỗi', () => {
+  it('sau lỗi phải đợi thuLaiSauMs mới thử lại (không dồn kết nối)', async () => {
+    let lan = 0;
+    const thuMot = vi.fn(async () => {
+      lan += 1;
+      if (lan === 1) throw new Error('ngat');
+      return 'ok';
+    });
+    const kq = chayCoDuPhong(thuMot, { ...CAU_HINH, thuLaiSauMs: 400 });
+    await vi.advanceTimersByTimeAsync(399);
+    expect(thuMot).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(2);
+    await expect(kq).resolves.toBe('ok');
+    expect(thuMot).toHaveBeenCalledTimes(2);
   });
 });

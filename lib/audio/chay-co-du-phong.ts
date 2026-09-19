@@ -8,6 +8,7 @@ export type CauHinhDuPhong = {
   timeoutMotLanMs: number;
   nganSachTongMs: number;
   toiThieuMotLanMs: number;
+  thuLaiSauMs: number; // nghỉ chút trước khi thử lại sau LỖI (đừng dồn kết nối khi Microsoft đang đóng kết nối)
 };
 
 // Số liệu chẩn đoán (tuỳ chọn): cho biết đã phát mấy lần chạy và lần thứ mấy thắng, để phát hiện "lần đầu hay treo".
@@ -51,10 +52,15 @@ export function chayCoDuPhong<T>(
           loiCuoi = err;
           soThatBai += 1;
           if (daKetThuc || soThatBai < daPhat) return; // vẫn còn lần khác đang chạy
-          if (!phatThem()) {
-            ketThuc();
-            loi(loiCuoi instanceof Error ? loiCuoi : new Error(String(loiCuoi)));
-          }
+          const thuLai = () => {
+            if (daKetThuc || soThatBai < daPhat) return; // trong lúc nghỉ đã có lần khác được phát
+            if (!phatThem()) {
+              ketThuc();
+              loi(loiCuoi instanceof Error ? loiCuoi : new Error(String(loiCuoi)));
+            }
+          };
+          if (cauHinh.thuLaiSauMs > 0) setTimeout(thuLai, cauHinh.thuLaiSauMs);
+          else thuLai();
         }
       );
 
