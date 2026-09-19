@@ -1,5 +1,5 @@
 export function parseChuong(tenFile, noiDungFile) {
-  const khopSo = tenFile.match(/^chuong-(\d{3})\.md$/);
+  const khopSo = tenFile.match(/^chuong-(\d{3,})\.md$/);
   if (!khopSo) {
     throw new Error(`Ten file khong dung dinh dang chuong-XXX.md: ${tenFile}`);
   }

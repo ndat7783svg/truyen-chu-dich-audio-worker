@@ -39,7 +39,10 @@ function timThuMucTruyen(tenTruyenGoc) {
     .map((entry) => entry.name);
 
   const timKiem = tenTruyenGoc.toLowerCase();
-  const khop = tatCaThuMuc.filter((ten) => ten.toLowerCase().includes(timKiem));
+  const khopDungTen = tatCaThuMuc.filter((ten) => ten.toLowerCase() === timKiem);
+  // Trùng ĐÚNG tên thì chọn luôn, không bị nhập nhằng với truyện khác có tên chứa cụm này (vd "Võ Thánh").
+  const khop =
+    khopDungTen.length === 1 ? khopDungTen : tatCaThuMuc.filter((ten) => ten.toLowerCase().includes(timKiem));
 
   if (khop.length === 0) {
     console.error(
@@ -230,7 +233,7 @@ async function main() {
     console.error(`Khong tim thay thu muc chuong: ${thuMucChuong}`);
     process.exit(1);
   }
-  const fileChuong = readdirSync(thuMucChuong).filter((f) => /^chuong-\d{3}\.md$/.test(f));
+  const fileChuong = readdirSync(thuMucChuong).filter((f) => /^chuong-\d{3,}\.md$/.test(f));
 
   const danhSachKiemTra = [];
   const daDang = [];

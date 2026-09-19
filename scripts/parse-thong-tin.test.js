@@ -39,6 +39,19 @@ describe('parseThongTin', () => {
     expect(kq.theLoai).toEqual([]);
   });
 
+  it('doc the loai tu muc "## Thể loại" va bo phan ngoac giai thich (khong mat the loai sau ngoac)', () => {
+    const noiDung =
+      '**Tác giả:** X\n\n## Thể loại\nĐô thị hiện đại, cao võ (võ đạo siêu phàm), thiên tài lưu, nhiệt huyết.\n\n**Nhân vật chính:** A (B), sống ở C.\n\n## Giới thiệu\n\nMô tả.';
+    const kq = parseThongTin(noiDung);
+    expect(kq.theLoai).toEqual(['Đô thị hiện đại', 'Cao võ', 'Thiên tài lưu', 'Nhiệt huyết']);
+    expect(kq.moTa).toBe('Mô tả.');
+  });
+
+  it('dong **Thể loại:** van duoc uu tien hon muc "## Thể loại"', () => {
+    const noiDung = '**Thể loại:** A / B\n\n## Thể loại\nC, D';
+    expect(parseThongTin(noiDung).theLoai).toEqual(['A', 'B']);
+  });
+
   it('mo_ta la null neu thieu muc Gioi thieu', () => {
     const noiDung = '**Tác giả:** X\n**Thể loại:** A / B';
     const kq = parseThongTin(noiDung);
