@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ loi: 'qua_tai' }, { status: 503, headers: { 'Retry-After': '5' } });
     }
     try {
-      const thongKe = { soLanPhat: 0, lanThang: 0 };
+      const thongKe = { soLanPhat: 0, lanThang: 0, nhatKy: [] as string[] };
       const t2 = Date.now();
       const mp3 = await taoDoanAudio(cacDoan[chiSo], thongKe);
       const msTts = Date.now() - t2;
@@ -67,6 +67,7 @@ export async function GET(request: NextRequest) {
           'Content-Type': 'audio/mpeg',
           // Chẩn đoán: thời gian từng bước + số lần thử TTS / lần thắng (xem trong tab Network hoặc curl -D).
           'Server-Timing': `db;dur=${msDb}, slot;dur=${msSlot}, tts;dur=${msTts};desc="phat=${thongKe.soLanPhat} thang=${thongKe.lanThang}"`,
+          'X-Audio-Nhat-Ky': thongKe.nhatKy.join(' | ').replace(/[^ -~]/g, '?'),
           'Cache-Control': laChuongVip
             ? 'private, max-age=3600' // cho trình duyệt giữ (nạp trước/nghe lại), CDN dùng chung KHÔNG được lưu
             : 'public, max-age=3600, s-maxage=86400',

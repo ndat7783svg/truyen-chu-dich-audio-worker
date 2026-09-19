@@ -12,7 +12,7 @@ export type CauHinhDuPhong = {
 };
 
 // Số liệu chẩn đoán (tuỳ chọn): cho biết đã phát mấy lần chạy và lần thứ mấy thắng, để phát hiện "lần đầu hay treo".
-export type ThongKeDuPhong = { soLanPhat: number; lanThang: number };
+export type ThongKeDuPhong = { soLanPhat: number; lanThang: number; nhatKy?: string[] };
 
 export function chayCoDuPhong<T>(
   thuMot: (timeoutMs: number) => Promise<T>,
@@ -44,13 +44,17 @@ export function chayCoDuPhong<T>(
       thuMot(Math.min(cauHinh.timeoutMotLanMs, conLaiMs)).then(
         (ketQua) => {
           if (daKetThuc) return;
-          if (thongKe) thongKe.lanThang = lanSo;
+          if (thongKe) {
+            thongKe.lanThang = lanSo;
+            thongKe.nhatKy?.push(`${lanSo}:ok@${Date.now() - batDau}ms`);
+          }
           ketThuc();
           xong(ketQua);
         },
         (err) => {
           loiCuoi = err;
           soThatBai += 1;
+          thongKe?.nhatKy?.push(`${lanSo}:loi@${Date.now() - batDau}ms:${String((err as Error)?.message ?? err).slice(0, 28)}`);
           if (daKetThuc || soThatBai < daPhat) return; // vẫn còn lần khác đang chạy
           const thuLai = () => {
             if (daKetThuc || soThatBai < daPhat) return; // trong lúc nghỉ đã có lần khác được phát
