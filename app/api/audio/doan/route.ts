@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
           'X-Audio-Nhat-Ky': thongKe.nhatKy.join(' | ').replace(/[^ -~]/g, '?'),
           'Cache-Control': laChuongVip
             ? 'private, max-age=3600' // cho trình duyệt giữ (nạp trước/nghe lại), CDN dùng chung KHÔNG được lưu
-            : 'public, max-age=3600, s-maxage=86400',
+            : 'public, max-age=3600, s-maxage=604800', // chương free: CDN giữ 7 ngày -> đoạn đã có người nghe thì ra ngay
         },
       });
     } finally {
