@@ -1,5 +1,35 @@
 # NEXT_SESSION.md
 
+## Phiên 2026-09-19 (tối) — audio HLS tạo theo đoạn nhỏ trên Vercel: ĐÃ deploy, đã gỡ hệ cũ, CHỜ user thử điện thoại
+
+**Đã làm & deploy production**: thay audio cả chương (GitHub Actions) bằng HLS theo đoạn nhỏ trên Vercel. Chi tiết,
+số đo thật, bài học: `docs/handoff/audio-hls-vercel.md`; spec `docs/superpowers/specs/2026-09-19-audio-hls-vercel-design.md`;
+plan `docs/superpowers/plans/2026-09-19-audio-hls-vercel.md`. Kiểm chứng: browser desktop (phát sau ~1s, tự đổi chương, chặn
+VIP đúng ranh giới chương 50), curl production (VIP 403, tham số sai 400, CDN HIT).
+
+**Cuối ngày (user báo đứt đoạn 3-5s ở 1.5x + yêu cầu khoá thanh tua + đồng ý gỡ hệ cũ)**: đã sửa đứt đoạn bằng nạp trước 4 đoạn
+song song (đo lại trên production ở 1.5x: 7 lần đứng/38s -> 1 lần/2.4s trong 100s), khoá thanh tua (chỉ hiển thị, không kéo
+được), gỡ hệ audio cũ khỏi code (`git rm`, commit 88350f6) + xoá 2 file audio & bucket `audio-chuong` trên Supabase. Phát hiện
+quan trọng: Microsoft TTS (`msedge-tts`) có chế độ NHANH ~0.5s/đoạn và CHẬM ~4-13s/đoạn tuỳ mức dùng, ~30% lần thử đầu bị đóng
+kết nối rồi thử lại được — hạn chế cố hữu của dịch vụ miễn phí (xem handoff). Route `doan` giữ header chẩn đoán `Server-Timing`
+và `X-Audio-Nhat-Ky`.
+
+**VIỆC CẦN LÀM ĐẦU PHIÊN SAU**:
+1. Hỏi user kết quả thử điện thoại thật (Android + iPhone): **tắt màn hình vẫn nghe? hết chương tự sang chương sau khi tắt màn
+   hình?** và 1.5x còn đứt không (bằng chứng quan trọng nhất, chưa có). Chữ trên iPhone có thể lệch chương vài chục giây (mốc
+   ước lượng) — không phải lỗi âm thanh.
+2. **User tự làm**: (a) chạy phần SQL cuối `supabase/schema.sql` ("GỠ HỆ THỐNG AUDIO CŨ") trong Supabase SQL Editor (bản web mới
+   đã deploy nên chạy được); (b) xoá biến `GITHUB_DISPATCH_TOKEN` trên Vercel + thu hồi PAT trên GitHub; (c) repo GitHub
+   `truyen-chu-dich-audio-worker` (origin) còn workflow cũ cho tới khi push commit gỡ — push/tắt/archive tuỳ user (Claude chưa push).
+3. Theo dõi Microsoft TTS: nếu nhiều người nghe mà chậm/502 nhiều -> `vercel logs` + header `Server-Timing`/`X-Audio-Nhat-Ky`;
+   cân nhắc TTS trả phí (Azure/Google) chỉ khi user chấp nhận chi phí.
+4. Theo dõi Vercel Usage (Function Duration/Invocations) và có ai bị 429 oan (rate limit theo IP: playlist 30/10 phút, đoạn 60/phút).
+5. Hỏi user cho xoá dự án Vercel tạm `tts-thu-nghiem` (asuo-team) — còn giữ vì tiện so sánh tốc độ Microsoft.
+6. Chưa test chương VIP bằng tài khoản có gói thật (chỉ test vé giả lập + 403 không vé) — nhờ user/tài khoản VIP nghe thử chương >50.
+7. Việc treo cũ: trang Chính sách bảo mật/Điều khoản, chương 259 "Cẩu Tại Sơ Thánh...", kiểm chứng giá giao dịch VIP (`so_tien`), APK Android.
+8. Còn 4 file sửa dở KHÔNG phải của phiên này (`scripts/parse-chuong.js`, `parse-thong-tin.js`, `sync-truyen.mjs`, `docs/handoff/du-lieu-va-parse-chuong.md`)
+   — của phiên trước, chưa commit; hỏi user trước khi đụng.
+
 ## Phiên 2026-09-19 — sửa lỗi 429 "thao tác quá nhanh" + Google OAuth publish + việc treo
 
 - **Ý ĐỊNH DÀI HẠN (user chốt hướng, làm SAU vì tốn nhiều thời gian): đóng gói website thành app

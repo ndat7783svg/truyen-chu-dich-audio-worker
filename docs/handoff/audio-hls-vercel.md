@@ -41,12 +41,22 @@ Cố ý chưa sửa: (1) rate limit theo IP có thể quá chặt với IP dùng
 liệu thật (`taoGioiHanPlaylist` 30/10 phút, mỗi lần Start tốn 2 lượt; `taoGioiHanDoan` 60/phút);
 (2) manifest + playlist mỗi cái đọc 12 chương, mỗi đoạn đọc lại cả chương — chỉ tốn DB/độ trễ.
 
+## Cập nhật cuối ngày 2026-09-19: đứt đoạn ở 1.5x, khoá thanh tua, gỡ hệ cũ
+
+**Triệu chứng user báo**: nghe 1.5x hay đứt 3-5s. **Đo thật trên production** (chương chưa lưu tạm, 1.5x, 100s): trước sửa 7 lần đứng, tổng 38s, bộ đệm phía trước 0-7s; sau sửa 1 lần đứng 2.4s (lúc mới bắt đầu), bộ đệm 22-40s.
+
+**Nguyên nhân**: hls.js chỉ tải TUẦN TỰ từng đoạn nên không tích được bộ đệm; đoạn nào tạo chậm là hết đệm (1.5x ăn đệm nhanh hơn). **Đã sửa**: (1) trình phát nạp trước 4 đoạn phía sau song song (`napTruocDoan`, tối đa 3 request cùng lúc) vào bộ nhớ đệm trình duyệt + hls.js `maxBufferLength` 120s; đoạn chương VIP đổi `no-store` -> `private, max-age=3600` để trình duyệt giữ được (CDN dùng chung vẫn không lưu); manifest trả thêm `ve` để trình phát tự dựng URL đoạn VIP; (2) `chay-co-du-phong.ts`: thử lại nhanh khi lỗi (nghỉ 400ms, tối đa 4 lần trong ngân sách 52s), chạy dự phòng song song chỉ khi lần đầu treo >11s; (3) trần đồng thời toàn site 20 -> 30; (4) CDN giữ đoạn chương free 7 ngày.
+
+**Khoá thanh tua**: thanh tiến độ chỉ hiển thị (`pointer-events-none`, `tabIndex -1`), vì audio tạo theo đoạn nên tua tới chỗ chưa tạo sẽ đứng. Nút ±10s và nút chương kế của màn hình khoá vẫn nhảy được (nhảy ngắn/đã nạp trước).
+
+**BÀI HỌC QUAN TRỌNG về Microsoft TTS (msedge-tts)** — chẩn đoán bằng header `Server-Timing` + `X-Audio-Nhat-Ky` (giữ lại trong route `doan`, xem bằng `curl -D`): dịch vụ có 2 chế độ tuỳ mức dùng — NHANH ~0.5s/đoạn 200 ký tự (dự án thử nghiệm `tts-thu-nghiem` lúc ít dùng) và CHẬM ~4-13s/đoạn (xấp xỉ tốc độ đọc thật) khi web chính bị dùng liên tục; ~30% lần thử đầu bị Microsoft đóng kết nối sau đúng ~2.4s ("Stream closed before the synthesis completed") nhưng lần thử lại thành công. Hedge ngưỡng 6s (bản đầu) làm XẤU thêm: ở chế độ chậm hầu như đoạn nào cũng >6s nên bị nhân đôi kết nối -> Microsoft đóng nhiều hơn (502 cuối cùng 12% -> sau chỉnh ~2.5%). Đây là hạn chế cố hữu của dịch vụ miễn phí không chính thức; nhiều người nghe cùng lúc có thể chậm hơn. Hướng triệt để nếu cần: TTS trả phí (Azure/Google, ~16$/1 triệu ký tự — user từng từ chối vì ngân sách) hoặc VPS riêng (không chắc hết bị giới hạn theo IP). KHÔNG dùng `hedge` thấp.
+
+**Gỡ hệ audio cũ (2026-09-19, theo đồng ý của user)**: `git rm` ModalNgheAudioThat.tsx, actions-audio(+test), scripts/worker-audio-chuong.mjs, tao-audio-chuong.mjs, lib/tao-audio-logic(+test), .github/workflows/worker-audio-chuong.yml; bỏ `audioUrl`/`audio_url` khỏi page.tsx/KhungDocChuong/PanelDocAudio; xoá 2 file audio + bucket `audio-chuong` trên Supabase (14MB). Khôi phục code từ lịch sử git (commit 88350f6 là commit gỡ) nếu cần. **CHƯA làm (user tự làm)**: (a) chạy SQL cuối `supabase/schema.sql` ("GỠ HỆ THỐNG AUDIO CŨ": drop 2 hàm RPC, bảng `hang_doi_audio`, cột `truyen.audio_truy_cap_luc`, `chuong.audio_url`) — CHỈ sau khi bản web mới đã deploy (đã deploy); (b) xoá biến `GITHUB_DISPATCH_TOKEN` trên Vercel và thu hồi token PAT trên GitHub; (c) repo GitHub `truyen-chu-dich-audio-worker` (remote origin của repo này) còn workflow cũ trên GitHub cho tới khi push commit gỡ — tắt/archive tuỳ user.
+
 ## Vận hành
 - Biến môi trường Vercel Production: `SUPABASE_SERVICE_ROLE_KEY` (đã có), `AUDIO_TICKET_SECRET` (mới, thêm
   2026-09-19 bằng `vercel env add ... --sensitive`). Thiếu `AUDIO_TICKET_SECRET` → chương VIP trả 500 (fail đóng).
 - `/api/audio/doan` bị loại khỏi middleware (`matcher`) để không gọi Supabase Auth mỗi đoạn và không Set-Cookie
   làm hỏng cache CDN.
-- Code + dữ liệu audio CŨ vẫn nguyên (chưa gỡ): `ModalNgheAudioThat.tsx`, `actions-audio.ts`, workflow GitHub
-  Actions worker, `hang_doi_audio`, bucket `audio-chuong`, `chuong.audio_url`, cron dọn 12h. Gỡ khi user xác
-  nhận bản mới ổn (hỏi user trước khi xoá).
+- Hệ audio cũ đã gỡ (xem mục cập nhật cuối ngày ở trên).
 - Dự án Vercel tạm `tts-thu-nghiem` (asuo-team) và thư mục scratchpad thử nghiệm còn giữ — hỏi user xoá.

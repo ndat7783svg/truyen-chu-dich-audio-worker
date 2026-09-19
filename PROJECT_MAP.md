@@ -39,12 +39,10 @@ website truyện chữ AI/
 │   │       ├── page.tsx             (trang đọc chương - SSR 1 nhóm 50 chương chứa chương đang đọc + tổng số chương + ghi RPC ghi_luot_xem, render KhungDocChuong)
 │   │       ├── loading.tsx          (fallback "Đang tải..." cho route trang đọc chương)
 │   │       ├── actions.ts           (server actions luuTienDoDoc + ghiLuotXemChuong - gọi được an toàn từ SSR và Client khi chuyển chương)
-│   │       ├── actions-audio.ts     (server action yeuCauTaoAudioNgay - gọi RPC xep_hang_tao_audio và kích hoạt GitHub Actions workflow dispatch)
 │   │       ├── KhungDocChuong.tsx   (client - khung đọc quản lý client state chương đang hiển thị, hỗ trợ chuyển chương tại chỗ không reload trang qua replaceState, cuộn mượt, chặn copy)
 │   │       ├── PanelCaiDatDoc.tsx   (client - nút "Aa" + dropdown 4 mục cài đặt đọc, `absolute` trong khung cha)
-│   │       ├── PanelDocAudio.tsx    (client - nút loa "Nghe chương" cạnh "Aa", mở ModalNgheAudioThat hoặc chạy Web Speech API giọng máy)
-│   │       ├── ModalNgheAudioHls.tsx (client - trình phát audio HLS MỚI đang dùng: hls.js/HLS gốc, tự chuyển chương qua mốc manifest, lỗi có nút Thử lại; thay ModalNgheAudioThat)
-│   │       ├── ModalNgheAudioThat.tsx (client - modal trình phát audio thật Neural; tự chuyển chương âm thầm qua RPC lay_noi_dung_chuong không reload trang; gate VIP tại chỗ; polling & auto-play; Media Session API; giao diện bottom-sheet trên mobile <640px)
+│   │       ├── PanelDocAudio.tsx    (client - nút loa "Nghe chương" cạnh "Aa", mở ModalNgheAudioHls hoặc chạy Web Speech API giọng máy)
+│   │       ├── ModalNgheAudioHls.tsx (client - trình phát audio HLS: hls.js/HLS gốc, nạp trước 4 đoạn song song, tự chuyển chương qua mốc manifest, thanh tiến độ chỉ hiển thị không cho tua, lỗi có nút Thử lại)
 │   │       ├── DanhSachChuong.tsx   (client - nút "Danh sách" + dropdown chuyển nhóm chương tải on-demand + cache state, tự động theo dõi và chuyển nhóm khi số chương đổi client-side)
 │   │       ├── ChanChuongVip.tsx    (chặn chương >50 khi chưa có gói VIP hiệu lực, hiện <ChonGoiVip/>)
 │   │       └── LuuTienDo.tsx        (client component ghi tien_do_doc khi mở trang)
@@ -87,15 +85,11 @@ website truyện chữ AI/
 │       └── xac-minh-bot.ts          (layIpTuHeader, ipTrongDaiCidr, ipTrongDanhSach - xác minh IP bot thật)
 ├── scripts/                         (chạy độc lập bằng node --env-file=.env.local)
 │   ├── lib/
-│   │   ├── tao-audio-logic.mjs      (hàm thuần/dùng chung cho audio: taoAudioBuffer, uploadVaCapNhat, damBaoBucketStorage, chuanHoaXml, chayPoolSongSong, donDepAudioKhongHoatDong - tự xoá audio 1 bộ truyện không ai nghe >12h)
-│   │   └── tao-audio-logic.test.js  (unit test cho tao-audio-logic)
 │   ├── slug.js                      (taoSlug - sinh slug từ tên có dấu)
 │   ├── parse-chuong.js              (parseChuong - đọc 1 file chuong-XXX.md, chấp nhận tiêu đề có/không có "#")
 │   ├── parse-thong-tin.js           (parseThongTin - đọc file thong-tin.md: tác giả/thể loại/mô tả)
 │   ├── kiem-tra-chuong.js           (kiemTraTinhLienTuc/laySoChuongTuTieuDe - kiểm tra thiếu chương/lệch số trong nguồn cục bộ)
 │   ├── sync-truyen.mjs              (CLI "check [tên truyện]" - đồng bộ chương + metadata lên Supabase, in báo cáo tính liên tục sau khi đăng)
-│   ├── tao-audio-chuong.mjs         (CLI tạo audio file hàng loạt qua msedge-tts giọng vi-VN-HoaiMyNeural, upload bucket audio-chuong, cập nhật chuong.audio_url)
-│   ├── worker-audio-chuong.mjs      (Worker CLI chạy trên GitHub Actions - dọn audio bộ truyện không hoạt động >12h rồi quét bảng hang_doi_audio tạo audio theo chiến lược "tạo trước 1 chương", kích hoạt qua workflow_dispatch từ yeuCauTaoAudioNgay - KHÔNG phụ thuộc cron, xem docs/handoff/audio-that-ai-modal-va-storage.md)
 │   ├── xac-nhan-thanh-toan-logic.js (tinhHanMoi/SO_NGAY_THEO_GOI/TEN_GOI - hàm thuần dùng cho script CLI dưới, tách riêng khỏi lib/ vì scripts/ là JS thuần không qua TypeScript)
 │   └── xac-nhan-thanh-toan.mjs      (CLI xác nhận thanh toán gói VIP thủ công: `node --env-file=.env.local scripts/xac-nhan-thanh-toan.mjs <MA_GIAO_DICH>`, dùng SUPABASE_SERVICE_ROLE_KEY, idempotent)
 ├── supabase/schema.sql              (schema tích luỹ - áp dụng thủ công qua SQL Editor)
@@ -106,8 +100,7 @@ website truyện chữ AI/
 
 ## Data model (Supabase Postgres)
 - `truyen` — ten, slug, mo_ta, anh_bia (URL Storage), trang_thai, tac_gia, luot_xem.
-- `chuong` — truyen_id, so_chuong, tieu_de, noi_dung, luot_xem, **audio_url** (URL file audio Storage public hoặc null).
-- `hang_doi_audio` — chuong_id (PK), truyen_id, so_chuong, yeu_cau_luc, so_lan_loi (hàng đợi tạo audio on-demand "trước 1 chương").
+- `chuong` — truyen_id, so_chuong, tieu_de, noi_dung, luot_xem. (Cột `audio_url` của hệ audio cũ: chạy SQL gỡ trong `supabase/schema.sql` để xoá.)
 - `tien_do_doc` — user_id, truyen_id, chuong_id (tiến độ đọc, 1 dòng/user/truyện).
 - `the_loai` — id, ten, slug.
 - `truyen_the_loai` — bảng nối nhiều-nhiều giữa `truyen` và `the_loai`.
@@ -124,7 +117,6 @@ website truyện chữ AI/
   trang_thai (`cho_thanh_toan`/`da_thanh_toan`), tao_luc, thanh_toan_luc — lịch sử mua gói VIP, tạo
   qua server action `taoGiaoDich`, đánh dấu đã thanh toán qua script CLI `xac-nhan-thanh-toan.mjs`.
 - Storage bucket `anh-bia` (public) — ảnh bìa từng truyện, tên object = `[slug-truyen].jpg`.
-- Storage bucket `audio-chuong` (public) — file audio từng chương, tên object = `[truyen-id]/[so-chuong].mp3`.
 
 ## Auth (Supabase Auth)
 - Đăng ký: email/mật khẩu, bắt buộc xác nhận email thật (Supabase "Confirm email" đã bật) + đăng
@@ -153,12 +145,4 @@ website truyện chữ AI/
 `node --env-file=.env.local scripts/sync-truyen.mjs "<tên truyện>"` — đọc chương mới +
 metadata (tác giả/thể loại/ảnh bìa/mô tả, ghi đè mỗi lần chạy) từ `D:\translate truyen`, đăng lên
 Supabase. Chi tiết hành vi xem `docs/superpowers/specs/2026-09-09-dot-a-metadata-truyen-design.md`.
-
-## Lệnh tạo audio file hàng loạt
-`node --env-file=.env.local scripts/tao-audio-chuong.mjs "<tên truyện>" [--gioi-han-song-song 20]` — tạo
-file mp3 Neural TTS (MsEdgeTTS) cho tất cả chương chưa có audio_url, upload Storage `audio-chuong` và
-cập nhật DB.
-
-## Lệnh worker tạo audio ngầm (chạy định kỳ Windows Task Scheduler trên máy cá nhân hoặc GitHub Actions)
-`node --env-file=.env.local scripts/worker-audio-chuong.mjs [--chuong-id <uuid>]` — ưu tiên tạo audio cho chuong_id (nếu có), sau đó quét tối đa 5 chương trong `hang_doi_audio` (so_lan_loi < 3), tạo audio mp3 và xoá khỏi hàng đợi khi thành công.
 
