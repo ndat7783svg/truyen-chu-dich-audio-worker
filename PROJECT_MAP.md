@@ -64,7 +64,7 @@ website truyện chữ AI/
 │   ├── TheTruyen.tsx                (thẻ truyện dùng chung - trang chủ + trang thể loại, hiện lượt xem, số chương, nhãn "Dịch")
 │   └── ChonGoiVip.tsx               (client - modal chọn 1 trong 3 gói VIP + hướng dẫn chuyển khoản MoMo (QR + tên/ngân hàng/STK có nút copy), dùng chung ở trang Tài khoản và ChanChuongVip)
 ├── lib/
-│   ├── audio/                       (Audio HLS: chia-doan (chia đoạn + ước lượng thời lượng), danh-sach-phat (dựng m3u8/manifest + lọc chương theo quyền), ve-audio (vé HMAC), tham-so, tao-doan-audio (msedge-tts, thử lại trong ngân sách 52s), du-lieu-chuong (service role + quyền người gọi), xay-danh-sach-phat, nhan-dien-trinh-duyet (Safari→HLS gốc, còn lại→hls.js))
+│   ├── audio/                       (Audio HLS: chia-doan (chia đoạn + ước lượng thời lượng), danh-sach-phat (dựng m3u8/manifest + lọc chương theo quyền), ve-audio (vé HMAC), tham-so, tao-doan-audio (msedge-tts) + chay-co-du-phong (thử lại nhanh có nghỉ 400ms, tối đa 4 lần trong ngân sách 52s, chạy dự phòng chỉ khi treo >11s; route doan trả header chẩn đoán Server-Timing/X-Audio-Nhat-Ky), du-lieu-chuong (service role + quyền người gọi), xay-danh-sach-phat, nhan-dien-trinh-duyet (Safari→HLS gốc, còn lại→hls.js))
 │   ├── actions/
 │   │   └── lay-nhom-chuong.ts       (server action layNhomChuong - tải 50 chương theo nhóm on-demand)
 │   ├── config/

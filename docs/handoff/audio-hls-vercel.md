@@ -43,7 +43,7 @@ liệu thật (`taoGioiHanPlaylist` 30/10 phút, mỗi lần Start tốn 2 lư�
 
 ## Cập nhật cuối ngày 2026-09-19: đứt đoạn ở 1.5x, khoá thanh tua, gỡ hệ cũ
 
-**Triệu chứng user báo**: nghe 1.5x hay đứt 3-5s. **Đo thật trên production** (chương chưa lưu tạm, 1.5x, 100s): trước sửa 7 lần đứng, tổng 38s, bộ đệm phía trước 0-7s; sau sửa 1 lần đứng 2.4s (lúc mới bắt đầu), bộ đệm 22-40s.
+**Triệu chứng user báo**: nghe 1.5x hay đứt 3-5s. **Đo thật trên production** (chương chưa lưu tạm, 1.5x, 100s): trước sửa 7 lần đứng, tổng 38s, bộ đệm phía trước 0-7s; sau nạp trước (2 lần đo) 1 lần đứng 2.4s và 2 lần đứng tổng 8.2s (đều ở phút đầu), bộ đệm 22-50s; sau khi thêm chờ đệm 10s: 0 lần đứng.
 
 **Nguyên nhân**: hls.js chỉ tải TUẦN TỰ từng đoạn nên không tích được bộ đệm; đoạn nào tạo chậm là hết đệm (1.5x ăn đệm nhanh hơn). **Đã sửa**: (1) trình phát nạp trước 4 đoạn phía sau song song (`napTruocDoan`, tối đa 3 request cùng lúc) vào bộ nhớ đệm trình duyệt + hls.js `maxBufferLength` 120s; đoạn chương VIP đổi `no-store` -> `private, max-age=3600` để trình duyệt giữ được (CDN dùng chung vẫn không lưu); manifest trả thêm `ve` để trình phát tự dựng URL đoạn VIP; (2) `chay-co-du-phong.ts`: thử lại nhanh khi lỗi (nghỉ 400ms, tối đa 4 lần trong ngân sách 52s), chạy dự phòng song song chỉ khi lần đầu treo >11s; (3) trần đồng thời toàn site 20 -> 30; (4) CDN giữ đoạn chương free 7 ngày.
 

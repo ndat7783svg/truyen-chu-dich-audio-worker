@@ -14,6 +14,8 @@ quan trọng: Microsoft TTS (`msedge-tts`) có chế độ NHANH ~0.5s/đoạn v
 kết nối rồi thử lại được — hạn chế cố hữu của dịch vụ miễn phí (xem handoff). Route `doan` giữ header chẩn đoán `Server-Timing`
 và `X-Audio-Nhat-Ky`.
 
+**Chốt cuối phiên (user chọn "đợi ~10s")**: trình phát giờ CHỜ ĐỆM ~10s rồi mới phát (tối đa 30s), hiện dòng "Đang tạo audio... vui lòng đợi vài giây để nghe (Ns)" (cũng hiện khi đang phát bị đứng chờ đoạn kế). Đo thật production 1.5x/100s/chương mới: có tiếng sau ~9s, 0 lần đứng. **Chưa kiểm chứng trên iPhone/Safari**: Safari buộc `play()` đồng bộ lúc bấm nên `onPlaying` tạm dừng rồi chờ đủ đệm mới `play()` lại (giả định iOS cho phép play() lại sau lần play đầu có cử chỉ). Nếu iPhone kẹt/không tự phát sau chờ -> xem `batDauDoiDem`/`onPlaying` trong `ModalNgheAudioHls.tsx` (phương án dự phòng: trên Safari bỏ chờ đệm, phát ngay như cũ). Còn 1 cảnh báo eslint nhỏ (thiếu dep `dungNguon` ở effect mount, dòng ~132) — không ảnh hưởng chạy.
+
 **VIỆC CẦN LÀM ĐẦU PHIÊN SAU**:
 1. Hỏi user kết quả thử điện thoại thật (Android + iPhone): **tắt màn hình vẫn nghe? hết chương tự sang chương sau khi tắt màn
    hình?** và 1.5x còn đứt không (bằng chứng quan trọng nhất, chưa có). Chữ trên iPhone có thể lệch chương vài chục giây (mốc
