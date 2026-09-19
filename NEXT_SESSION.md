@@ -16,9 +16,15 @@ và `X-Audio-Nhat-Ky`.
 
 **Chốt cuối phiên (user chọn "đợi ~10s")**: trình phát giờ CHỜ ĐỆM ~10s rồi mới phát (tối đa 30s), hiện dòng "Đang tạo audio... vui lòng đợi vài giây để nghe (Ns)" (cũng hiện khi đang phát bị đứng chờ đoạn kế). Đo thật production 1.5x/100s/chương mới: có tiếng sau ~9s, 0 lần đứng. **Chưa kiểm chứng trên iPhone/Safari**: Safari buộc `play()` đồng bộ lúc bấm nên `onPlaying` tạm dừng rồi chờ đủ đệm mới `play()` lại (giả định iOS cho phép play() lại sau lần play đầu có cử chỉ). Nếu iPhone kẹt/không tự phát sau chờ -> xem `batDauDoiDem`/`onPlaying` trong `ModalNgheAudioHls.tsx` (phương án dự phòng: trên Safari bỏ chờ đệm, phát ngay như cũ). Còn 1 cảnh báo eslint nhỏ (thiếu dep `dungNguon` ở effect mount, dòng ~132) — không ảnh hưởng chạy.
 
+**Cập nhật sau chốt (2026-09-19, đã deploy, commit 286e99e)**: user test Android thật báo dòng "Đang tạo audio... (Ns)" lệch với
+nút ▶ (audio phát được rồi mà dòng vẫn quay). Đo trên production desktop: logic đúng, nhưng audio phát được sớm hơn lúc đủ ngưỡng
+10s. Đã sửa `ModalNgheAudioHls.tsx`: hiện "Audio đã sẵn sàng, sắp tự phát" khi đã phát được; hiện "bấm ▶ để nghe" nếu trình duyệt chặn
+tự phát (trước đó `play()` lỗi bị nuốt); nới dò đệm 0.5s -> 1.5s. **User xác nhận trên Android: hết lỗi lệch thông báo, tắt màn
+hình vẫn nghe được.** Chưa xác nhận: tự sang chương sau khi tắt màn hình, iPhone.
+
 **VIỆC CẦN LÀM ĐẦU PHIÊN SAU**:
-1. Hỏi user kết quả thử điện thoại thật (Android + iPhone): **tắt màn hình vẫn nghe? hết chương tự sang chương sau khi tắt màn
-   hình?** và 1.5x còn đứt không (bằng chứng quan trọng nhất, chưa có). Chữ trên iPhone có thể lệch chương vài chục giây (mốc
+1. Hỏi user: **hết chương có tự sang chương sau khi tắt màn hình không** và **iPhone (Safari)** có tự phát sau chờ đệm không
+   (Android: tắt màn hình nghe được, hết lỗi thông báo — đã xong). Chữ trên iPhone có thể lệch chương vài chục giây (mốc
    ước lượng) — không phải lỗi âm thanh.
 2. **User tự làm**: (a) chạy phần SQL cuối `supabase/schema.sql` ("GỠ HỆ THỐNG AUDIO CŨ") trong Supabase SQL Editor (bản web mới
    đã deploy nên chạy được); (b) xoá biến `GITHUB_DISPATCH_TOKEN` trên Vercel + thu hồi PAT trên GitHub; (c) repo GitHub
