@@ -35,6 +35,10 @@ type Manifest = {
 // Nạp trước (song song) vài đoạn phía sau đoạn đang phát vào bộ nhớ đệm trình duyệt. hls.js chỉ tải TUẦN TỰ từng
 // đoạn nên không tích được bộ đệm; đo thật ở 1.5x: đứng hình 4-15 giây mỗi khi 1 đoạn tạo chậm. Nạp song song
 // biến các đoạn sau thành "đã có sẵn" khi hls.js hỏi tới.
+// Chờ đệm được ngần này giây phía trước rồi mới bắt đầu phát (đo thật ở 1.5x: phát ngay thì phút đầu hay đứng vài
+// giây vì chưa có sẵn đoạn nào). Tối đa chờ CHO_DEM_TOI_DA_MS rồi phát bất kể, để không kẹt vô hạn.
+const NGUONG_DEM_GIAY = 10;
+const CHO_DEM_TOI_DA_MS = 30_000;
 const SO_DOAN_NAP_TRUOC = 4;
 const TOI_DA_NAP_DONG_THOI = 3;
 
@@ -87,6 +91,9 @@ export default function ModalNgheAudioHls({
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [chiSoChuong, setChiSoChuong] = useState(0);
   const [dangPhat, setDangPhat] = useState(false);
+  const [dangDem, setDangDem] = useState(false); // đang chờ đệm ~10s trước khi phát
+  const [dangCho, setDangCho] = useState(false); // đang phát mà bị đứng chờ đoạn kế được tạo
+  const [soGiayDem, setSoGiayDem] = useState(0);
   const [thoiGian, setThoiGian] = useState(0); // currentTime toàn playlist
   const [tocDo, setTocDo] = useState(1);
 
@@ -95,6 +102,8 @@ export default function ModalNgheAudioHls({
   const manifestRef = useRef<Manifest | null>(null);
   const chiSoRef = useRef(0);
   const dungHlsGocRef = useRef(false);
+  const dangDemRef = useRef(false);
+  const timerDemRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tocDoRef = useRef(1);
   const soLanThuLaiMangRef = useRef(0);
   const daTuDongPhatRef = useRef(false);
@@ -122,8 +131,49 @@ export default function ModalNgheAudioHls({
     return () => dungNguon();
   }, []);
 
+  function huyDoiDem() {
+    if (timerDemRef.current) {
+      clearInterval(timerDemRef.current);
+      timerDemRef.current = null;
+    }
+    dangDemRef.current = false;
+    setDangDem(false);
+  }
+
+  // Chờ tới khi đã đệm đủ NGUONG_DEM_GIAY phía trước (hoặc quá CHO_DEM_TOI_DA_MS) rồi mới phát. Trong lúc chờ,
+  // nạp trước song song vẫn chạy nên đệm đầy rất nhanh. Người dùng bấm Phát thì bỏ qua chờ (xem togglePhat).
+  function batDauDoiDem(phien: number) {
+    huyDoiDem();
+    dangDemRef.current = true;
+    setDangDem(true);
+    setSoGiayDem(0);
+    const t0 = Date.now();
+    timerDemRef.current = setInterval(() => {
+      const el = audioRef.current;
+      if (phien !== phienRef.current || !el) {
+        huyDoiDem();
+        return;
+      }
+      const troiQuaMs = Date.now() - t0;
+      setSoGiayDem(Math.floor(troiQuaMs / 1000));
+      let dem = 0;
+      const b = el.buffered;
+      for (let i = 0; i < b.length; i += 1) {
+        if (b.start(i) <= el.currentTime + 0.5 && b.end(i) > el.currentTime) dem = b.end(i) - el.currentTime;
+      }
+      const conLai = Number.isFinite(el.duration) ? el.duration - el.currentTime : Infinity;
+      const daDu = dem >= NGUONG_DEM_GIAY || (dem > 0 && dem >= conLai - 0.5); // chương ngắn: có hết là phát
+      if (daDu || troiQuaMs >= CHO_DEM_TOI_DA_MS) {
+        huyDoiDem();
+        el.play().catch(() => {});
+      }
+    }, 300);
+  }
+
   function dungNguon() {
     phienRef.current += 1;
+    huyDoiDem();
+    setDangCho(false);
     daNapTruocRef.current.clear();
     soDangNapTruocRef.current = 0;
     hlsRef.current?.destroy();
@@ -160,7 +210,10 @@ export default function ModalNgheAudioHls({
       artist: tenTruyen,
       album: tenTruyen,
     });
-    navigator.mediaSession.setActionHandler('play', () => audioRef.current?.play());
+    navigator.mediaSession.setActionHandler('play', () => {
+      huyDoiDem();
+      audioRef.current?.play();
+    });
     navigator.mediaSession.setActionHandler('pause', () => audioRef.current?.pause());
     navigator.mediaSession.setActionHandler('seekbackward', () => tuaGiay(-10));
     navigator.mediaSession.setActionHandler('seekforward', () => tuaGiay(10));
@@ -369,9 +422,11 @@ export default function ModalNgheAudioHls({
         });
         hls.loadSource(playlistUrl);
         hls.attachMedia(el);
-        el.play().catch(() => {});
+        // KHÔNG phát ngay: batDauDoiDem sẽ phát khi đã đệm đủ ~10s.
       });
     }
+    // Safari/iOS: buộc phải play() đồng bộ ở trên (cử chỉ bấm); onPlaying sẽ tạm dừng ngay rồi chờ đệm đủ mới phát lại.
+    batDauDoiDem(phien);
 
     // Manifest chỉ để dựng giao diện/mốc chương; tải song song, không chặn việc phát.
     taiManifest(soChuongBatDau, phien).then((man) => {
@@ -424,6 +479,7 @@ export default function ModalNgheAudioHls({
   function togglePhat() {
     const el = audioRef.current;
     if (!el) return;
+    huyDoiDem(); // bấm Phát/Tạm dừng thủ công = bỏ qua chờ đệm
     if (el.paused) el.play().catch(() => {});
     else el.pause();
   }
@@ -447,7 +503,22 @@ export default function ModalNgheAudioHls({
           ref={audioRef}
           preload="auto"
           onPlay={() => setDangPhat(true)}
-          onPause={() => setDangPhat(false)}
+          onPause={() => {
+            setDangPhat(false);
+            setDangCho(false);
+          }}
+          onPlaying={() => {
+            // Safari/iOS đã bị buộc play() ngay từ lúc bấm: nếu vẫn đang chờ đệm thì tạm dừng lại tới khi đủ.
+            if (dangDemRef.current) {
+              audioRef.current?.pause();
+              return;
+            }
+            setDangCho(false);
+          }}
+          onWaiting={() => {
+            const el = audioRef.current;
+            if (!dangDemRef.current && el && el.currentTime > 0.5 && !el.paused) setDangCho(true);
+          }}
           onEnded={khiKetThuc}
           onError={khiAudioLoi}
           onTimeUpdate={() => {
@@ -559,8 +630,14 @@ export default function ModalNgheAudioHls({
 
             {dangChay && (
               <div className="space-y-5 py-2">
-                {trangThai.loai === 'dangTai' && !muc && (
-                  <p className="text-center text-sm text-blue-600 font-medium">Đang chuẩn bị audio...</p>
+                {(dangDem || dangCho || (trangThai.loai === 'dangTai' && !muc)) && (
+                  <div className="flex items-center justify-center gap-2 rounded-xl bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">
+                    <span className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600" />
+                    <span>
+                      Đang tạo audio... vui lòng đợi vài giây để nghe
+                      {dangDem && soGiayDem >= 3 ? ' (' + soGiayDem + 's)' : ''}
+                    </span>
+                  </div>
                 )}
                 <div className="space-y-1.5">
                   <input
