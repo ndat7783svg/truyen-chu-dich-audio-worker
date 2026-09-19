@@ -414,7 +414,7 @@ describe('docVe', () => {
 import type { VeAudio } from './ve-audio';
 
 const REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const REGEX_SO_NGUYEN = /^\d{1,9}$/;
+const REGEX_SO_NGUYEN = /^\d{1,16}$/; // đủ chứa timestamp giây (10 chữ số)
 
 export function docTruyenVaChuong(p: URLSearchParams): { truyenId: string; soChuong: number } | null {
   const t = p.get('t') ?? '';
