@@ -46,3 +46,20 @@
   ngay là đường thông báo lỗi bị TÁI SỬ DỤNG cho nhiều điều kiện fail khác nhau (ở đây: "thiếu file"
   và "có file nhưng thiếu field bắt buộc" dùng chung 1 dòng `console.error`) — đọc thẳng code quanh
   chỗ in ra thông báo đó thay vì tin nghĩa đen của thông báo.
+
+## Đăng "Võ Thánh" (2026-09-19): khớp tên một phần, thể loại dạng mục, nhãn "Hoàn thành" sai
+
+- **Khớp tên**: `sync-truyen.mjs` dùng `includes` không phân biệt hoa thường; "Võ Thánh" trùng một phần với thư mục "Ta Đã Là Đại La
+  Kim Tiên, Sao Các Ngươi Mới Chỉ Võ Thánh" -> báo "Khớp nhiều hơn 1 truyện" và thoát. Sửa: có đúng 1 thư mục trùng NGUYÊN tên
+  (so sánh chữ thường) thì chọn luôn, còn lại giữ hành vi cũ. Tên truyện mới trùng một phần với truyện có sẵn sẽ gặp lại lỗi loại này.
+- **Thể loại dạng mục**: `thong-tin.md` của Võ Thánh ghi thể loại bằng mục `## Thể loại` + 1 đoạn "A, B (giải thích), C." thay vì dòng
+  `**Thể loại:**` -> `timTheLoai` trả `[]` -> truyện lên web KHÔNG thuộc thể loại nào (không hiện ở trang thể loại) mà script không báo lỗi.
+  Sửa: `timTheLoaiTheoMuc` (bỏ phần trong ngoặc bằng replace toàn bộ — KHÁC nhánh inline cắt từ dấu "(" đầu tiên, vì cắt ở đây sẽ mất
+  mọi thể loại phía sau ngoặc; bỏ dấu chấm cuối; viết hoa chữ đầu cho khớp thể loại có sẵn, ghép thể loại theo slug nên "Quốc thuật"
+  khớp bản có sẵn, không tạo trùng). Dòng `**Thể loại:**` vẫn được ưu tiên. Bài học: sau khi đăng truyện mới luôn kiểm tra cả
+  `truyen_the_loai` (không chỉ số chương) — thiếu field ở nguồn thì script im lặng bỏ qua.
+- **Nhãn "Hoàn thành" sai (CHƯA sửa, chờ user chọn)**: field `**Trạng thái:**` trong `thong-tin.md` là tình trạng BẢN GỐC tiếng Trung;
+  Võ Thánh gốc đã hoàn thành nhưng web mới có 141/767 chương (bên dự án dịch `da_duyet: false`, `trang_thai: dang_dich`, ~358 chương còn ở
+  `cho-duyet-antigravity/`). `sync-truyen.mjs` ghi đè `trang_thai` theo file mỗi lần check. Hướng khuyên dùng: bỏ qua "Hoàn thành" khi
+  số chương đang có ở `chuong/` < `tong_chuong` trong `D:\translate truyen\scripts\queue.json` (chỉ đọc).
+- Quy tắc nguồn: web CHỈ đăng từ `chuong/` (đã duyệt thật), không đọc `cho-duyet-antigravity/`. "Đã duyệt khoảng N chương" của user = số file trong `chuong/`.

@@ -1,5 +1,52 @@
 # NEXT_SESSION.md
 
+## Phiên 2026-09-19 tối → 2026-09-20 — CHỐT PHIÊN (đọc mục này trước tiên, các mục dưới là lịch sử)
+
+**Đã làm & deploy production trong phiên này** (mọi thứ đã commit, working tree sạch):
+1. Sửa dòng "Đang tạo audio... (Ns)" lệch với nút ▶ trên Android: hiện "Audio đã sẵn sàng, sắp tự phát" khi đã phát được; "bấm ▶
+   để nghe" nếu trình duyệt chặn tự phát (trước đó `play()` lỗi bị nuốt). Commit 286e99e. User xác nhận: hết lỗi, tắt màn hình vẫn nghe,
+   TỰ CHUYỂN CHƯƠNG khi tắt màn hình chạy được (Android). iPhone/Safari vẫn CHƯA test (user sẽ tự báo).
+2. Dọn hệ audio cũ XONG: user đã chạy SQL gỡ (Claude xác minh qua REST: cột/bảng/RPC cũ không còn, 8008 chương còn nguyên), xoá
+   `GITHUB_DISPATCH_TOKEN` trên Vercel, thu hồi PAT, tắt Actions repo `truyen-chu-dich-audio-worker`. Claude gỡ nốt lời gọi
+   `xep_hang_tao_audio` sót trong `PanelDocAudio.tsx` (cbaece0). Đã xoá dự án Vercel `tts-thu-nghiem`. Local đang trước origin ~30 commit,
+   CỐ Ý không push (repo origin chỉ là chỗ worker cũ, Actions đã tắt).
+3. **Sửa đứng audio nửa sau chương ở 1.5x** (user báo: chương 59 "Quốc Thuật", từ phút ~5 cứ 30s-1 phút đứng 1 lần). Điều tra bằng số
+   đo thật + mô phỏng: mỗi kết nối Microsoft TTS chỉ ~1x thời gian thực, ~50% lần thử đầu bị đóng rồi thử lại, độ trễ đoạn trung vị
+   11.5s/max 35s; nạp trước 4 đoạn (~25s) không đủ hấp thụ. Sửa `SO_DOAN_NAP_TRUOC` 4->10, `TOI_DA_NAP_DONG_THOI` 3->4 (6d7f157).
+   Kiểm chứng production 1.5x: phát 6:15 liên tục, 0 lần đứng, đệm 56-124s. CHƯA A/B với bản cũ, CHƯA thử chương VIP >50 nửa sau
+   ở 1.5x. Chi tiết `docs/handoff/audio-hls-vercel.md` mục "Đứng audio ở nửa sau chương". Đánh đổi: 4 kết nối nạp trước/người nghe,
+   trần toàn site 30 -> ~6 người nghe cùng lúc là chạm trần.
+4. **Đăng truyện mới "Võ Thánh"** (slug `vo-thanh`, tác giả Điền Lệ): 141/141 chương ĐÃ DUYỆT trong `chuong/` (khớp "~140 chương" user
+   nói), có ảnh bìa + mô tả + 7 thể loại. Bên `D:\translate truyen` truyện này đang dịch dở (499/767, `da_duyet: false`), ~358 chương
+   còn ở `cho-duyet-antigravity/` (chưa đăng). Khi user báo có thêm chương duyệt -> chạy lại `node --env-file=.env.local
+   scripts/sync-truyen.mjs "Võ Thánh"` (idempotent, chỉ đăng chương mới).
+5. 2 lỗi script phát sinh khi đăng Võ Thánh, đã sửa + test (151/151 pass), commit bc5b0fe (gom luôn 4 file sửa dở của phiên trước —
+   regex `\d{3,}` và `timMoTa` nhận "Tóm tắt", đã xem diff khớp tài liệu): (a) `sync-truyen.mjs` từ chối chạy khi tên trùng MỘT PHẦN
+   với truyện khác ("Võ Thánh" vs "Ta Đã Là Đại La Kim Tiên... Võ Thánh") -> nay ưu tiên khớp ĐÚNG tên; (b) `parse-thong-tin.js` bỏ
+   sót thể loại khi `thong-tin.md` ghi dạng mục `## Thể loại` (đoạn cách nhau dấu phẩy, có ngoặc giải thích) thay vì dòng
+   `**Thể loại:**` -> nay đọc được cả 2 dạng (bỏ phần ngoặc, viết hoa chữ đầu, dòng inline vẫn được ưu tiên).
+
+**VIỆC CẦN LÀM ĐẦU PHIÊN SAU**:
+1. **User CHƯA trả lời câu hỏi treo**: trạng thái "Võ Thánh" trên web đang là `hoan-thanh` (vì `thong-tin.md` ghi "Hoàn thành" = tình
+   trạng BẢN GỐC tiếng Trung) trong khi web mới có 141/767 chương -> độc giả thấy "Hoàn thành" nhưng thiếu chương; mỗi lần "check" sau
+   script lại ghi đè theo file đó. Hai cách đã đề xuất: (1) chỉ đổi DB thành `dang-ra` (bị ghi đè lần check sau trừ khi file bên dự án
+   dịch sửa thành "Đang ra"); (2) **Claude khuyên** sửa `scripts/sync-truyen.mjs`: bỏ qua trạng thái "Hoàn thành" khi số chương đang có
+   ở `chuong/` < `tong_chuong` của truyện trong `D:\translate truyen\scripts\queue.json` (mảng `truyen[]`, khớp theo `ten`; chỉ ĐỌC
+   file đó, không sửa). Hỏi user chọn rồi làm; sau đó kiểm tra các truyện khác có bị nhãn sai tương tự không (so `tong_chuong` với số
+   chương đã đăng).
+2. Hỏi user kết quả thử lại audio trên điện thoại: chương VIP >50 ở 1.5x, nghe qua phút 5-10 còn đứng không (nếu còn: thử nạp trước
+   sâu hơn/giảm hedge/TTS trả phí); iPhone/Safari có tự phát sau chờ đệm không; nếu audio TỰ DỪNG (không phải quay "Đang tạo") thì
+   điều tra — trong lần thử desktop có 1 lần `paused` tự nhiên ở giây 161 chưa giải thích được (nghi khung trình duyệt nhúng của công cụ).
+3. Việc treo còn lại (không đổi): trang Chính sách bảo mật/Điều khoản dịch vụ thật (link trên Google Cloud > Branding đang trỏ trang
+   chủ), chương 259 "Cẩu Tại Sơ Thánh Ma Môn..." thiếu tiêu đề ở nguồn dịch, kiểm chứng giá giao dịch VIP (`giao_dich.so_tien` đúng giá
+   gói — cần user tạo giao dịch bằng tài khoản thật), thử chương VIP bằng tài khoản có gói, theo dõi Microsoft TTS/Vercel Usage/429 oan khi
+   nhiều người nghe, APK Android (ý định dài hạn), TheTruyen chưa tắt prefetch.
+4. Công cụ đo audio đã dùng nằm ở scratchpad tạm (sẽ mất) -> đã sao lưu vào `scripts/cong-cu-do-audio/` (`dothroughput.mjs` đo tốc độ
+   tạo đoạn thật của 1 chương free: `node dothroughput.mjs <truyen_id> <chuong> <tu_doan> <den_doan> <song_song>` với `OUT=file.json`;
+   `mophong.mjs <file.json>` mô phỏng số lần đứng theo cấu hình nạp trước).
+5. Bài học vận hành mới: `vercel logs --json` lặp mỗi sự kiện ~20 lần (đừng đếm thô); công cụ thử trình duyệt nhúng chụp ảnh/nhấn menu
+   không ổn định với dev server local -> kiểm chứng nên làm trên production; lệnh `vercel project rm` hỏi xác nhận `y`.
+
 ## Phiên 2026-09-19 (tối) — audio HLS tạo theo đoạn nhỏ trên Vercel: ĐÃ deploy, đã gỡ hệ cũ, CHỜ user thử điện thoại
 
 **Đã làm & deploy production**: thay audio cả chương (GitHub Actions) bằng HLS theo đoạn nhỏ trên Vercel. Chi tiết,
@@ -39,8 +86,7 @@ hình vẫn nghe được.** Chưa xác nhận: tự sang chương sau khi tắt
 5. Hỏi user cho xoá dự án Vercel tạm `tts-thu-nghiem` (asuo-team) — còn giữ vì tiện so sánh tốc độ Microsoft.
 6. Chưa test chương VIP bằng tài khoản có gói thật (chỉ test vé giả lập + 403 không vé) — nhờ user/tài khoản VIP nghe thử chương >50.
 7. Việc treo cũ: trang Chính sách bảo mật/Điều khoản, chương 259 "Cẩu Tại Sơ Thánh...", kiểm chứng giá giao dịch VIP (`so_tien`), APK Android.
-8. Còn 4 file sửa dở KHÔNG phải của phiên này (`scripts/parse-chuong.js`, `parse-thong-tin.js`, `sync-truyen.mjs`, `docs/handoff/du-lieu-va-parse-chuong.md`)
-   — của phiên trước, chưa commit; hỏi user trước khi đụng.
+8. ~~4 file sửa dở của phiên trước~~ ĐÃ commit ở bc5b0fe (xem mục đầu file).
 
 ## Phiên 2026-09-19 — sửa lỗi 429 "thao tác quá nhanh" + Google OAuth publish + việc treo
 
