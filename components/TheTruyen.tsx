@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { dinhDangSoRutGon } from '@/lib/utils/format';
+import BieuTuong from './BieuTuong';
 
 export type TruyenThe = {
   slug: string;
@@ -13,83 +14,62 @@ export type TruyenThe = {
   soChuong?: number;
 };
 
-export default function TheTruyen({ truyen }: { truyen: TruyenThe }) {
-  const theLoaiHienThi = truyen.theLoai.slice(0, 3);
-  const soDu = truyen.theLoai.length - theLoaiHienThi.length;
-
+// Ảnh bìa + nhãn dùng chung cho thẻ truyện dạng lưới và dạng kệ vuốt ngang.
+export function BiaTruyen({
+  truyen,
+  sizes,
+  className = '',
+  anNhan = false,
+}: {
+  truyen: Pick<TruyenThe, 'ten' | 'anhBia' | 'trangThai'>;
+  sizes: string;
+  className?: string;
+  anNhan?: boolean; // ảnh bìa nhỏ (bảng xếp hạng) không đủ chỗ cho nhãn
+}) {
   return (
-    <Link
-      href={`/truyen/${truyen.slug}`}
-      className="block rounded-lg border border-border overflow-hidden hover:shadow-md transition-shadow"
+    <div
+      className={`relative aspect-[2/3] overflow-hidden rounded-lg bg-surface ring-1 ring-border ${className}`}
     >
-      <div className="relative aspect-[2/3] bg-surface">
-        {truyen.anhBia ? (
-          <Image
-            src={truyen.anhBia}
-            alt={truyen.ten}
-            fill
-            sizes="(max-width: 640px) 45vw, 200px"
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-muted-foreground text-sm px-2 text-center">
-            Chưa có ảnh bìa
-          </div>
-        )}
-        <span className="absolute top-1 left-1 px-2 py-0.5 rounded text-xs bg-black/60 text-white">
-          {truyen.trangThai === 'hoan-thanh' ? 'Hoàn thành' : 'Đang ra'}
+      {truyen.anhBia ? (
+        <Image
+          src={truyen.anhBia}
+          alt={truyen.ten}
+          fill
+          sizes={sizes}
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center px-2 text-center text-xs text-muted-foreground">
+          {truyen.ten}
+        </div>
+      )}
+      {!anNhan && truyen.trangThai === 'hoan-thanh' && (
+        <span className="absolute left-1.5 top-1.5 rounded bg-done px-1.5 py-0.5 text-[10px] font-semibold text-white">
+          Full
         </span>
-        <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-purple-600 text-white">
+      )}
+      {!anNhan && (
+        <span className="absolute right-1.5 top-1.5 rounded bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-on-accent">
           Dịch
         </span>
-      </div>
-      <div className="p-2">
-        <h3 className="font-medium line-clamp-2">{truyen.ten}</h3>
-        <div className="flex items-center justify-between text-sm text-muted-foreground mt-1">
-          {truyen.tacGia ? (
-            <p className="truncate flex-1 pr-1">{truyen.tacGia}</p>
-          ) : (
-            <span />
-          )}
-          <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-              />
-            </svg>
-            {dinhDangSoRutGon(truyen.luotXem ?? 0)}
-          </span>
-        </div>
-        {typeof truyen.soChuong === 'number' && (
-          <p className="text-xs text-muted-foreground mt-0.5">{truyen.soChuong} chương</p>
-        )}
-        {theLoaiHienThi.length > 0 && (
-          <div className="mt-1 flex flex-wrap gap-1">
-            {theLoaiHienThi.map((tl) => (
-              <span
-                key={tl.slug}
-                className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700"
-              >
-                {tl.ten}
-              </span>
-            ))}
-            {soDu > 0 && <span className="text-xs px-1.5 py-0.5 text-muted-foreground">+{soDu}</span>}
-          </div>
-        )}
+      )}
+    </div>
+  );
+}
+
+export default function TheTruyen({ truyen }: { truyen: TruyenThe }) {
+  return (
+    <Link href={`/truyen/${truyen.slug}`} className="group block min-w-0">
+      <BiaTruyen truyen={truyen} sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 170px" />
+      <h3 className="mt-2 line-clamp-2 text-sm font-medium leading-snug group-hover:text-accent">
+        {truyen.ten}
+      </h3>
+      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+        {typeof truyen.soChuong === 'number' && <span>{truyen.soChuong} ch</span>}
+        <span className="flex items-center gap-0.5">
+          <BieuTuong ten="mat" className="h-3.5 w-3.5" />
+          {dinhDangSoRutGon(truyen.luotXem ?? 0)}
+        </span>
       </div>
     </Link>
   );

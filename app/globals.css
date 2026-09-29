@@ -2,42 +2,73 @@
 
 :root {
   --mau-nen: #ffffff;
-  --mau-nen-phu: #f9fafb;
+  --mau-nen-phu: #f6f7f9;
+  --mau-the: #ffffff;
   --mau-chu: #171717;
   --mau-chu-phu: #6b7280;
   --mau-vien: #e5e7eb;
+  --mau-nhan: #4f46e5;
+  --mau-chu-tren-nhan: #ffffff;
+  --mau-nhan-nhat: #eef2ff;
+  --mau-hang: #d97706;
+  --mau-xong: #059669;
 }
 
 :root[data-theme='giay'] {
   --mau-nen: #f4ecd8;
   --mau-nen-phu: #ece0c6;
+  --mau-the: #f8f1e1;
   --mau-chu: #5b4636;
   --mau-chu-phu: #8a7360;
   --mau-vien: #d9c9a8;
+  --mau-nhan: #9a5b2c;
+  --mau-chu-tren-nhan: #fffaf0;
+  --mau-nhan-nhat: #e9d6b8;
+  --mau-hang: #b45309;
+  --mau-xong: #3f7d3a;
 }
 
 :root[data-theme='toi'] {
-  --mau-nen: #1a1a1a;
-  --mau-nen-phu: #262626;
+  --mau-nen: #141414;
+  --mau-nen-phu: #1f1f1f;
+  --mau-the: #1c1c1c;
   --mau-chu: #e5e5e5;
   --mau-chu-phu: #a3a3a3;
-  --mau-vien: #3f3f3f;
+  --mau-vien: #333333;
+  --mau-nhan: #818cf8;
+  --mau-chu-tren-nhan: #111111;
+  --mau-nhan-nhat: #262a4d;
+  --mau-hang: #fbbf24;
+  --mau-xong: #34d399;
 }
 
 @theme inline {
   --color-background: var(--mau-nen);
   --color-surface: var(--mau-nen-phu);
+  --color-card: var(--mau-the);
   --color-foreground: var(--mau-chu);
   --color-muted-foreground: var(--mau-chu-phu);
   --color-border: var(--mau-vien);
-  --font-sans: var(--font-geist-sans);
+  --color-accent: var(--mau-nhan);
+  --color-on-accent: var(--mau-chu-tren-nhan);
+  --color-accent-soft: var(--mau-nhan-nhat);
+  --color-rank: var(--mau-hang);
+  --color-done: var(--mau-xong);
+  --font-sans: var(--font-be-vietnam);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--color-background);
   color: var(--color-foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-be-vietnam), Arial, Helvetica, sans-serif;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @keyframes thanh-tien-trinh {

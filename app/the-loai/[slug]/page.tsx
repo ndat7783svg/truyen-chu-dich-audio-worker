@@ -60,9 +60,13 @@ export default async function TrangTheLoai({
   return (
     <>
       <ThongBaoFanpage />
-      <main className="w-full max-w-5xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Thể loại: {theLoai.ten}</h1>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+      <main className="mx-auto w-full max-w-6xl px-4 py-5">
+        <p className="text-sm text-muted-foreground">Thể loại</p>
+        <h1 className="mb-4 text-2xl font-bold">
+          {theLoai.ten}
+          <span className="ml-2 text-sm font-normal text-muted-foreground">{dsThe.length} truyện</span>
+        </h1>
+        <div className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
           {dsThe.map((truyen) => (
             <TheTruyen key={truyen.slug} truyen={truyen} />
           ))}

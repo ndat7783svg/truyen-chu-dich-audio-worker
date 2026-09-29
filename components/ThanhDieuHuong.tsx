@@ -1,61 +1,22 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import BieuTuong from './BieuTuong';
 
-const MUC: { duongDan: string; nhan: string; icon: ReactNode }[] = [
-  {
-    duongDan: '/',
-    nhan: 'Trang chủ',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-        />
-      </svg>
-    ),
-  },
-  {
-    duongDan: '/tai-khoan',
-    nhan: 'Tài khoản',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-        />
-      </svg>
-    ),
-  },
-  {
-    duongDan: '/tu-truyen',
-    nhan: 'Tủ truyện',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-        />
-      </svg>
-    ),
-  },
-];
+const MUC = [
+  { duongDan: '/', nhan: 'Trang chủ', icon: 'nha' },
+  { duongDan: '/tu-truyen', nhan: 'Tủ truyện', icon: 'tu-sach' },
+  { duongDan: '/tai-khoan', nhan: 'Tài khoản', icon: 'nguoi' },
+] as const;
 
 export default function ThanhDieuHuong() {
   const pathname = usePathname();
 
   return (
     <>
-      {/* Desktop: icon nổi dọc bên trái */}
-      <nav className="hidden md:flex fixed left-4 top-1/2 -translate-y-1/2 z-30 flex-col gap-2 p-2 rounded-full border border-border bg-surface shadow-md">
+      {/* Desktop: thanh icon nổi dọc bên trái */}
+      <nav className="fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-1 rounded-2xl border border-border bg-card p-1.5 shadow-md min-[1360px]:flex">
         {MUC.map((muc) => {
           const dangHoatDong = pathname === muc.duongDan;
           return (
@@ -63,15 +24,13 @@ export default function ThanhDieuHuong() {
               <Link
                 href={muc.duongDan}
                 aria-label={muc.nhan}
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                  dangHoatDong
-                    ? 'bg-foreground text-background'
-                    : 'text-foreground hover:bg-background'
+                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+                  dangHoatDong ? 'bg-accent text-on-accent' : 'text-foreground hover:bg-surface'
                 }`}
               >
-                {muc.icon}
+                <BieuTuong ten={muc.icon} />
               </Link>
-              <span className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap rounded bg-foreground text-background text-xs px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded bg-foreground px-2 py-1 text-xs text-background opacity-0 transition-opacity group-hover:opacity-100">
                 {muc.nhan}
               </span>
             </div>
@@ -79,25 +38,25 @@ export default function ThanhDieuHuong() {
         })}
       </nav>
 
-      {/* Mobile: thanh ngang cố định dưới đáy */}
-      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 z-30 justify-center gap-6 border-t border-border bg-surface py-2 shadow-md">
-        {MUC.map((muc) => {
-          const dangHoatDong = pathname === muc.duongDan;
-          return (
-            <Link
-              key={muc.duongDan}
-              href={muc.duongDan}
-              aria-label={muc.nhan}
-              className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
-                dangHoatDong
-                  ? 'bg-foreground text-background'
-                  : 'text-foreground hover:bg-background'
-              }`}
-            >
-              {muc.icon}
-            </Link>
-          );
-        })}
+      {/* Điện thoại + máy tính bảng: thanh ngang cố định dưới đáy, có chữ dưới icon */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur min-[1360px]:hidden">
+        <div className="mx-auto flex max-w-md justify-around">
+          {MUC.map((muc) => {
+            const dangHoatDong = pathname === muc.duongDan;
+            return (
+              <Link
+                key={muc.duongDan}
+                href={muc.duongDan}
+                className={`flex min-w-16 flex-col items-center gap-0.5 px-3 py-2 text-[11px] font-medium ${
+                  dangHoatDong ? 'text-accent' : 'text-muted-foreground'
+                }`}
+              >
+                <BieuTuong ten={muc.icon} className="h-5.5 w-5.5" />
+                {muc.nhan}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
     </>
   );

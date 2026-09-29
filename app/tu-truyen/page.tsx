@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { taoSupabaseServerClient } from '@/lib/supabase/server';
 import DongTruyenDaLuu from './DongTruyenDaLuu';
+import BieuTuong from '@/components/BieuTuong';
 
 type HangDaLuu = {
   truyen_id: string;
@@ -24,19 +25,36 @@ export default async function TrangTuTruyen() {
   }
 
   return (
-    <main className="w-full max-w-md mx-auto p-4">
+    <main className="mx-auto w-full max-w-2xl px-4 py-5">
       <h1 className="text-2xl font-bold">Tủ truyện</h1>
-      <h2 className="mt-4 text-sm font-semibold uppercase text-muted-foreground">Đã lưu</h2>
+      <h2 className="mt-4 text-sm font-semibold text-muted-foreground">
+        Đã lưu{user && dsDaLuu.length > 0 ? ` · ${dsDaLuu.length}` : ''}
+      </h2>
 
-      {!user ? (
-        <p className="mt-3 text-muted-foreground">
-          <Link href="/dang-nhap" className="underline">
-            Đăng nhập
-          </Link>{' '}
-          để xem truyện đã lưu.
-        </p>
-      ) : dsDaLuu.length === 0 ? (
-        <p className="mt-3 text-muted-foreground">Chưa lưu truyện nào.</p>
+      {!user || dsDaLuu.length === 0 ? (
+        <div className="mt-3 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border px-4 py-10 text-center">
+          <BieuTuong ten="tu-sach" className="h-8 w-8 text-muted-foreground" />
+          {!user ? (
+            <>
+              <p className="text-muted-foreground">Đăng nhập để xem truyện đã lưu.</p>
+              <Link
+                href="/dang-nhap"
+                className="rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent"
+              >
+                Đăng nhập
+              </Link>
+            </>
+          ) : (
+            <>
+              <p className="text-muted-foreground">
+                Bấm nút &ldquo;Lưu&rdquo; ở trang truyện để thêm truyện vào tủ.
+              </p>
+              <Link href="/" className="text-sm font-semibold text-accent hover:underline">
+                Khám phá truyện
+              </Link>
+            </>
+          )}
+        </div>
       ) : (
         <ul className="mt-3 space-y-2">
           {dsDaLuu.map((dong) => (

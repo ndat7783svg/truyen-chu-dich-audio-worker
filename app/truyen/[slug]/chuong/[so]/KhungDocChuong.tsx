@@ -14,6 +14,7 @@ import { luuTienDoDoc, ghiLuotXemChuong } from './actions';
 import PanelCaiDatDoc from './PanelCaiDatDoc';
 import PanelDocAudio from './PanelDocAudio';
 import DanhSachChuong, { type MucChuong } from './DanhSachChuong';
+import BieuTuong from '@/components/BieuTuong';
 
 const notoSerif = Noto_Serif({
   subsets: ['vietnamese', 'latin'],
@@ -61,6 +62,7 @@ export default function KhungDocChuong({
 }) {
   const [caiDat, setCaiDat] = useState<CaiDatDoc>(CAI_DAT_MAC_DINH);
   const [hienThanhTop, setHienThanhTop] = useState(true);
+  const [tienDoDoc, setTienDoDoc] = useState(0);
   const scrollYTruocRef = useRef(0);
 
   // State quản lý chương đang hiển thị (cho phép chuyển chương liền mạch không reload trang)
@@ -101,7 +103,10 @@ export default function KhungDocChuong({
         setHienThanhTop(true);
       }
       scrollYTruocRef.current = scrollY;
+      const conLai = document.documentElement.scrollHeight - window.innerHeight;
+      setTienDoDoc(conLai > 0 ? Math.min(100, Math.round((scrollY / conLai) * 100)) : 100);
     }
+    xuLyCuon();
     window.addEventListener('scroll', xuLyCuon, { passive: true });
     return () => window.removeEventListener('scroll', xuLyCuon);
   }, []);
@@ -136,34 +141,41 @@ export default function KhungDocChuong({
     e.preventDefault();
   }
 
+  const vienMo = caiDat.mauNen === 'toi' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+  const urlChuong = (so: number) => `/truyen/${slugTruyen}/chuong/${so}`;
+
   return (
-    <main
-      className="w-full max-w-2xl mx-auto p-4 pt-14 relative"
+    <div
+      className="min-h-screen w-full"
       style={{
         backgroundColor: mauSac.nen,
         color: mauSac.chu,
         fontFamily: caiDat.phong === 'co-dien' ? notoSerif.style.fontFamily : undefined,
       }}
     >
+      {/* Thanh tiến độ đọc chương - luôn hiện, kể cả khi thanh công cụ đã ẩn */}
+      <div className="fixed inset-x-0 top-0 z-50 h-0.5" aria-hidden="true">
+        <div className="h-full bg-accent transition-[width] duration-150" style={{ width: `${tienDoDoc}%` }} />
+      </div>
+
       <div
-        className={`fixed top-0 inset-x-0 z-40 h-14 transition-transform duration-300 ${
+        className={`fixed top-0 inset-x-0 z-40 h-14 border-b transition-transform duration-300 ${
           hienThanhTop ? 'translate-y-0' : '-translate-y-full'
         }`}
+        style={{ backgroundColor: mauSac.nen, borderColor: vienMo }}
       >
         <Link
           href="/"
           aria-label="Về trang chủ"
           className="absolute top-3 left-3 w-9 h-9 rounded-full border flex items-center justify-center bg-white/80 text-gray-900"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-            />
-          </svg>
+          <BieuTuong ten="nha" />
         </Link>
+        <p className="pointer-events-none absolute inset-x-48 top-0 hidden h-14 items-center justify-center text-xs opacity-70 sm:flex">
+          <span className="truncate">
+            {tenTruyen} · Chương {chuongHienTai.soChuong}
+          </span>
+        </p>
         <DanhSachChuong
           slugTruyen={slugTruyen}
           truyenId={truyenId}
@@ -187,46 +199,114 @@ export default function KhungDocChuong({
         />
         <PanelCaiDatDoc caiDat={caiDat} onDoiCaiDat={capNhatCaiDat} />
       </div>
-      <p className="text-sm opacity-70">
-        <Link href={`/truyen/${slugTruyen}`} className="hover:underline">
+
+      <main className="relative mx-auto w-full max-w-2xl px-5 pb-28 pt-20">
+        <Link href={`/truyen/${slugTruyen}`} className="text-sm opacity-70 hover:underline">
           {tenTruyen}
         </Link>
-      </p>
-      <h1 className="text-xl font-bold mt-1">
-        Chương {chuongHienTai.soChuong}: {chuongHienTai.tieuDe}
-      </h1>
-      <article
-        className="mt-4 whitespace-pre-line select-none"
-        style={{ fontSize: `${caiDat.coChu}px`, lineHeight: caiDat.giaiDong }}
-        onContextMenu={chanChuotPhai}
-        onCopy={chanSaoChep}
-        onCut={chanSaoChep}
+        <h1 className="mt-1 text-2xl font-bold leading-snug">
+          Chương {chuongHienTai.soChuong}: {chuongHienTai.tieuDe}
+        </h1>
+        <article
+          className="mt-6 whitespace-pre-line select-none"
+          style={{ fontSize: `${caiDat.coChu}px`, lineHeight: caiDat.giaiDong }}
+          onContextMenu={chanChuotPhai}
+          onCopy={chanSaoChep}
+          onCut={chanSaoChep}
+        >
+          {chuongHienTai.noiDung}
+        </article>
+
+        {/* Điều hướng cuối chương */}
+        <nav className="mt-10 grid grid-cols-2 gap-3">
+          {chuongHienTai.soChuongTruoc ? (
+            <Link
+              href={urlChuong(chuongHienTai.soChuongTruoc)}
+              className="flex min-h-12 items-center justify-center gap-1 rounded-xl border font-semibold"
+              style={{ borderColor: vienMo }}
+            >
+              <BieuTuong ten="trai" className="h-4 w-4" /> Chương trước
+            </Link>
+          ) : (
+            <span />
+          )}
+          {chuongHienTai.soChuongSau ? (
+            <Link
+              href={urlChuong(chuongHienTai.soChuongSau)}
+              className="flex min-h-12 items-center justify-center gap-1 rounded-xl bg-accent font-semibold text-on-accent"
+            >
+              Chương sau <BieuTuong ten="phai" className="h-4 w-4" />
+            </Link>
+          ) : (
+            <Link
+              href={`/truyen/${slugTruyen}`}
+              className="flex min-h-12 items-center justify-center rounded-xl border px-2 text-center text-sm font-semibold"
+              style={{ borderColor: vienMo }}
+            >
+              Hết chương đã đăng — về trang truyện
+            </Link>
+          )}
+        </nav>
+      </main>
+
+      {/* Thanh điều hướng nhanh dưới đáy - hiện/ẩn cùng thanh trên */}
+      <nav
+        className={`fixed inset-x-0 bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
+          hienThanhTop ? 'translate-y-0' : 'translate-y-full'
+        }`}
+        style={{ backgroundColor: mauSac.nen, borderColor: vienMo }}
       >
-        {chuongHienTai.noiDung}
-      </article>
-      <nav className="mt-6 flex justify-between gap-3">
-        {chuongHienTai.soChuongTruoc ? (
+        <div className="mx-auto flex max-w-2xl gap-2 px-4 py-2">
+          <NutDuoiDay href={chuongHienTai.soChuongTruoc ? urlChuong(chuongHienTai.soChuongTruoc) : null} vien={vienMo}>
+            <BieuTuong ten="trai" className="h-4 w-4" /> Trước
+          </NutDuoiDay>
           <Link
-            href={`/truyen/${slugTruyen}/chuong/${chuongHienTai.soChuongTruoc}`}
-            className="flex-1 min-h-11 flex items-center justify-center rounded-lg border border-border font-medium hover:bg-black/5"
+            href={`/truyen/${slugTruyen}#danh-sach-chuong`}
+            aria-label="Danh sách chương"
+            className="flex h-11 w-12 shrink-0 items-center justify-center rounded-xl border"
+            style={{ borderColor: vienMo }}
           >
-            ← Chương trước
+            <BieuTuong ten="danh-sach" />
           </Link>
-        ) : (
-          <span className="flex-1" />
-        )}
-        {chuongHienTai.soChuongSau ? (
-          <Link
-            href={`/truyen/${slugTruyen}/chuong/${chuongHienTai.soChuongSau}`}
-            className="flex-1 min-h-11 flex items-center justify-center rounded-lg border border-border font-medium hover:bg-black/5"
+          <NutDuoiDay
+            href={chuongHienTai.soChuongSau ? urlChuong(chuongHienTai.soChuongSau) : null}
+            vien={vienMo}
+            nhan
           >
-            Chương sau →
-          </Link>
-        ) : (
-          <span className="flex-1" />
-        )}
+            Sau <BieuTuong ten="phai" className="h-4 w-4" />
+          </NutDuoiDay>
+        </div>
       </nav>
-    </main>
+    </div>
   );
 }
 
+function NutDuoiDay({
+  href,
+  vien,
+  nhan = false,
+  children,
+}: {
+  href: string | null;
+  vien: string;
+  nhan?: boolean;
+  children: React.ReactNode;
+}) {
+  const lop = 'flex h-11 flex-1 items-center justify-center gap-1 rounded-xl text-sm font-semibold';
+  if (!href) {
+    return (
+      <span className={`${lop} border opacity-40`} style={{ borderColor: vien }} aria-disabled="true">
+        {children}
+      </span>
+    );
+  }
+  return nhan ? (
+    <Link href={href} className={`${lop} bg-accent text-on-accent`}>
+      {children}
+    </Link>
+  ) : (
+    <Link href={href} className={`${lop} border`} style={{ borderColor: vien }}>
+      {children}
+    </Link>
+  );
+}

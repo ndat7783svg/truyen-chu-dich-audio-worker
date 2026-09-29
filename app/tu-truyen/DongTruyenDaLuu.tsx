@@ -31,18 +31,18 @@ export default function DongTruyenDaLuu({
   if (daXoa) return null;
 
   return (
-    <li className="flex items-center gap-3 border border-border bg-surface rounded-lg p-2">
-      <div className="relative w-10 aspect-[2/3] shrink-0 bg-background rounded overflow-hidden">
+    <li className="flex items-center gap-3 rounded-2xl border border-border bg-card p-2.5">
+      <div className="relative w-12 aspect-[2/3] shrink-0 overflow-hidden rounded-lg bg-surface">
         {anhBia && (
-          <Image src={anhBia} alt={ten} fill sizes="40px" className="object-cover" />
+          <Image src={anhBia} alt={ten} fill sizes="48px" className="object-cover" />
         )}
       </div>
-      <Link href={`/truyen/${slug}`} className="flex-1 truncate hover:underline">
+      <Link href={`/truyen/${slug}`} className="min-w-0 flex-1 line-clamp-2 font-medium hover:text-accent">
         {ten}
       </Link>
       <button
         onClick={boLuu}
-        className="text-sm text-muted-foreground hover:underline shrink-0"
+        className="shrink-0 rounded-lg px-2 py-1 text-sm text-muted-foreground hover:bg-surface"
       >
         Bỏ lưu
       </button>

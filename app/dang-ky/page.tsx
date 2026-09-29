@@ -70,14 +70,14 @@ export default function TrangDangKy() {
 
   if (dangKyThanhCong) {
     return (
-      <main className="w-full max-w-md mx-auto p-6 bg-surface border border-border rounded-lg shadow-sm mt-8">
+      <main className="mx-4 mt-8 mb-6 max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm sm:mx-auto sm:w-full">
         <h1 className="text-2xl font-bold mb-4 text-green-700">Đăng ký thành công!</h1>
         <p className="text-muted-foreground leading-relaxed mb-6">
           Vui lòng kiểm tra email <strong className="font-semibold">{email}</strong> để xác nhận tài khoản trước khi đăng nhập.
         </p>
         <Link
           href="/dang-nhap"
-          className="inline-block text-blue-600 hover:underline font-medium"
+          className="inline-block font-semibold text-accent hover:underline"
         >
           Về trang đăng nhập &rarr;
         </Link>
@@ -86,7 +86,7 @@ export default function TrangDangKy() {
   }
 
   return (
-    <main className="w-full max-w-md mx-auto p-6 bg-surface border border-border rounded-lg shadow-sm mt-8">
+    <main className="mx-4 mt-8 mb-6 max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm sm:mx-auto sm:w-full">
       <h1 className="text-2xl font-bold mb-6">Đăng ký tài khoản</h1>
 
       <form onSubmit={submit} className="space-y-4">
@@ -100,7 +100,7 @@ export default function TrangDangKy() {
             value={tenNguoiDung}
             onChange={(e) => setTenNguoiDung(e.target.value)}
             placeholder="Ví dụ: Nguyễn Văn A"
-            className="border border-border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 w-full rounded-xl border border-border bg-background px-3 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
         </div>
 
@@ -114,7 +114,7 @@ export default function TrangDangKy() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="name@example.com"
-            className="border border-border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 w-full rounded-xl border border-border bg-background px-3 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
         </div>
 
@@ -129,7 +129,7 @@ export default function TrangDangKy() {
             value={matKhau}
             onChange={(e) => setMatKhau(e.target.value)}
             placeholder="••••••••"
-            className="border border-border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 w-full rounded-xl border border-border bg-background px-3 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
         </div>
 
@@ -144,12 +144,12 @@ export default function TrangDangKy() {
             value={xacNhanMatKhau}
             onChange={(e) => setXacNhanMatKhau(e.target.value)}
             placeholder="••••••••"
-            className="border border-border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 w-full rounded-xl border border-border bg-background px-3 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
         </div>
 
         {loi && (
-          <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {loi}
           </div>
         )}
@@ -157,7 +157,7 @@ export default function TrangDangKy() {
         <button
           type="submit"
           disabled={dangXuLy}
-          className="w-full py-2.5 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium transition disabled:opacity-50"
+          className="h-11 w-full rounded-xl bg-accent px-4 font-semibold text-on-accent transition hover:opacity-90 disabled:opacity-50"
         >
           {dangXuLy ? 'Đang xử lý...' : 'Đăng ký'}
         </button>
@@ -168,14 +168,14 @@ export default function TrangDangKy() {
           <div className="w-full border-t border-border"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-surface text-muted-foreground">Hoặc tiếp tục với</span>
+          <span className="bg-card px-2 text-muted-foreground">Hoặc tiếp tục với</span>
         </div>
       </div>
 
       <button
         type="button"
         onClick={dangNhapGoogle}
-        className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-border rounded-md hover:bg-background font-medium transition shadow-sm"
+        className="flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-border px-4 font-medium transition hover:bg-surface"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path
@@ -200,7 +200,7 @@ export default function TrangDangKy() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Đã có tài khoản?{' '}
-        <Link href="/dang-nhap" className="text-blue-600 hover:underline font-medium">
+        <Link href="/dang-nhap" className="font-semibold text-accent hover:underline">
           Đăng nhập ngay
         </Link>
       </p>

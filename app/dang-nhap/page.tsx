@@ -66,7 +66,7 @@ function FormDangNhap() {
   }
 
   return (
-    <main className="w-full max-w-md mx-auto p-6 bg-surface border border-border rounded-lg shadow-sm mt-8">
+    <main className="mx-4 mt-8 mb-6 max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm sm:mx-auto sm:w-full">
       <h1 className="text-2xl font-bold mb-6">Đăng nhập</h1>
 
       <form onSubmit={submit} className="space-y-4">
@@ -80,7 +80,7 @@ function FormDangNhap() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="name@example.com"
-            className="border border-border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 w-full rounded-xl border border-border bg-background px-3 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
         </div>
 
@@ -94,12 +94,12 @@ function FormDangNhap() {
             value={matKhau}
             onChange={(e) => setMatKhau(e.target.value)}
             placeholder="••••••••"
-            className="border border-border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 w-full rounded-xl border border-border bg-background px-3 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
         </div>
 
         {loi && (
-          <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {loi}
           </div>
         )}
@@ -107,7 +107,7 @@ function FormDangNhap() {
         <button
           type="submit"
           disabled={dangXuLy}
-          className="w-full py-2.5 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium transition disabled:opacity-50"
+          className="h-11 w-full rounded-xl bg-accent px-4 font-semibold text-on-accent transition hover:opacity-90 disabled:opacity-50"
         >
           {dangXuLy ? 'Đang xử lý...' : 'Đăng nhập'}
         </button>
@@ -118,14 +118,14 @@ function FormDangNhap() {
           <div className="w-full border-t border-border"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-surface text-muted-foreground">Hoặc tiếp tục với</span>
+          <span className="bg-card px-2 text-muted-foreground">Hoặc tiếp tục với</span>
         </div>
       </div>
 
       <button
         type="button"
         onClick={dangNhapGoogle}
-        className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-border rounded-md hover:bg-background font-medium transition shadow-sm"
+        className="flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-border px-4 font-medium transition hover:bg-surface"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path
@@ -150,7 +150,7 @@ function FormDangNhap() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Chưa có tài khoản?{' '}
-        <Link href="/dang-ky" className="text-blue-600 hover:underline font-medium">
+        <Link href="/dang-ky" className="font-semibold text-accent hover:underline">
           Đăng ký ngay
         </Link>
       </p>

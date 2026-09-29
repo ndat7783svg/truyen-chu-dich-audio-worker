@@ -53,13 +53,13 @@ export default function ChonGoiVip() {
       <button
         type="button"
         onClick={moLai}
-        className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
+        className="inline-flex h-11 items-center justify-center rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:opacity-90"
       >
         Mua gói VIP
       </button>
       {moModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-surface rounded-lg p-4 w-full max-w-sm space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4">
+          <div className="w-full max-w-sm space-y-4 max-h-[90vh] overflow-y-auto rounded-t-2xl bg-card p-5 text-left sm:rounded-2xl">
             {trangThai.buoc === 'chon-goi' && (
               <>
                 <h2 className="text-lg font-semibold">Chọn gói VIP</h2>
@@ -73,12 +73,12 @@ export default function ChonGoiVip() {
                       type="button"
                       disabled={dangXuLy}
                       onClick={() => chonGoi(goi.ma)}
-                      className="w-full flex justify-between items-center border border-border rounded p-3 hover:bg-black/5 disabled:opacity-60"
+                      className="flex w-full items-center justify-between rounded-xl border border-border p-3.5 hover:border-accent disabled:opacity-60"
                     >
                       <span>
                         {goi.ten} ({goi.soNgay} ngày)
                       </span>
-                      <span className="font-semibold">{goi.gia.toLocaleString('vi-VN')}đ</span>
+                      <span className="font-bold text-accent">{goi.gia.toLocaleString('vi-VN')}đ</span>
                     </button>
                   ))}
                 </div>
@@ -91,7 +91,7 @@ export default function ChonGoiVip() {
                   Gói: <strong>{trangThai.tenGoi}</strong> — Số tiền:{' '}
                   <strong>{trangThai.soTien.toLocaleString('vi-VN')}đ</strong>
                 </p>
-                <div className="relative w-full aspect-square bg-surface rounded overflow-hidden">
+                <div className="relative w-full aspect-square overflow-hidden rounded-xl bg-white">
                   <Image
                     src="/qr-nhan-tien-momo.png"
                     alt="QR nhận tiền MoMo"
@@ -100,7 +100,7 @@ export default function ChonGoiVip() {
                     className="object-contain"
                   />
                 </div>
-                <div className="text-sm border border-border rounded p-3 space-y-2">
+                <div className="space-y-2 rounded-xl border border-border p-3 text-sm">
                   <DongThongTinCopy
                     nhan="Tên người nhận"
                     giaTri={THONG_TIN_NHAN_TIEN.tenNguoiNhan}
@@ -122,16 +122,16 @@ export default function ChonGoiVip() {
                 </div>
                 <p className="text-sm">
                   Chuyển khoản đúng số tiền, nội dung ghi chính xác:{' '}
-                  <strong className="text-blue-600">{trangThai.maGiaoDich}</strong>{' '}
+                  <strong className="text-accent">{trangThai.maGiaoDich}</strong>{' '}
                   <button
                     type="button"
                     onClick={() => copyVaoClipboard('maGiaoDich', trangThai.maGiaoDich)}
-                    className="text-xs underline text-blue-600"
+                    className="text-xs text-accent underline"
                   >
                     {truongDaCopy === 'maGiaoDich' ? 'Đã copy' : 'Copy'}
                   </button>
                 </p>
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                <p className="rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
                   Thanh toán của bạn đang được xử lý. Việc xử lý có thể bị chậm khoảng 5 - 20 phút,
                   vui lòng chờ đợi. Ngoài ra, thanh toán sẽ không được xử lý trong khung giờ từ 23h
                   đến 6h sáng hôm sau.
@@ -142,7 +142,7 @@ export default function ChonGoiVip() {
             <button
               type="button"
               onClick={() => setMoModal(false)}
-              className="w-full px-4 py-2 rounded border border-border text-sm font-medium"
+              className="h-11 w-full rounded-xl border border-border px-4 text-sm font-medium hover:bg-surface"
             >
               Đóng
             </button>
@@ -173,7 +173,7 @@ function DongThongTinCopy({
       <button
         type="button"
         onClick={onCopy}
-        className="shrink-0 text-xs px-2 py-1 rounded border border-border hover:bg-black/5"
+        className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-xs hover:border-accent"
       >
         {daCopy ? 'Đã copy' : 'Copy'}
       </button>

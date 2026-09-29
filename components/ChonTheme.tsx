@@ -29,8 +29,8 @@ export default function ChonTheme() {
           key={tc.gia}
           type="button"
           onClick={() => doiTheme(tc.gia)}
-          className={`flex-1 border rounded p-2 text-sm ${
-            theme === tc.gia ? 'border-blue-500' : 'border-border'
+          className={`flex-1 rounded-xl border p-2.5 text-sm font-medium ${
+            theme === tc.gia ? 'border-accent bg-accent-soft text-accent' : 'border-border hover:border-accent'
           }`}
         >
           {tc.nhan}

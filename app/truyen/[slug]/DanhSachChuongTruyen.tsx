@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { SO_CHUONG_FREE } from '@/lib/config/goi-vip';
-import { taoDanhSachNhom, catChuongTheoNhom } from '@/lib/utils/chuong';
+import { taoDanhSachNhom, catChuongTheoNhom, KICH_THUOC_NHOM_CHUONG } from '@/lib/utils/chuong';
+import BieuTuong from '@/components/BieuTuong';
 
 export type MucChuongTruyen = {
   id: string;
@@ -15,28 +16,31 @@ export default function DanhSachChuongTruyen({
   dsChuong,
   slugTruyen,
   coGoiHieuLuc,
+  soChuongDangDoc,
 }: {
   dsChuong: MucChuongTruyen[];
   slugTruyen: string;
   coGoiHieuLuc: boolean;
+  soChuongDangDoc?: number;
 }) {
-  const [soNhomDangChon, setSoNhomDangChon] = useState(0);
+  // Mở sẵn nhóm chứa chương đang đọc dở (nếu có), để khỏi phải tự tìm.
+  const [soNhomDangChon, setSoNhomDangChon] = useState(() => {
+    if (!soChuongDangDoc) return 0;
+    const viTri = dsChuong.findIndex((c) => c.so_chuong === soChuongDangDoc);
+    return viTri < 0 ? 0 : Math.floor(viTri / KICH_THUOC_NHOM_CHUONG);
+  });
 
   const danhSachNhom = taoDanhSachNhom(dsChuong.length);
   const chuongHienThi = catChuongTheoNhom(dsChuong, soNhomDangChon);
 
   if (dsChuong.length === 0) {
-    return <p className="mt-6 text-muted-foreground text-sm">Chưa có chương nào.</p>;
+    return <p className="py-6 text-sm text-muted-foreground">Chưa có chương nào.</p>;
   }
 
   return (
-    <div className="mt-6">
-      <div className="flex items-center justify-between gap-2 border-b border-border pb-2">
-        <h2 className="text-lg font-bold">Danh sách chương ({dsChuong.length})</h2>
-      </div>
-
+    <div className="py-3">
       {danhSachNhom.length > 1 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto py-3 no-scrollbar">
+        <div className="no-scrollbar -mx-4 flex items-center gap-1.5 overflow-x-auto px-4 pb-3">
           {danhSachNhom.map((nhom) => {
             const dangChon = nhom.soNhom === soNhomDangChon;
             return (
@@ -44,47 +48,38 @@ export default function DanhSachChuongTruyen({
                 key={nhom.soNhom}
                 type="button"
                 onClick={() => setSoNhomDangChon(nhom.soNhom)}
-                className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
+                className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs transition-colors ${
                   dangChon
-                    ? 'bg-blue-600 text-white font-medium'
-                    : 'bg-surface border border-border text-foreground hover:bg-black/5 dark:hover:bg-white/5'
+                    ? 'bg-accent font-semibold text-on-accent'
+                    : 'border border-border bg-card hover:border-accent'
                 }`}
               >
-                Chương {nhom.nhan}
+                {nhom.nhan}
               </button>
             );
           })}
         </div>
       )}
 
-      <ul className="mt-3 space-y-1">
+      <ul className="grid sm:grid-cols-2 sm:gap-x-6">
         {chuongHienThi.map((chuong) => {
           const biKhoa = chuong.so_chuong > SO_CHUONG_FREE && !coGoiHieuLuc;
+          const dangDoc = chuong.so_chuong === soChuongDangDoc;
           return (
-            <li key={chuong.id}>
+            <li key={chuong.id} className="border-b border-border">
               <Link
                 href={`/truyen/${slugTruyen}/chuong/${chuong.so_chuong}`}
                 prefetch={false}
-                className="flex items-center gap-1.5 hover:underline py-0.5 text-sm"
+                className={`flex items-center gap-2 py-2.5 text-sm hover:text-accent ${
+                  dangDoc ? 'font-semibold text-accent' : ''
+                }`}
               >
+                <span className="w-16 shrink-0 text-muted-foreground">Ch. {chuong.so_chuong}</span>
+                <span className="min-w-0 flex-1 truncate">{chuong.tieu_de}</span>
+                {dangDoc && <span className="shrink-0 text-xs">Đang đọc</span>}
                 {biKhoa && (
-                  <svg
-                    className="w-3.5 h-3.5 text-muted-foreground shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 10-8 0v4h8z"
-                    />
-                  </svg>
+                  <BieuTuong ten="khoa" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 )}
-                <span>
-                  Chương {chuong.so_chuong}: {chuong.tieu_de}
-                </span>
               </Link>
             </li>
           );

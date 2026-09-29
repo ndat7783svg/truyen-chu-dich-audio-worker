@@ -19,8 +19,8 @@ website truyện chữ AI/
 ├── app/                             (Next.js App Router)
 │   ├── layout.tsx                   (root layout, bọc <ChromeToanSite/> quanh Header+ThanhDieuHuong, <ThanhTienTrinh/> (Suspense), script chống FOUC, metadata.title "Truyện chữ dịch")
 │   ├── loading.tsx                  (fallback "Đang tải..." cho route `/`)
-│   ├── page.tsx                     (trang chủ - lưới thẻ truyện, đọc query `q` từ URL để lọc theo tìm kiếm)
-│   ├── globals.css                  (3 theme CSS Sáng/Giấy/Tối + mapping Tailwind v4 @theme inline + keyframe thanh-tien-trinh)
+│   ├── page.tsx                     (trang chủ - Truyện nổi bật/Xem nhiều nhất/Đọc tiếp/Mới cập nhật/Thể loại/Tất cả truyện; có `q` thì chỉ hiện kết quả tìm kiếm)
+│   ├── globals.css                  (3 theme CSS Sáng/Giấy/Tối, token màu nhấn accent/on-accent/accent-soft/card/rank/done, phông Be Vietnam Pro, tiện ích no-scrollbar)
 │   ├── auth/callback/route.ts       (route PKCE dùng chung cho Google OAuth + link xác nhận email)
 │   ├── tai-khoan/
 │   │   ├── page.tsx                 (trang tài khoản - hồ sơ, cấp độ, mục Gói VIP, đổi theme, đăng xuất)
@@ -29,7 +29,8 @@ website truyện chữ AI/
 │   │   ├── page.tsx                 (trang tủ truyện - tab "Đã lưu" thật, query truyen_da_luu join truyen)
 │   │   └── DongTruyenDaLuu.tsx      (client - 1 hàng trong danh sách Đã lưu, có nút Bỏ lưu)
 │   ├── truyen/[slug]/
-│   │   ├── page.tsx                 (trang truyện - ảnh bìa, tác giả, thể loại, mô tả, lượt xem, nút Lưu, nút Bắt đầu đọc/Đọc tiếp, ds chương)
+│   │   ├── page.tsx                 (trang truyện - đầu trang bìa mờ + 3 số liệu + nút đọc/Lưu, tab Giới thiệu/Chương, Truyện cùng thể loại; `layHetChuong` lấy >1000 chương theo đợt)
+│   │   ├── TabTruyen.tsx            (client - 2 tab Giới thiệu/Chương, link `#danh-sach-chuong` mở thẳng tab Chương)
 │   │   ├── loading.tsx              (fallback "Đang tải..." cho route trang truyện)
 │   │   ├── actions-luu.ts           (server actions luuTruyen/boLuuTruyen cho tính năng Đã lưu)
 │   │   ├── NutLuuTruyen.tsx         (client - nút icon bookmark lưu/bỏ lưu, khoá nút lúc đang xử lý)
@@ -61,7 +62,10 @@ website truyện chữ AI/
 │   ├── DropdownTheLoai.tsx          (client component - menu thể loại trong Header)
 │   ├── NutDangXuat.tsx              (client component - nút đăng xuất, dùng trong trang Tài khoản)
 │   ├── SearchBox.tsx                (ô tìm kiếm, nằm trong Header, submit điều hướng về `/?q=...`)
-│   ├── TheTruyen.tsx                (thẻ truyện dùng chung - trang chủ + trang thể loại, hiện lượt xem, số chương, nhãn "Dịch")
+│   ├── TheTruyen.tsx                (thẻ truyện dùng chung + `BiaTruyen` (bìa + nhãn Full/Dịch, `anNhan` cho bìa nhỏ))
+│   ├── KhoiTrangChu.tsx             (các khối trang chủ: TieuDeMuc, TruyenNoiBat, BangXepHang, KeTruyen (vuốt ngang), DanhSachTheLoai)
+│   ├── BieuTuong.tsx                (bộ icon SVG nét dùng chung, prop `dac` = tô đặc)
+│   ├── DangTai.tsx                  (khung xương "đang tải" dùng trong các loading.tsx)
 │   └── ChonGoiVip.tsx               (client - modal chọn 1 trong 3 gói VIP + hướng dẫn chuyển khoản MoMo (QR + tên/ngân hàng/STK có nút copy), dùng chung ở trang Tài khoản và ChanChuongVip)
 ├── lib/
 │   ├── audio/                       (Audio HLS: chia-doan (chia đoạn + ước lượng thời lượng), danh-sach-phat (dựng m3u8/manifest + lọc chương theo quyền), ve-audio (vé HMAC), tham-so, tao-doan-audio (msedge-tts) + chay-co-du-phong (thử lại nhanh có nghỉ 400ms, tối đa 4 lần trong ngân sách 52s, chạy dự phòng chỉ khi treo >11s; route doan trả header chẩn đoán Server-Timing/X-Audio-Nhat-Ky), du-lieu-chuong (service role + quyền người gọi), xay-danh-sach-phat, nhan-dien-trinh-duyet (Safari→HLS gốc, còn lại→hls.js))

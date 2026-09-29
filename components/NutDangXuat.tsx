@@ -14,7 +14,7 @@ export default function NutDangXuat() {
   }
 
   return (
-    <button onClick={dangXuat} className="hover:underline">
+    <button onClick={dangXuat} className="text-sm font-medium text-red-600 hover:underline">
       Đăng xuất
     </button>
   );
