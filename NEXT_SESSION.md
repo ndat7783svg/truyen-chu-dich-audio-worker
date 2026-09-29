@@ -20,6 +20,24 @@ trang chủ có mục mới, "Đô Thị Chí Tôn" hiện đủ 1626 chương, 
 Chi tiết: spec `docs/superpowers/specs/2026-09-29-nang-cap-giao-dien-design.md`, handoff
 `docs/handoff/nang-cap-giao-dien-va-audit-bao-mat.md`.
 
+**Đăng truyện trong cùng chat (2026-09-20 → 09-28)** — trạng thái web lúc chốt (đếm thẳng trong DB):
+| Truyện | Web | Còn chờ |
+|---|---|---|
+| Cẩu Tại Sơ Thánh Ma Môn Làm Nhân Tài | 1449/1449 (đủ, chương 259 thiếu tiêu đề đã được nguồn bổ sung) | — |
+| Võ Thánh | 767/767 (nhãn "Hoàn thành" giờ ĐÚNG -> câu hỏi treo phiên trước đã tự hết) | — |
+| Chín Đồng Chín Dạ Minh Châu, Ta Mua Đứt Huyện Lệnh Cổ Đại (mới) | 344 (1-345) | **chương 128 không có ở cả `chuong/` lẫn `cho-duyet-antigravity/`** -> chờ bên dịch bù |
+| Quốc Thuật, Từ Bị Vũ Cảnh Lục Soát Núi Bắn Chết Bắt Đầu Kiến Thần (mới) | 248/248 đã duyệt | chương sau chờ duyệt |
+| Cẩu Bên Cạnh Nữ Ma Đầu Lén Lút Tu Luyện (mới) | 649 (1-650) | **chương 609 chờ duyệt** (user sẽ báo) |
+| Lục Hoàng Tử Vô Địch (mới) | 650 | chương sau chờ duyệt |
+- Chương 585/588/591 "Cẩu Bên Cạnh..." là thông báo XIN NGHỈ thật của tác giả (user xác nhận) -> theo yêu cầu user,
+  Claude đã COPY 3 file từ `cho-duyet-antigravity/` sang `chuong/` bên `D:\translate truyen` rồi đăng (ngoại lệ ranh giới
+  "chỉ đọc" — có sự đồng ý của user). Nhắc user báo bên dự án dịch coi 3 chương này là đã duyệt.
+- 2 truyện mới "Cẩu Bên Cạnh..." (649/1623) và "Lục Hoàng Tử..." (650/1634) đang hiện "Hoàn thành" dù chưa đăng đủ
+  (thong-tin.md ghi trạng thái bản gốc) — đã hỏi user, CHƯA trả lời cách sửa (cách 2 Claude khuyên: script bỏ qua
+  "Hoàn thành" khi số chương `chuong/` < `tong_chuong` trong `queue.json`).
+- Quy trình "check": quét kho bằng đối chiếu số file `chuong/` với số chương trên DB từng truyện; truyện chỉ có
+  `cho-duyet-antigravity/` = chưa duyệt, KHÔNG đăng. Kho có 7+ bộ chưa có chương nào duyệt.
+
 ## Phiên 2026-09-19 tối → 2026-09-20 — CHỐT PHIÊN (đọc mục này trước tiên, các mục dưới là lịch sử)
 
 **Đã làm & deploy production trong phiên này** (mọi thứ đã commit, working tree sạch):

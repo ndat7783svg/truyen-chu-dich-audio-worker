@@ -63,3 +63,14 @@
   `cho-duyet-antigravity/`). `sync-truyen.mjs` ghi đè `trang_thai` theo file mỗi lần check. Hướng khuyên dùng: bỏ qua "Hoàn thành" khi
   số chương đang có ở `chuong/` < `tong_chuong` trong `D:\translate truyen\scripts\queue.json` (chỉ đọc).
 - Quy tắc nguồn: web CHỈ đăng từ `chuong/` (đã duyệt thật), không đọc `cho-duyet-antigravity/`. "Đã duyệt khoảng N chương" của user = số file trong `chuong/`.
+
+## 2026-09-20 → 09-28: đăng hàng loạt, chương "xin nghỉ", chương thiếu ở nguồn
+- Đối chiếu kho nhanh: đếm file `chuong-*.md` trong `chuong/` từng truyện so với `count` chương trên DB (service role);
+  lệch = có chương duyệt chưa đăng. `cho-duyet-antigravity/` là CHƯA duyệt, không đăng. Cờ `da_duyet` trong
+  `queue.json` không đáng tin cho từng chương (truyện `da_duyet: true` vẫn có chương mới nằm ở thư mục chờ duyệt).
+- Tên truyện user gõ có thể khác tên thư mục (ảnh chụp ghi "Hạ Thiên", thực tế là "Chín Đồng Chín Dạ Minh Châu...")
+  -> đối chiếu theo số chương, hỏi lại nếu không chắc.
+- Chương thông báo "xin nghỉ" của tác giả vẫn là 1 chương có số -> nếu bỏ, danh sách nhảy số. User quyết đăng
+  (585/588/591 "Cẩu Bên Cạnh..."), Claude copy từ `cho-duyet-antigravity/` sang `chuong/` theo yêu cầu.
+- Script báo "thiếu N chương" sau khi đăng: tìm file đó trong `cho-duyet-antigravity/` trước (chưa duyệt) rồi mới
+  kết luận thiếu hẳn ở nguồn (vd ch.128 "Chín Đồng..." không có ở đâu).
