@@ -4,13 +4,12 @@
 
 **Trạng thái**: code giao diện mới XONG trong working tree (Claude tự code theo yêu cầu user, không giao Antigravity),
 build sạch, 154/154 test pass, tự review (sửa 2 lỗi: menu Thể loại trên Android, ảnh nền mờ tải quá to).
-**CHƯA commit, CHƯA deploy** — user chọn "xem bản thử trước rồi mới đưa lên web thật".
+**ĐÃ commit (a4314cb) + deploy production 2026-09-29** sau khi user xem bản thử và đồng ý. Kiểm chứng production:
+trang chủ có mục mới, "Đô Thị Chí Tôn" hiện đủ 1626 chương, chương VIP khi chưa đăng nhập vẫn không lộ nội dung.
 
 **VIỆC CẦN LÀM ĐẦU PHIÊN SAU**:
-1. Hỏi user đã xem bản thử chưa (`npm run dev` -> http://localhost:3000, hoặc đề nghị tạo link Vercel preview
-   `npx vercel@latest --yes --scope asuo-team` (KHÔNG `--prod`) để xem trên điện thoại — hỏi trước khi tạo).
-   Muốn chỉnh gì thì chỉnh; đồng ý thì commit + deploy `npx vercel@latest --prod --yes --scope asuo-team`.
-2. Sau deploy: thử menu Thể loại trên điện thoại thật (đã sửa lý thuyết, chưa thử được cảm ứng thật).
+1. ~~Xem bản thử + deploy~~ XONG.
+2. Hỏi user phản hồi giao diện mới trên điện thoại thật; thử menu Thể loại trên điện thoại thật (đã sửa lý thuyết, chưa thử được cảm ứng thật).
 3. Tuỳ chọn: bỏ N+1 truy vấn ở mục "Mới cập nhật" trang chủ bằng view SQL (xem handoff) khi kho truyện lớn.
 4. Đã BỎ khỏi trang Tài khoản 2 dòng giữ chỗ "Cấp độ: Thành viên" và mục "Cài đặt — Sắp ra mắt" — báo user, muốn
    giữ thì thêm lại.
