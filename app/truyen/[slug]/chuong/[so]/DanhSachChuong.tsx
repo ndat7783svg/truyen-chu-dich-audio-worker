@@ -40,22 +40,25 @@ export default function DanhSachChuong({
     }));
   }
 
-  // Tự động chuyển nhóm khi số chương hiện tại thay đổi (ví dụ khi audio tự động chuyển chương vượt ranh giới 50 chương)
+  // Tự động chuyển nhóm CHỈ khi số chương hiện tại thay đổi (ví dụ audio tự chuyển chương vượt ranh giới 50 chương).
+  // Không được phụ thuộc soNhomDangChon — nếu không, mỗi lần người đọc bấm chọn nhóm khác sẽ bị kéo ngược về nhóm của chương đang đọc.
+  const [prevSoChuong, setPrevSoChuong] = useState(soChuongHienTai);
+  if (prevSoChuong !== soChuongHienTai) {
+    setPrevSoChuong(soChuongHienTai);
+    setSoNhomDangChon(tinhNhomCuaChuong(soChuongHienTai));
+  }
+
   useEffect(() => {
     const nhomMoi = tinhNhomCuaChuong(soChuongHienTai);
-    if (nhomMoi !== soNhomDangChon) {
-      setSoNhomDangChon(nhomMoi);
-      if (!cacheNhom[nhomMoi]) {
-        layNhomChuong(truyenId, nhomMoi)
-          .then((duLieu) => {
-            setCacheNhom((prev) => ({ ...prev, [nhomMoi]: duLieu }));
-          })
-          .catch((err) => {
-            console.error('Lỗi khi tự động tải nhóm chương mới:', err);
-          });
-      }
-    }
-  }, [soChuongHienTai, soNhomDangChon, cacheNhom, truyenId]);
+    if (cacheNhom[nhomMoi]) return;
+    layNhomChuong(truyenId, nhomMoi)
+      .then((duLieu) => {
+        setCacheNhom((prev) => ({ ...prev, [nhomMoi]: duLieu }));
+      })
+      .catch((err) => {
+        console.error('Lỗi khi tự động tải nhóm chương mới:', err);
+      });
+  }, [soChuongHienTai, cacheNhom, truyenId]);
 
 
   useEffect(() => {
